@@ -1,0 +1,4 @@
+
+jinja2
+openpyxl
+python3-ghostscript
