@@ -39,7 +39,7 @@ Source: "C:\Users\arabela\Documents\GitHub\huiini_local\dist\huiini\*"; DestDir:
 Source: "C:\Users\arabela\Documents\GitHub\huiini_local\*.png"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\arabela\Documents\GitHub\huiini_local\*.json"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Users\arabela\Documents\GitHub\huiini_local\*.jinja"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\arabela\Documents\huiini\pdflatex_path.txt"; DestDir: "{userdocs}\huiini"; Flags: ignoreversion onlyifdoesntexist
+Source: "C:\Users\arabela\Documents\huiini\pdflatex_path.txt"; DestDir: "{userdocs}\huiini"; Flags: ignoreversion onlyifdoesntexist uninsneveruninstall
 Source: "C:\Users\arabela\Documents\huiini\template_diot.xlsx"; DestDir: "{userdocs}\huiini"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
