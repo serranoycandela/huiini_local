@@ -236,9 +236,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
             print("no")
         else:
             #confirmacion para maricas
-            self.lista_ordenada.pop(curr_indexes[0].row())
+            categoria = self.cats_dialog.myListWidget.currentItem().text().split(" (")[0]
+            self.dicc_de_categorias.pop(categoria)
             with open(self.json_path, "w", encoding="utf-8") as jsonfile:
-                json.dump(self.lista_ordenada, jsonfile)
+                json.dump(self.dicc_de_categorias, jsonfile)
 
             self.cats_dialog.myListWidget.takeItem(curr_indexes[0].row())
 
@@ -247,75 +248,55 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
         if len(curr_indexes)>1:
             print("no")
         else:
+            categoria = self.cats_dialog.myListWidget.currentItem().text().split(" (")[0]
+            lista_de_empiezos = ", ".join(self.dicc_de_categorias[categoria])
 
-            nombre, ok = QInputDialog().getText(self.cats_dialog, "Nombre de la Categoría",
-                                        "Nombre de la categoría:", QLineEdit.Normal,self.lista_ordenada[curr_indexes[0].row()][1])
-            claves_ps, ok = QInputDialog().getText(self.cats_dialog, "Lista de claves de producto o servicio",
+
+            nombre, ok1 = QInputDialog().getText(self.cats_dialog, "Nombre de la Categoría",
+                                        "Nombre de la categoría:", QLineEdit.Normal,categoria)
+            claves_ps, ok2 = QInputDialog().getText(self.cats_dialog, "Lista de claves de producto o servicio",
                                          "clave_ps:", QLineEdit.Normal,
-                                         self.lista_ordenada[curr_indexes[0].row()][0])
+                                         lista_de_empiezos)
 
-            self.lista_ordenada[curr_indexes[0].row()][0] = claves_ps
-            self.lista_ordenada[curr_indexes[0].row()][1] = nombre
-            self.lista_ordenada = sorted(self.lista_ordenada, key=lambda tup: tup[1])
-            with open(self.json_path, "w", encoding="utf-8") as jsonfile:
-                json.dump(self.lista_ordenada, jsonfile)
-            self.cats_dialog.myListWidget.clear()
-            for tupla in self.lista_ordenada:
-                self.cats_dialog.myListWidget.addItem(tupla[1]+" ("+tupla[0]+")")
-
+            if ok1 and ok2:
+                if nombre != categoria:
+                    self.dicc_de_categorias.pop(categoria)
+                self.dicc_de_categorias[nombre] = claves_ps.split(", ")
+                #self.lista_ordenada = sorted(self.lista_ordenada, key=lambda tup: tup[1])
+                with open(self.json_path, "w", encoding="utf-8") as jsonfile:
+                    json.dump(self.dicc_de_categorias, jsonfile)
+                self.cats_dialog.myListWidget.clear()
+                self.enlista_categorias()
 
     def agregaCategoria(self):
-        nombre, ok = QInputDialog().getText(self.cats_dialog, "Nombre de la Categoría",
+        nombre, ok1 = QInputDialog().getText(self.cats_dialog, "Nombre de la Categoría",
                                      "Nombre de la categoría:", QLineEdit.Normal,"")
-        claves_ps, ok = QInputDialog().getText(self.cats_dialog, "Lista de claves de producto o servicio",
+        claves_ps, ok2 = QInputDialog().getText(self.cats_dialog, "Lista de claves de producto o servicio",
                                      "clave_ps:", QLineEdit.Normal,
                                      "")
         claves_ps.strip()
 
+        if ok1 and ok2:
+            for clave in claves_ps.split(", "):
+                pasa = True
+                for categoria, lista in self.dicc_de_categorias.items():
+                    for clave1 in lista:
+                        if clave1.startswith(clave) or clave.startswith(clave1):
+                            pasa = False
+                            QMessageBox.information(self, "Advertencia", "El inicio de clave " + clave + " ya está considerado en la categoría " + tupla[1])
+                if pasa:
+                    if clave == "" or nombre == "":
+                        print("no mames")
+                    else:
+                        self.dicc_de_categorias[nombre] = claves_ps.split(", ")
 
-        for clave in claves_ps.split(","):
-            pasa = True
-            for tupla in self.lista_ordenada:
-                if tupla[0].startswith(clave) or clave.startswith(tupla[0]):
-                    pasa = False
-                    QMessageBox.information(self, "Advertencia", "La inicio de clave " + clave + " ya está considerado en la categoría " + tupla[1])
-            if pasa:
-                if clave == "" or nombre == "":
-                    print("no mames")
-                else:
-                    self.lista_ordenada.append([clave, nombre])
+            #self.lista_ordenada = sorted(self.lista_ordenada, key=lambda tup: tup[1])
+            with open(self.json_path, "w", encoding="utf-8") as jsonfile:
+                json.dump(self.dicc_de_categorias, jsonfile)
+            self.cats_dialog.myListWidget.clear()
+            self.enlista_categorias()
 
-        self.lista_ordenada = sorted(self.lista_ordenada, key=lambda tup: tup[1])
-        with open(self.json_path, "w", encoding="utf-8") as jsonfile:
-            json.dump(self.lista_ordenada, jsonfile)
-        self.cats_dialog.myListWidget.clear()
-        for tupla in self.lista_ordenada:
-            self.cats_dialog.myListWidget.addItem(tupla[1]+" ("+tupla[0]+")")
-
-
-    def edita_categorias(self):
-        self.cats_dialog = categorias_widget()
-        self.cats_dialog.remove_button.clicked.connect(self.quitaCategoria)
-        self.cats_dialog.add_button.clicked.connect(self.agregaCategoria)
-        self.cats_dialog.edit_button.clicked.connect(self.editaCategoria)
-        folder_cliente = os.path.split(os.path.split(self.paths[0])[0])[0]
-        self.json_path = join(folder_cliente, "categorias_huiini.json")
-        if os.path.exists(self.json_path):
-            with open(self.json_path, "r", encoding="utf-8") as jsonfile:
-                lista_de_tuplas = json.load(jsonfile)
-        else:
-            lista_de_tuplas = []
-
-
-        # lista_de_tuplas.extend(lista_categorias_default)
-        self.lista_ordenada = sorted(lista_de_tuplas, key=lambda tup: tup[1])
-
-        self.dicc_de_categorias = {}
-        for tupla in self.lista_ordenada:
-            if not tupla[1] in self.dicc_de_categorias:
-                self.dicc_de_categorias[tupla[1]] = []
-            self.dicc_de_categorias[tupla[1]].append(tupla[0])
-
+    def enlista_categorias(self):
         for key, value in self.dicc_de_categorias.items():
             if len(value) > 3:
                 texto_claves = " ("+value[0]+", "+value[1]+", "+value[2]+"...)"
@@ -326,6 +307,25 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
             # if "Default" in tupla[0]:
             #     i.setBackground(QtGui.QColor("#ababab"))
             self.cats_dialog.myListWidget.addItem(i)
+
+    def edita_categorias(self):
+        self.cats_dialog = categorias_widget()
+        self.cats_dialog.remove_button.clicked.connect(self.quitaCategoria)
+        self.cats_dialog.add_button.clicked.connect(self.agregaCategoria)
+        self.cats_dialog.edit_button.clicked.connect(self.editaCategoria)
+        folder_cliente = os.path.split(os.path.split(self.paths[0])[0])[0]
+        self.json_path = join(folder_cliente, "categorias_dicc_huiini.json")
+        if os.path.exists(self.json_path):
+            with open(self.json_path, "r", encoding="utf-8") as jsonfile:
+                self.dicc_de_categorias = json.load(jsonfile)
+        else:
+            self.dicc_de_categorias = {}
+
+
+        # lista_de_tuplas.extend(lista_categorias_default)
+        #self.lista_ordenada = sorted(lista_de_tuplas, key=lambda tup: tup[1])
+
+        self.enlista_categorias()
         self.cats_dialog.exec()
         # folder_cliente = os.path.split(os.path.split(self.paths[0])[0])[0]
         # json_path = join(folder_cliente,"categorias_huiini.json")
