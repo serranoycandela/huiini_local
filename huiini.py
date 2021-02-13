@@ -309,8 +309,20 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
 
         # lista_de_tuplas.extend(lista_categorias_default)
         self.lista_ordenada = sorted(lista_de_tuplas, key=lambda tup: tup[1])
+
+        self.dicc_de_categorias = {}
         for tupla in self.lista_ordenada:
-            i = QListWidgetItem(tupla[1]+" ("+tupla[0]+")")
+            if not tupla[1] in self.dicc_de_categorias:
+                self.dicc_de_categorias[tupla[1]] = []
+            self.dicc_de_categorias[tupla[1]].append(tupla[0])
+
+        for key, value in self.dicc_de_categorias.items():
+            if len(value) > 3:
+                texto_claves = " ("+value[0]+", "+value[1]+", "+value[2]+"...)"
+            else:
+                texto_claves = " (" + ", ".join(value) + ")"
+            i = QListWidgetItem(key+texto_claves)
+            i.setToolTip("\n".join(value))
             # if "Default" in tupla[0]:
             #     i.setBackground(QtGui.QColor("#ababab"))
             self.cats_dialog.myListWidget.addItem(i)
