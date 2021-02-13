@@ -717,7 +717,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
         #         for concepto in self.conceptos[mes]:
 
         #dv_categorias = DataValidation(type="list", formula1='"{}"'.format(self.texto_para_validacion), allow_blank=True)
-        dv_categorias = DataValidation(type="list", formula1="=Categorias!A1:A"+str(len(self.lista_categorias_default)), allow_blank=True)
+        dv_categorias = DataValidation(type="list", formula1="=Categorias!A$1:A$"+str(len(self.lista_categorias_default)), allow_blank=True)
 
         ws_todos.add_data_validation(dv_categorias)
         for concepto in self.conceptos:

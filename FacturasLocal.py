@@ -747,8 +747,10 @@ class FacturaLocal(object):
 
         ## aqui falta manejar los posibes errores al generar el pdf
 
-
-        os.chdir(os.path.join(os.path.dirname(self.tex_path),"huiini"))
+        if "Nomina" in self.tex_path:
+            os.chdir(os.path.join(os.path.dirname(os.path.dirname(self.tex_path)),"huiini"))
+        else:
+            os.chdir(os.path.join(os.path.dirname(self.tex_path),"huiini"))
 
 
         self.tex_path = self.tex_path.replace("/", "\\\\")
