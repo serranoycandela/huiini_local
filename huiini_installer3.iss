@@ -21,9 +21,9 @@ AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
 DefaultDirName={pf}\{#MyAppName}
 DisableProgramGroupPage=yes
-LicenseFile=C:\Users\arabela\Documents\GitHub\huiini_local\LICENSE
+LicenseFile=LICENSE
 OutputBaseFilename=huiiniInstaller
-SetupIconFile=C:\Users\arabela\Documents\GitHub\huiini_local\myicon.ico
+SetupIconFile=myicon.ico
 Compression=lzma
 SolidCompression=yes
 
@@ -34,13 +34,13 @@ Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "C:\Users\arabela\Documents\GitHub\huiini_local\dist\huiini\huiini.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\arabela\Documents\GitHub\huiini_local\dist\huiini\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "C:\Users\arabela\Documents\GitHub\huiini_local\*.png"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\arabela\Documents\GitHub\huiini_local\*.json"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\arabela\Documents\GitHub\huiini_local\*.jinja"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\arabela\Documents\huiini\pdflatex_path.txt"; DestDir: "{userdocs}\huiini"; Flags: ignoreversion onlyifdoesntexist uninsneveruninstall
-Source: "C:\Users\arabela\Documents\huiini\template_diot.xlsx"; DestDir: "{userdocs}\huiini"; Flags: ignoreversion
+Source: "dist\huiini\huiini.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "dist\huiini\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "huiini_local\*.png"; DestDir: "{app}"; Flags: ignoreversion
+Source: "*.json"; DestDir: "{app}"; Flags: ignoreversion
+Source: "*.jinja"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\huiini_aux_files\pdflatex_path.txt"; DestDir: "{userdocs}\huiini"; Flags: ignoreversion onlyifdoesntexist uninsneveruninstall
+Source: "..\huiini_aux_files\template_diot.xlsx"; DestDir: "{userdocs}\huiini"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
