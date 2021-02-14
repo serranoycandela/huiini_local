@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Huiini"
-#define MyAppVersion "1.4"
+#define MyAppVersion "1.4.3"
 #define MyAppPublisher "Huiini"
 #define MyAppURL "http://huiini.com.mx"
 #define MyAppExeName "huiini.exe"
@@ -36,7 +36,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 [Files]
 Source: "dist\huiini\huiini.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "dist\huiini\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "huiini_local\*.png"; DestDir: "{app}"; Flags: ignoreversion
+Source: "*.png"; DestDir: "{app}"; Flags: ignoreversion
 Source: "*.json"; DestDir: "{app}"; Flags: ignoreversion
 Source: "*.jinja"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\huiini_aux_files\pdflatex_path.txt"; DestDir: "{userdocs}\huiini"; Flags: ignoreversion onlyifdoesntexist uninsneveruninstall
