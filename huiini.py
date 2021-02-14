@@ -283,7 +283,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
                     for clave1 in lista:
                         if clave1.startswith(clave) or clave.startswith(clave1):
                             pasa = False
-                            QMessageBox.information(self, "Advertencia", "El inicio de clave " + clave + " ya está considerado en la categoría " + tupla[1])
+                            QMessageBox.information(self, "Advertencia", "El inicio de clave " + clave + " ya está considerado en la categoría " + categoria)
                 if pasa:
                     if clave == "" or nombre == "":
                         print("no mames")
@@ -519,6 +519,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
             workbook = load_workbook(self.annual_xlsx_path)
             if not "Ingresos" in workbook.sheetnames:
                 ws_ingresos = workbook.create_sheet("Ingresos")
+            else:
+                ws_ingresos = workbook["Ingresos"]
 
             ws_ingresos.cell(1, 1, "MesEmision")
             ws_ingresos.cell(1, 2,     "MesPago")
@@ -684,12 +686,17 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
         workbook = load_workbook(self.annual_xlsx_path)
         if not "Conceptos" in workbook.sheetnames:
             ws_todos = workbook.create_sheet("Conceptos")
+        else:
+            ws_todos = workbook["Conceptos"]
 
-        if "iva_por_categria" in workbook.sheetnames:
+        if "IVA_anual" in workbook.sheetnames:
             sheet1 = workbook["IVA_anual"]
             workbook.remove_sheet(sheet1)
-        if "importe_por_categria" in workbook.sheetnames:
+        if "Importe_anual" in workbook.sheetnames:
             sheet1 = workbook["Importe_anual"]
+            workbook.remove_sheet(sheet1)
+        if "Categorias" in workbook.sheetnames:
+            sheet1 = workbook["Categorias"]
             workbook.remove_sheet(sheet1)
 
         ws_cats = workbook.create_sheet("IVA_anual")
@@ -710,20 +717,25 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
                         if ws_mes.cell(row, 9).value - self.complementosDePago[ws_mes.cell(row, 3).value]["suma"] < 0.5:
                             ws_mes.cell(row, 13, "Pagado")
 
-        ws_todos.cell(1, 1, "mes")
-        ws_todos.cell(1, 2, 'clave_concepto')
-        ws_todos.cell(1, 3, 'UUID')
-        ws_todos.cell(1, 4, 'cantidad')
-        ws_todos.cell(1, 5, 'descripcion')
-        ws_todos.cell(1, 6, 'importeConcepto')
-        ws_todos.cell(1, 7, 'descuento')
-        ws_todos.cell(1, 8, 'subTotal')
-        ws_todos.cell(1, 9, 'impuestos')
-        ws_todos.cell(1, 10, 'total')
-        ws_todos.cell(1, 11, 'tipo')
-        ws_todos.cell(1, 12, 'status')
 
-        row = 1
+        print("ws_todos.max_row................................................................",str(ws_todos.max_row))
+        if ws_todos.max_row == 1:
+            ws_todos.cell(1, 1, "mes")
+            ws_todos.cell(1, 2, 'clave_concepto')
+            ws_todos.cell(1, 3, 'UUID')
+            ws_todos.cell(1, 4, 'cantidad')
+            ws_todos.cell(1, 5, 'descripcion')
+            ws_todos.cell(1, 6, 'importeConcepto')
+            ws_todos.cell(1, 7, 'descuento')
+            ws_todos.cell(1, 8, 'subTotal')
+            ws_todos.cell(1, 9, 'impuestos')
+            ws_todos.cell(1, 10, 'total')
+            ws_todos.cell(1, 11, 'tipo')
+            ws_todos.cell(1, 12, 'status')
+            row = 1
+        else:
+            row = ws_todos.max_row
+
         # for mes in meses:
         #     if mes in meses_folders:
         #         for concepto in self.conceptos[mes]:
@@ -767,7 +779,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
             workbook = load_workbook(self.annual_xlsx_path)
             if not mes in workbook.sheetnames:
                 self.yaEstaba[mes] = False
-                ws_mes = workbook.create_sheet(mes)
+                antesDeConceptos = workbook.worksheets.index(workbook['Conceptos'])
+                ws_mes = workbook.create_sheet(mes, antesDeConceptos)
             else:
                 self.yaEstaba[mes] = True
         else:
@@ -778,61 +791,61 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
             workbook.remove_sheet(sheet1)
             self.yaEstaba[mes] = False
 
+        if not self.yaEstaba[mes]:
+            ws_mes.cell(1, 1, "clave_ps")
+            ws_mes.cell(1, 2,     "Fecha")
+            ws_mes.cell(1, 3,     "UUID")
+            ws_mes.cell(1, 4,     "Nombre")
+            ws_mes.cell(1, 5,     "RFC")
+            ws_mes.cell(1, 6,     "Concepto")
+            ws_mes.cell(1, 7,     "Sub")
+            ws_mes.cell(1, 8,     "IVA")
+            ws_mes.cell(1, 9,     "Total")
+            ws_mes.cell(1, 10,     "F-Pago")
+            ws_mes.cell(1, 11,     "M-Pago")
+            ws_mes.cell(1, 12,     "Tipo")
+            ws_mes.cell(1, 13,     "Status")
+            ws_mes.cell(1, 14,     "TipoDeComprobante")
+            ws_mes.cell(1, 15,     "complementosDePago")
 
-        ws_mes.cell(1, 1, "clave_ps")
-        ws_mes.cell(1, 2,     "Fecha")
-        ws_mes.cell(1, 3,     "UUID")
-        ws_mes.cell(1, 4,     "Nombre")
-        ws_mes.cell(1, 5,     "RFC")
-        ws_mes.cell(1, 6,     "Concepto")
-        ws_mes.cell(1, 7,     "Sub")
-        ws_mes.cell(1, 8,     "IVA")
-        ws_mes.cell(1, 9,     "Total")
-        ws_mes.cell(1, 10,     "F-Pago")
-        ws_mes.cell(1, 11,     "M-Pago")
-        ws_mes.cell(1, 12,     "Tipo")
-        ws_mes.cell(1, 13,     "Status")
-        ws_mes.cell(1, 14,     "TipoDeComprobante")
-        ws_mes.cell(1, 15,     "complementosDePago")
+            dv = DataValidation(type="list", formula1='"Pendiente,Pagado"', allow_blank=True)
+            ws_mes.add_data_validation(dv)
 
-        dv = DataValidation(type="list", formula1='"Pendiente,Pagado"', allow_blank=True)
-        ws_mes.add_data_validation(dv)
+            row = 1
+            for factura in self.listaDeFacturasOrdenadas:
+                row += 1
+                ws_mes.cell(row, 1, factura.conceptos[0]['clave_concepto'])
+                ws_mes.cell(row, 2, factura.fechaTimbrado)
+                ws_mes.cell(row, 3, factura.UUID)
+                ws_mes.cell(row, 4, factura.EmisorNombre)
+                ws_mes.cell(row, 5, factura.EmisorRFC)
+                ws_mes.cell(row, 6, factura.conceptos[0]['descripcion'])
+                ws_mes.cell(row, 7, factura.subTotal)
+                ws_mes.cell(row, 8, factura.traslados["IVA"]["importe"])
+                ws_mes.cell(row, 9, factura.total)
+                ws_mes.cell(row, 10, factura.formaDePagoStr)
+                ws_mes.cell(row, 11, factura.metodoDePago)
+                ws_mes.cell(row, 12, factura.conceptos[0]['tipo'])
+                status = "Pendiente"
+                if factura.metodoDePago == "PUE":
+                    status = "Pagado"
+                if factura.metodoDePago == "PPD":
+                    if factura.UUID in self.complementosDePago:
+                        if factura.total - self.complementosDePago[factura.UUID]["suma"] < 0.5:
+                            status = "Pagado"
+                if factura.tipoDeComprobante == "P":
+                    status = "Pagado"
 
-        row = 1
-        for factura in self.listaDeFacturasOrdenadas:
-            row += 1
-            ws_mes.cell(row, 1, factura.conceptos[0]['clave_concepto'])
-            ws_mes.cell(row, 2, factura.fechaTimbrado)
-            ws_mes.cell(row, 3, factura.UUID)
-            ws_mes.cell(row, 4, factura.EmisorNombre)
-            ws_mes.cell(row, 5, factura.EmisorRFC)
-            ws_mes.cell(row, 6, factura.conceptos[0]['descripcion'])
-            ws_mes.cell(row, 7, factura.subTotal)
-            ws_mes.cell(row, 8, factura.traslados["IVA"]["importe"])
-            ws_mes.cell(row, 9, factura.total)
-            ws_mes.cell(row, 10, factura.formaDePagoStr)
-            ws_mes.cell(row, 11, factura.metodoDePago)
-            ws_mes.cell(row, 12, factura.conceptos[0]['tipo'])
-            status = "Pendiente"
-            if factura.metodoDePago == "PUE":
-                status = "Pagado"
-            if factura.metodoDePago == "PPD":
+                dv.add(ws_mes.cell(row, 13))
+                ws_mes.cell(row, 13, status)
+                ws_mes.cell(row, 14, factura.tipoDeComprobante)
                 if factura.UUID in self.complementosDePago:
-                    if factura.total - self.complementosDePago[factura.UUID]["suma"] < 0.5:
-                        status = "Pagado"
-            if factura.tipoDeComprobante == "P":
-                status = "Pagado"
+                    ws_mes.cell(row, 15, self.complementosDePago[factura.UUID]["suma"])
 
-            dv.add(ws_mes.cell(row, 13))
-            ws_mes.cell(row, 13, status)
-            ws_mes.cell(row, 14, factura.tipoDeComprobante)
-            if factura.UUID in self.complementosDePago:
-                ws_mes.cell(row, 15, self.complementosDePago[factura.UUID]["suma"])
+                if factura.tipoDeComprobante == "P":
+                    print("segun "+ factura.UUID + "del mes " +mes+ ", aqui buscaria en todos los meses el uuid "+factura.IdDocumento+" y si encuentra su factura modificaria, la columna 13 del renglon de esa factura en el mes que esté, a Pagado")
 
-            if factura.tipoDeComprobante == "P":
-                print("segun "+ factura.UUID + "del mes " +mes+ ", aqui buscaria en todos los meses el uuid "+factura.IdDocumento+" y si encuentra su factura modificaria, la columna 13 del renglon de esa factura en el mes que esté, a Pagado")
-
-        workbook.save(self.annual_xlsx_path)
+            workbook.save(self.annual_xlsx_path)
 
     def hazResumenDiot(self,currentDir):
         home = os.path.expanduser('~')
@@ -1234,54 +1247,21 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
         self.progressBar.show()
         self.progressBar.setValue(1)
         folder_cliente = os.path.split(os.path.split(self.paths[0])[0])[0]
-        self.json_path = join(folder_cliente, "categorias_huiini.json")
+        self.json_path = join(folder_cliente, "categorias_dicc_huiini.json")
         if os.path.exists(self.json_path):
             with open(self.json_path, "r", encoding="utf-8") as jsonfile:
-                lista_de_tuplas = json.load(jsonfile)
+                self.dicc_de_categorias = json.load(jsonfile)
         else:
-            lista_de_tuplas = []
-        self.lista_ordenada = sorted(lista_de_tuplas, key=lambda tup: tup[1])
+            self.dicc_de_categorias = {}
+
         self.lista_categorias_default = []
-        # self.lista_categorias_default = ["Combustible",
-        #                             "Pasajes",
-        #                             "Peajes",
-        #                             "Consumo en Restaurante",
-        #                             "Alimentos",
-        #                             "Hospedaje",
-        #                             "Teléfono",
-        #                             "Internet",
-        #                             "Equipo de Computo",
-        #                             "Nómina",
-        #                             "Institución Bancaria",
-        #                             "Gastos Admin",
-        #                             "Servcios Admin",
-        #                             "Renta",
-        #                             "Gasto Personal",
-        #                             "Renta de Equipo",
-        #                             "Envios",
-        #                             "Soporte Técnico",
-        #                             "Papeleria",
-        #                             "Mant. Auto",
-        #                             "Seguros",
-        #                             "Mant. Oficina",
-        #                             "Estacionamiento",
-        #                             "Donativos",
-        #                             "Gestion de Eventos",
-        #                             "Politicas de Salud",
-        #                             "Equipos Multimedia"]
 
         with open(join(scriptDirectory,"categorias_default.json"), "r", encoding="utf-8") as jf:
             self.lista_categorias_default = json.load(jf)
-        for tupla in self.lista_ordenada:
-            if not tupla[1] in self.lista_categorias_default:
-                self.lista_categorias_default.append(tupla[1])
+        for categoria, claves in self.dicc_de_categorias.items():
+            if not categoria in self.lista_categorias_default:
+                self.lista_categorias_default.append(categoria)
 
-
-
-        #self.texto_para_validacion = ",".join(self.lista_categorias_default)
-        #self.texto_para_validacion = ",".join(["oo","uu ú","aa aa"])
-        self.texto_para_validacion = "oo,u uú"
-        print(self.texto_para_validacion)
         self.todos_los_meses = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"]
 
         self.conceptos = []
@@ -1300,14 +1280,20 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
         pdflatex_folder_path = os.path.join(home, 'Documents', 'huiini')
         with open(os.path.join(pdflatex_folder_path,"huiini_home_folder_path.txt"), "w") as f:
             f.write(huiini_home_folder)
+        meses = []
         for path in paths:
             mes = os.path.split(path)[1]
             mes = ''.join([i for i in mes if not i.isdigit()])
             mes = mes.strip()
+            meses.append(mes)
             if not mes in self.todos_los_meses:
                 no_son_meses = True
             if year_folder != os.path.split(path)[0]:
                 same_year = False
+
+        self.paths = [tuple[1] for x in self.todos_los_meses for tuple in zip(meses,self.paths) if tuple[0] == x]
+
+        print(self.paths)
 
         if not same_year or no_son_meses:
             if no_son_meses:
@@ -1330,7 +1316,16 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
 
             self.annual_xlsx_path = os.path.join(year_folder, client+"_"+year + ".xlsx")
             if os.path.isfile(self.annual_xlsx_path):#borra el anterior
-                os.remove(self.annual_xlsx_path)
+
+                reply = QMessageBox.question(self, 'Message',"Borrar información previa?", QMessageBox.Yes |
+                QMessageBox.No, QMessageBox.No)
+
+                if reply == QMessageBox.Yes:
+                    os.remove(self.annual_xlsx_path)
+
+
+
+
 
             if len(self.paths) > 1:
                 self.excel_path = self.annual_xlsx_path
@@ -1340,23 +1335,23 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
             self.listaDeFacturasIngresos = []
 
             p = 0
-            for path in paths:
+            for path in self.paths:
                 p += 1
-                progreso = int(100*(p/(len(paths)+2)))
+                progreso = int(100*(p/(len(self.paths)+2)))
                 self.procesaEgresos(path)
-                self.pon_categorias_custom_por_factura(paths)
+                self.pon_categorias_custom_por_factura(self.paths)
                 self.agregaMes(self.mes)
                 self.procesaIngresos(path)
                 self.aislaNomina(path)
                 self.progressBar.setValue(progreso)
 
 
-            self.hazTabDeIngresos(paths)
+            self.hazTabDeIngresos(self.paths)
             p += 1
             progreso = int(100*(p/(len(paths)+2)))
             self.progressBar.setValue(progreso)
-            self.pon_categorias_custom_por_concepto(paths)
-            self.hazAgregados(paths)
+            self.pon_categorias_custom_por_concepto(self.paths)
+            self.hazAgregados(self.paths)
             p += 1
             progreso = int(100*(p/(len(paths)+2)))
             self.progressBar.setValue(progreso)
@@ -1368,12 +1363,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
     def pon_categorias_custom_por_factura(self,paths):
 
         folder_cliente = os.path.split(os.path.split(paths[0])[0])[0]
-        json_path = join(folder_cliente,"categorias_huiini.json")
+        json_path = join(folder_cliente,"categorias_dicc_huiini.json")
         hay_categorias_custom = False
         if os.path.exists(json_path):
             hay_categorias_custom = True
             with open(json_path, "r") as jsonfile:
-                self.lista_de_empiezos = json.load(jsonfile)
+                self.dicc_de_categorias = json.load(jsonfile)
 
 
         if hay_categorias_custom:
@@ -1381,27 +1376,29 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
                 for concepto in factura.conceptos:
                     clave = concepto["clave_concepto"]
 
-                    for empiezo in self.lista_de_empiezos:
-                        if clave.startswith(empiezo[0]):
-                            concepto["tipo"] = empiezo[1]
+                    for categoria, claves in self.dicc_de_categorias.items():
+                        for clave1 in claves:
+                            if clave.startswith(clave1):
+                                concepto["tipo"] = categoria
 
 
     def pon_categorias_custom_por_concepto(self,paths):
         folder_cliente = os.path.split(os.path.split(paths[0])[0])[0]
-        json_path = join(folder_cliente,"categorias_huiini.json")
+        json_path = join(folder_cliente,"categorias_dicc_huiini.json")
         hay_categorias_custom = False
         if os.path.exists(json_path):
             hay_categorias_custom = True
             with open(json_path, "r") as jsonfile:
-                self.lista_de_empiezos = json.load(jsonfile)
+                self.dicc_de_categorias = json.load(jsonfile)
 
 
         if hay_categorias_custom:
             for concepto in self.conceptos:
                 clave = concepto["clave_concepto"]
-                for empiezo in self.lista_de_empiezos:
-                    if clave.startswith(empiezo[0]):
-                        concepto["tipo"] = empiezo[1]
+                for categoria, claves in self.dicc_de_categorias.items():
+                    for clave1 in claves:
+                        if clave.startswith(clave1):
+                            concepto["tipo"] = categoria
 
     def procesaIngresos(self, path):
         self.esteFolder = join(path,"INGRESOS")
