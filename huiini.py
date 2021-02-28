@@ -178,7 +178,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
 
         self.listaDeImpresoras.currentItemChanged.connect(self.cambiaSeleccionDeImpresora)
 
-        self.tableWidget_xml.setColumnCount(15)
+        self.tableWidget_xml.setColumnCount(16)
         self.tableWidget_xml.setColumnWidth(0,30)#pdf
         self.tableWidget_xml.setColumnWidth(1,95)#fecha
         self.tableWidget_xml.setColumnWidth(2,70)#uuid
@@ -215,7 +215,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
         header.setContextMenuPolicy(Qt.CustomContextMenu)
         header.customContextMenuRequested.connect(self.handleHeaderMenu)
 
-        lc = ["Pdf","Fecha","UUID","Receptor","Emisor","Concepto","Subtotal","Descuento","Traslado\nIVA","Traslado\nIEPS","Retención\nIVA","Retención\nISR","Total","Forma\nPago","Método\nPago"]
+        lc = ["Pdf","Fecha","UUID","Receptor","Emisor","Concepto","Subtotal","Descuento","Traslado\nIVA","Traslado\nIEPS","Retención\nIVA","Retención\nISR","Total","Forma\nPago","Método\nPago","Tipo"]
         self.ponEncabezado(lc)
 
         self.tableWidget_xml.cellDoubleClicked.connect(self.meDoblePicaronXML)
@@ -471,7 +471,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
 
 
     def calculaAgregados(self, df, ws_cats, variable):
-
+        # for col in df.columns:
+        #     print(col)
+        print(df.head())
         por_categorias = df.groupby(['mes', 'tipo'], as_index=False).agg({variable:sum})
         por_categorias_wide = por_categorias.pivot_table(index="mes",columns=['tipo'],values=variable,fill_value= 0)
         por_categorias_wide.reset_index(inplace=True)
@@ -691,13 +693,16 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
 
         if "IVA_anual" in workbook.sheetnames:
             sheet1 = workbook["IVA_anual"]
-            workbook.remove_sheet(sheet1)
+            workbook.remove(sheet1)
         if "Importe_anual" in workbook.sheetnames:
             sheet1 = workbook["Importe_anual"]
-            workbook.remove_sheet(sheet1)
+            workbook.remove(sheet1)
         if "Categorias" in workbook.sheetnames:
             sheet1 = workbook["Categorias"]
-            workbook.remove_sheet(sheet1)
+            workbook.remove(sheet1)
+
+        workbook.save(self.annual_xlsx_path)
+
 
         ws_cats = workbook.create_sheet("IVA_anual")
         ws_cats_importe = workbook.create_sheet("Importe_anual")
@@ -710,12 +715,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
         for mes in self.meses:
             ws_mes = workbook[mes]
             for row in range(2,len(ws_mes["A"])):
-                if ws_mes.cell(row, 11).value == "PPD":#11 H
+                if ws_mes.cell(row, 12).value == "PPD":#11 H
                     print("ajustaria"+ ws_mes.cell(row, 3).value)
                     if ws_mes.cell(row, 3).value in self.complementosDePago:
-                        ws_mes.cell(row, 15, self.complementosDePago[ws_mes.cell(row, 3).value]["suma"])
-                        if ws_mes.cell(row, 9).value - self.complementosDePago[ws_mes.cell(row, 3).value]["suma"] < 0.5:
-                            ws_mes.cell(row, 13, "Pagado")
+                        ws_mes.cell(row, 16, self.complementosDePago[ws_mes.cell(row, 3).value]["suma"])
+                        if ws_mes.cell(row, 10).value - self.complementosDePago[ws_mes.cell(row, 3).value]["suma"] < 0.5:
+                            ws_mes.cell(row, 14, "Pagado")
 
 
         print("ws_todos.max_row................................................................",str(ws_todos.max_row))
@@ -759,7 +764,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
                 ws_todos.cell(row, 10, (concepto['importeConcepto'] - concepto['descuento']) + concepto['impuestos'])
                 dv_categorias.add(ws_todos.cell(row, 11))
                 ws_todos.cell(row, 11, concepto['tipo'])
-                ws_todos.cell(row, 12, "=VLOOKUP(C"+str(row)+","+concepto['mes']+"!C:N,11,FALSE)")
+                ws_todos.cell(row, 12, "=VLOOKUP(C"+str(row)+","+concepto['mes']+"!C:N,12,FALSE)")
 
         df = pd.DataFrame(self.conceptos)
 
@@ -779,7 +784,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
             workbook = load_workbook(self.annual_xlsx_path)
             if not mes in workbook.sheetnames:
                 self.yaEstaba[mes] = False
-                antesDeConceptos = workbook.worksheets.index(workbook['Conceptos'])
+                if "Conceptos" in workbook.sheetnames:
+                    antesDeConceptos = workbook.worksheets.index(workbook['Conceptos'])
+                else:
+                    antesDeConceptos = 1
                 ws_mes = workbook.create_sheet(mes, antesDeConceptos)
             else:
                 self.yaEstaba[mes] = True
@@ -799,14 +807,15 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
             ws_mes.cell(1, 5,     "RFC")
             ws_mes.cell(1, 6,     "Concepto")
             ws_mes.cell(1, 7,     "Sub")
-            ws_mes.cell(1, 8,     "IVA")
-            ws_mes.cell(1, 9,     "Total")
-            ws_mes.cell(1, 10,     "F-Pago")
-            ws_mes.cell(1, 11,     "M-Pago")
-            ws_mes.cell(1, 12,     "Tipo")
-            ws_mes.cell(1, 13,     "Status")
-            ws_mes.cell(1, 14,     "TipoDeComprobante")
-            ws_mes.cell(1, 15,     "complementosDePago")
+            ws_mes.cell(1, 8,     "Descuento")
+            ws_mes.cell(1, 9,     "IVA")
+            ws_mes.cell(1, 10,     "Total")
+            ws_mes.cell(1, 11,     "F-Pago")
+            ws_mes.cell(1, 12,     "M-Pago")
+            ws_mes.cell(1, 13,     "Tipo")
+            ws_mes.cell(1, 14,     "Status")
+            ws_mes.cell(1, 15,     "TipoDeComprobante")
+            ws_mes.cell(1, 16,     "complementosDePago")
 
             dv = DataValidation(type="list", formula1='"Pendiente,Pagado"', allow_blank=True)
             ws_mes.add_data_validation(dv)
@@ -820,12 +829,19 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
                 ws_mes.cell(row, 4, factura.EmisorNombre)
                 ws_mes.cell(row, 5, factura.EmisorRFC)
                 ws_mes.cell(row, 6, factura.conceptos[0]['descripcion'])
-                ws_mes.cell(row, 7, factura.subTotal)
-                ws_mes.cell(row, 8, factura.traslados["IVA"]["importe"])
-                ws_mes.cell(row, 9, factura.total)
-                ws_mes.cell(row, 10, factura.formaDePagoStr)
-                ws_mes.cell(row, 11, factura.metodoDePago)
-                ws_mes.cell(row, 12, factura.conceptos[0]['tipo'])
+                if factura.tipoDeComprobante == "E":
+                    ws_mes.cell(row, 7, 0.0 - factura.subTotal)
+                    ws_mes.cell(row, 8, 0.0 - factura.descuento)
+                    ws_mes.cell(row, 9, 0.0 - factura.traslados["IVA"]["importe"])
+                    ws_mes.cell(row, 10, 0.0 - factura.total)
+                else:
+                    ws_mes.cell(row, 7, factura.subTotal)
+                    ws_mes.cell(row, 8, factura.descuento)
+                    ws_mes.cell(row, 9, factura.traslados["IVA"]["importe"])
+                    ws_mes.cell(row, 10, factura.total)
+                ws_mes.cell(row, 11, factura.formaDePagoStr)
+                ws_mes.cell(row, 12, factura.metodoDePago)
+                ws_mes.cell(row, 13, factura.conceptos[0]['tipo'])
                 status = "Pendiente"
                 if factura.metodoDePago == "PUE":
                     status = "Pagado"
@@ -836,11 +852,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
                 if factura.tipoDeComprobante == "P":
                     status = "Pagado"
 
-                dv.add(ws_mes.cell(row, 13))
-                ws_mes.cell(row, 13, status)
-                ws_mes.cell(row, 14, factura.tipoDeComprobante)
+                dv.add(ws_mes.cell(row, 14))
+                ws_mes.cell(row, 14, status)
+                ws_mes.cell(row, 15, factura.tipoDeComprobante)
                 if factura.UUID in self.complementosDePago:
-                    ws_mes.cell(row, 15, self.complementosDePago[factura.UUID]["suma"])
+                    ws_mes.cell(row, 16, self.complementosDePago[factura.UUID]["suma"])
 
                 if factura.tipoDeComprobante == "P":
                     print("segun "+ factura.UUID + "del mes " +mes+ ", aqui buscaria en todos los meses el uuid "+factura.IdDocumento+" y si encuentra su factura modificaria, la columna 13 del renglon de esa factura en el mes que esté, a Pagado")
@@ -1340,6 +1356,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
                 progreso = int(100*(p/(len(self.paths)+2)))
                 self.procesaEgresos(path)
                 self.pon_categorias_custom_por_factura(self.paths)
+                self.pon_categorias_custom_en_gui(self.paths)
                 self.agregaMes(self.mes)
                 self.procesaIngresos(path)
                 self.aislaNomina(path)
@@ -1400,6 +1417,24 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
                         if clave.startswith(clave1):
                             concepto["tipo"] = categoria
 
+    def pon_categorias_custom_en_gui(self, paths):
+
+        folder_cliente = os.path.split(os.path.split(paths[0])[0])[0]
+        json_path = join(folder_cliente,"categorias_dicc_huiini.json")
+        hay_categorias_custom = False
+        if os.path.exists(json_path):
+            hay_categorias_custom = True
+            with open(json_path, "r") as jsonfile:
+                self.dicc_de_categorias = json.load(jsonfile)
+
+
+        if hay_categorias_custom:
+            r = 0
+            for factura in self.listaDeFacturasOrdenadas:
+                r+=1
+                tooltipTipo = "\n".join(x['tipo'] for x in factura.conceptos)
+                self.tableWidget_xml.setItem(r,13,self.esteItem(factura.conceptos[0]['tipo'],tooltipTipo))
+
     def procesaIngresos(self, path):
         self.esteFolder = join(path,"INGRESOS")
         if os.path.isdir(self.esteFolder):
@@ -1415,19 +1450,22 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
             contador = 0
             for archivo in os.listdir(self.esteFolder):
                 if archivo.endswith(".xml"):
-                    laFactura = Factura(join(self.esteFolder + os.sep,archivo))
-                    if laFactura.sello == "SinSello":
-                        print("Omitiendo xml sin sello "+laFactura.xml_path)
-                    else:
-                        if laFactura.version:
-                            if laFactura.UUID in self.listaDeUUIDs:
+                    try:
+                        laFactura = Factura(join(self.esteFolder + os.sep,archivo))
+                        if laFactura.sello == "SinSello":
+                            print("Omitiendo xml sin sello "+laFactura.xml_path)
+                        else:
+                            if laFactura.version:
+                                if laFactura.UUID in self.listaDeUUIDs:
 
-                                cuantosDuplicados+=1
-                                self.listaDeDuplicados.append(laFactura.UUID)
-                            else:
-                                self.listaDeUUIDs.append(laFactura.UUID)
-                                contador += 1
-                                self.listaDeFacturas.append(laFactura)
+                                    cuantosDuplicados+=1
+                                    self.listaDeDuplicados.append(laFactura.UUID)
+                                else:
+                                    self.listaDeUUIDs.append(laFactura.UUID)
+                                    contador += 1
+                                    self.listaDeFacturas.append(laFactura)
+                    except:
+                        QMessageBox.information(self, "Information", "La factura : " + join(self.esteFolder + os.sep,archivo) + " está corrupta")
 
             self.listaDeFacturasOrdenadas = sorted(self.listaDeFacturas, key=lambda listaDeFacturas: listaDeFacturas.fechaTimbrado)
             if cuantosDuplicados > 0:
@@ -1494,7 +1532,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
         self.tableWidget_xml.clear()
         self.tableWidget_resumen.clear()
         self.tableWidget_resumen.repaint()
-        lc = ["Pdf","Fecha","UUID","Receptor","Emisor","Concepto","Subtotal","Descuento","Traslado\nIVA","Traslado\nIEPS","Retención\nIVA","Retención\nISR","Total","Forma\nPago","Método\nPago"]
+        lc = ["Pdf","Fecha","UUID","Receptor","Emisor","Concepto","Subtotal","Descuento","Traslado\nIVA","Traslado\nIEPS","Retención\nIVA","Retención\nISR","Total","Forma\nPago","Método\nPago","Tipo"]
         self.ponEncabezado(lc)
         self.tableWidget_xml.setRowCount(13)
         self.tableWidget_xml.repaint()
@@ -1565,6 +1603,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
                     concepto["impuestos"] = float(concepto['impuestos'])
                 else:
                     concepto["impuestos"] = 0
+                if factura.tipoDeComprobante == "E":
+                    concepto["importeConcepto"] = 0.0 - float(concepto['importeConcepto'])
+                    concepto["descuento"] = 0.0 - float(concepto['descuento'])
+                    #concepto["subTotal"] = 0.0 - float(concepto['subTotal'])
+                    concepto["impuestos"] = 0.0 - float(concepto['impuestos'])
+                    #concepto["total"] = 0.0 - float(concepto['total'])
+
             self.conceptos.extend(los_conceptos)
 
             if factura.tipoDeComprobante == "P":
@@ -1609,6 +1654,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
             self.tableWidget_xml.setItem(contador,12,self.esteItem(str(factura.total),""))
             self.tableWidget_xml.setItem(contador,13,self.esteItem(factura.formaDePagoStr,""))
             self.tableWidget_xml.setItem(contador,14, self.esteItem(factura.metodoDePago,factura.metodoDePago))
+            tooltipTipo = "\n".join(x['tipo'] for x in factura.conceptos)
+            self.tableWidget_xml.setItem(contador,15, self.esteItem(factura.conceptos[0]['tipo'],tooltipTipo))
 
             pdf_dir = os.path.join(os.path.dirname(factura.tex_path),"huiini")
             pdf_name = os.path.split(factura.tex_path)[1].replace("tex","pdf")

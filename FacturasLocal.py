@@ -372,11 +372,11 @@ class FacturaLocal(object):
         elif impuesto == "002":
             return "IVA"
         elif impuesto == "003":
-            return "ISH" ############################################################### ojo
-        elif impuesto == "004":
+            return "IEPS" ############################################################### ojo
+        elif impuesto == "004":### estos ultimos dos ni existen sugun mcfly
             return "TUA"
         elif impuesto == "005":
-            return "IEPS"
+            return "ISH"
         else:
             return impuesto
 
