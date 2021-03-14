@@ -3,10 +3,10 @@ from PySide2.QtCore import *
 from PySide2.QtCore import Qt, QDir
 from PySide2.QtGui import *
 from PySide2 import QtGui, QtCore, QtWidgets
-from PySide2.QtWidgets import QLineEdit, QTableWidgetItem, QFileDialog, QProgressDialog, QMessageBox, QListView, QAbstractItemView, QTreeView, QDialog, QVBoxLayout, QDialogButtonBox, QFileSystemModel, QInputDialog
+from PySide2.QtWidgets import QTableWidget, QLineEdit, QTableWidgetItem, QFileDialog, QProgressDialog, QMessageBox, QListView, QAbstractItemView, QTreeView, QDialog, QVBoxLayout, QDialogButtonBox, QFileSystemModel, QInputDialog
 from PySide2.QtWidgets import QPushButton, QListWidget, QListWidgetItem
 import sys
-import guiV2
+import guiV3
 from os import listdir, environ
 from os.path import isfile, join, basename
 import shutil
@@ -33,10 +33,13 @@ from datetime import datetime
 from copy import copy
 import ghostscript
 import locale
-
+import subprocess
+import psutil
+import signal
 
 
 ##C:\Python36\Scripts\pyside2-uic.exe mainwindowV2.ui -o guiV2.py
+##C:\Python36\Scripts\pyside2-uic.exe mainwindowV3.ui -o guiV3.py
 ##C:\Python36\Scripts\pyinstaller.exe huiini.py
 
 
@@ -157,7 +160,7 @@ class ImgWidgetTache(QtWidgets.QLabel):
 
 
 
-class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
+class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
 
     def __init__(self, parent=None):
         super(Ui_MainWindow, self).__init__(parent)
@@ -177,25 +180,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
         self.botonCancela.clicked.connect(self.cancelaImpresion)
 
         self.listaDeImpresoras.currentItemChanged.connect(self.cambiaSeleccionDeImpresora)
+        self.tables = {}
 
-        self.tableWidget_xml.setColumnCount(16)
-        self.tableWidget_xml.setColumnWidth(0,30)#pdf
-        self.tableWidget_xml.setColumnWidth(1,95)#fecha
-        self.tableWidget_xml.setColumnWidth(2,70)#uuid
-        self.tableWidget_xml.setColumnWidth(3,120)#receptor-nombre
-        self.tableWidget_xml.setColumnWidth(4,120)#emisor-rfc
-        self.tableWidget_xml.setColumnWidth(5,120)#concepto
-        self.tableWidget_xml.setColumnWidth(6,75)#Subtotal
-        self.tableWidget_xml.setColumnWidth(7,80)#Descuento
-        self.tableWidget_xml.setColumnWidth(8,80)#traslados-iva
-        self.tableWidget_xml.setColumnWidth(9,80)#traslados-ieps
-        self.tableWidget_xml.setColumnWidth(10,75)#retIVA
-        self.tableWidget_xml.setColumnWidth(11,75)#retISR
-        self.tableWidget_xml.setColumnWidth(12,80)#total
-        self.tableWidget_xml.setColumnWidth(13,74)#formaDePago
-        self.tableWidget_xml.setColumnWidth(14,77)#metodoDePago
 
-        self.tableWidget_xml.verticalHeader().setFixedWidth(35)
 
         self.tableWidget_resumen.setColumnCount(10)
         self.tableWidget_resumen.setColumnWidth(0,30)
@@ -211,17 +198,42 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
         self.tableWidget_resumen.setRowCount(2)
         #self.tableWidget_resumen.verticalHeader().setFixedWidth(35)
 
-        header = self.tableWidget_xml.verticalHeader()
+
+        self.tableWidget_resumen.cellDoubleClicked.connect(self.meDoblePicaronResumen)
+        self.progressBar.hide()
+
+
+    def setupTabMeses(self):
+        self.tables[self.mes].setColumnCount(16)
+        self.tables[self.mes].setColumnWidth(0,30)#pdf
+        self.tables[self.mes].setColumnWidth(1,95)#fecha
+        self.tables[self.mes].setColumnWidth(2,70)#uuid
+        self.tables[self.mes].setColumnWidth(3,120)#receptor-nombre
+        self.tables[self.mes].setColumnWidth(4,120)#emisor-rfc
+        self.tables[self.mes].setColumnWidth(5,120)#concepto
+        self.tables[self.mes].setColumnWidth(6,75)#Subtotal
+        self.tables[self.mes].setColumnWidth(7,80)#Descuento
+        self.tables[self.mes].setColumnWidth(8,80)#traslados-iva
+        self.tables[self.mes].setColumnWidth(9,80)#traslados-ieps
+        self.tables[self.mes].setColumnWidth(10,75)#retIVA
+        self.tables[self.mes].setColumnWidth(11,75)#retISR
+        self.tables[self.mes].setColumnWidth(12,80)#total
+        self.tables[self.mes].setColumnWidth(13,74)#formaDePago
+        self.tables[self.mes].setColumnWidth(14,77)#metodoDePago
+
+        self.tables[self.mes].verticalHeader().setFixedWidth(35)
+        header = self.tables[self.mes].verticalHeader()
         header.setContextMenuPolicy(Qt.CustomContextMenu)
         header.customContextMenuRequested.connect(self.handleHeaderMenu)
 
         lc = ["Pdf","Fecha","UUID","Receptor","Emisor","Concepto","Subtotal","Descuento","Traslado\nIVA","Traslado\nIEPS","Retención\nIVA","Retención\nISR","Total","Forma\nPago","Método\nPago","Tipo"]
-        self.ponEncabezado(lc)
+        self.ponEncabezado(lc,self.mes)
 
-        self.tableWidget_xml.cellDoubleClicked.connect(self.meDoblePicaronXML)
-        self.tableWidget_resumen.cellDoubleClicked.connect(self.meDoblePicaronResumen)
-        self.progressBar.hide()
-        self.tableWidget_xml.horizontalHeader().sectionClicked.connect(self.reordena)
+        self.tables[self.mes].cellDoubleClicked.connect(self.meDoblePicaronXML)
+        #self.tables[self.mes].horizontalHeader().sectionClicked.connect(self.reordena)
+        self.tables[self.mes].setSortingEnabled(True)
+
+#    def setupTabAnuales(self,tabName):
 
 
     def reordena(self, column):
@@ -229,6 +241,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
         if column == 2:
             print("reodenaria con uuid")
             self.listaDeFacturasOrdenadas = sorted(self.listaDeFacturasOrdenadas, key=lambda listaDeFacturasOrdenadas: listaDeFacturasOrdenadas.UUID)
+        if column == 15:
+            print("reodenaria con tipo")
+            self.listaDeFacturasOrdenadas = sorted(self.listaDeFacturasOrdenadas, key=lambda listaDeFacturasOrdenadas: listaDeFacturasOrdenadas.conceptos[0]['tipo'])
 
     def quitaCategoria(self):
         curr_indexes = self.cats_dialog.myListWidget.selectedIndexes()
@@ -261,7 +276,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
             if ok1 and ok2:
                 if nombre != categoria:
                     self.dicc_de_categorias.pop(categoria)
-                self.dicc_de_categorias[nombre] = claves_ps.split(", ")
+                if nombre in self.dicc_de_categorias:
+                    lista_previa = self.dicc_de_categorias[nombre].copy()
+                    lista_previa.extend(claves_ps.split(", "))#el espacio no se ocupa
+                    self.dicc_de_categorias[nombre] = lista_previa
                 #self.lista_ordenada = sorted(self.lista_ordenada, key=lambda tup: tup[1])
                 with open(self.json_path, "w", encoding="utf-8") as jsonfile:
                     json.dump(self.dicc_de_categorias, jsonfile)
@@ -967,20 +985,20 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
     def hazListadeUuids(self):
         self.listadeUuids = []
         for renglon in range(self.numeroDeFacturasValidas):
-            self.listadeUuids.append(self.tableWidget_xml.item(renglon,1).text())
+            self.listadeUuids.append(self.tables[self.mes].item(renglon,1).text())
 
 
     def handleHeaderMenu(self, pos):
         menu = QtGui.QMenu()
         deleteAction = QtGui.QAction('&Delete', self)
         #deleteAction = QtGui.QAction("Delete")
-        deleteAction.triggered.connect(lambda: self.quitaRenglon(self.tableWidget_xml.verticalHeader().logicalIndexAt(pos)))
+        deleteAction.triggered.connect(lambda: self.quitaRenglon(self.tables[self.mes].verticalHeader().logicalIndexAt(pos)))
         menu.addAction(deleteAction)
 
         menu.exec_(QtGui.QCursor.pos())
 
     def quitaRenglon(self,row):
-        elNombre = self.tableWidget_xml.item(row,2).text()
+        elNombre = self.tables[self.mes].item(row,2).text()
         suRFC = ""
         for factura in self.listaDeFacturasOrdenadas:
             if factura.UUID == elNombre:
@@ -990,11 +1008,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
                 break
 
 
-        suSubtotal = float(self.tableWidget_xml.item(row,6).text())
-        suDescuento = float(self.tableWidget_xml.item(row,7).text())
-        suTrasladoIVA = float(self.tableWidget_xml.item(row,8).text())
-        suImporte = float(self.tableWidget_xml.item(row,6).text())-float(self.tableWidget_xml.item(row,7).text())
-        self.tableWidget_xml.removeRow(row)
+        suSubtotal = float(self.tables[self.mes].item(row,6).text())
+        suDescuento = float(self.tables[self.mes].item(row,7).text())
+        suTrasladoIVA = float(self.tables[self.mes].item(row,8).text())
+        suImporte = float(self.tables[self.mes].item(row,6).text())-float(self.tables[self.mes].item(row,7).text())
+        self.tables[self.mes].removeRow(row)
 
         if suRFC in self.diccionarioPorRFCs:
             self.diccionarioPorRFCs[suRFC]['subTotal'] -= suSubtotal
@@ -1031,7 +1049,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
             suma = 0
             for renglon in range(self.numeroDeFacturasValidas):
                 try:
-                    suma += float(self.tableWidget_xml.item(renglon, columna).text())
+                    suma += float(self.tables[self.mes].item(renglon, columna).text())
                 except:
                     print("no puedo")
 
@@ -1046,11 +1064,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
             self.tableWidget_resumen.setCellWidget(0,0,ImgWidgetTache(self))
 
 
-    def ponEncabezado(self,lista_columnas):
+    def ponEncabezado(self,lista_columnas,tabName):
         n = -1
         for columna in lista_columnas:
             n += 1
-            self.tableWidget_xml.setHorizontalHeaderItem (n, QTableWidgetItem(columna))
+            self.tables[tabName].setHorizontalHeaderItem (n, QTableWidgetItem(columna))
 
 
 
@@ -1092,7 +1110,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
         if column == 2:
 
             egresos_folder = self.esteFolder.replace("INGRESOS", "EGRESOS")
-            xml =join(egresos_folder + os.sep,self.tableWidget_xml.item(row, 2).text()+".xml")
+            xml =join(egresos_folder + os.sep,self.tables[self.mes].item(row, 2).text()+".xml")
             #acrobatPath = r'C:/Program Files (x86)/Adobe/Acrobat Reader DC/Reader/AcroRd32.exe'
             #subprocess.Popen("%s %s" % (acrobatPath, pdf))
             try:
@@ -1104,7 +1122,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
 
         if column == 0:
             egresos_folder = self.esteFolder.replace("INGRESOS", "EGRESOS")
-            pdf = join(join(egresos_folder,"huiini"),self.tableWidget_xml.item(row, 2).text()+".pdf")
+            pdf = join(join(egresos_folder,"huiini"),self.tables[self.mes].item(row, 2).text()+".pdf")
             #acrobatPath = r'C:/Program Files (x86)/Adobe/Acrobat Reader DC/Reader/AcroRd32.exe'
             #subprocess.Popen("%s %s" % (acrobatPath, pdf))
             try:
@@ -1162,16 +1180,28 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
 
     def imprime(self):
         #objetosMagicosOrdenados = sorted(self.objetosMagicos, key=lambda objetosMagicos: objetosMagicos.fecha)
-        for renglon in range(0,self.tableWidget_xml.rowCount()-1):
-            uuid = self.tableWidget_xml.item(renglon,2).text()
-            if float(self.tableWidget_xml.item(renglon,12).text()) < 0.000001:
+
+        tabName = self.tabWidget.tabText(self.tabWidget.currentIndex())
+        print(tabName)
+        folder_mes = ""
+        for file in listdir(self.year_folder):
+            if tabName in file:
+                folder_mes = join(self.year_folder,file,"EGRESOS","huiini")
+
+        # if tabName == "Ingresos":
+        #     pdf_path1 = join(self.year_folder,file,"EGRESOS","huiini")
+        #     pdf_path2 =
+
+        for renglon in range(0,self.tables[tabName].rowCount()-1):
+            uuid = self.tables[tabName].item(renglon,2).text()
+            if float(self.tables[tabName].item(renglon,12).text()) < 0.000001:
                 print("no imprimo facturas con total menores a 0")
             else:
-                if self.tableWidget_xml.item(renglon,14).text() == "None":
+                if self.tables[tabName].item(renglon,14).text() == "None":
                     print("no imprimo pagos seño")
                 else:
-                    printing_folder = self.esteFolder.replace("INGRESOS","EGRESOS")
-                    pdf_path = join(join(printing_folder,"huiini"), uuid+".pdf")
+
+                    pdf_path = join(folder_mes, uuid+".pdf")
                     args = [
                             "-dPrinted", "-dBATCH", "-dNOSAFER", "-dNOPAUSE", "-dNOPROMPT"
                             "-q",
@@ -1184,22 +1214,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
                     encoding = locale.getpreferredencoding()
                     args = [a.encode(encoding) for a in args]
                     ghostscript.Ghostscript(*args)
-
-        for factura in self.listaDeFacturasOrdenadas:
-
-            pdf_path = join(join(self.esteFolder,"huiini"), factura.UUID+".pdf")
-            args = [
-                    "-dPrinted", "-dBATCH", "-dNOSAFER", "-dNOPAUSE", "-dNOPROMPT"
-                    "-q",
-                    "-dNumCopies#1",
-                    "-sDEVICE#mswinpr2",
-                    f'-sOutputFile#"%printer%{win32print.GetDefaultPrinter()}"',
-                    f'"{pdf_path}"'
-                ]
-
-            encoding = locale.getpreferredencoding()
-            args = [a.encode(encoding) for a in args]
-            ghostscript.Ghostscript(*args)
 
 
 
@@ -1222,7 +1236,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
 
 
                 factura.has_pdf = True
-                self.tableWidget_xml.setCellWidget(contador,0, ImgWidgetPalomita(self))
+                self.tables[self.mes].setCellWidget(contador,0, ImgWidgetPalomita(self))
 
                 #     else:
                 #         self.tableWidget_xml.setCellWidget(contador,0, ImgWidgetTache(self))
@@ -1262,6 +1276,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
         self.paths = paths.copy()
         self.progressBar.show()
         self.progressBar.setValue(1)
+
         folder_cliente = os.path.split(os.path.split(self.paths[0])[0])[0]
         self.json_path = join(folder_cliente, "categorias_dicc_huiini.json")
         if os.path.exists(self.json_path):
@@ -1285,11 +1300,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
         self.complementosDePago = {}
         self.meses = []
         print(paths[0])
-        year_folder = os.path.split(paths[0])[0]
+        self.year_folder = os.path.split(paths[0])[0]
         same_year = True
         no_son_meses = False
 
-        huiini_home_folder = os.path.split(os.path.split(year_folder)[0])[0]
+        huiini_home_folder = os.path.split(os.path.split(self.year_folder)[0])[0]
         print(huiini_home_folder)
 
         home = os.path.expanduser('~')
@@ -1304,7 +1319,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
             meses.append(mes)
             if not mes in self.todos_los_meses:
                 no_son_meses = True
-            if year_folder != os.path.split(path)[0]:
+            if self.year_folder != os.path.split(path)[0]:
                 same_year = False
 
         self.paths = [tuple[1] for x in self.todos_los_meses for tuple in zip(meses,self.paths) if tuple[0] == x]
@@ -1317,7 +1332,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
             else:
                 QMessageBox.information(self, "Información", "no son el mismo año")
         else:
-            print(year_folder)
+            print(self.year_folder)
             year = os.path.split(os.path.split(paths[0])[0])[1]
             client = os.path.split(os.path.split(os.path.split(paths[0])[0])[0])[1]
             print(client+"_"+year)
@@ -1330,7 +1345,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
             else:
                 self.hacerPDFs = False
 
-            self.annual_xlsx_path = os.path.join(year_folder, client+"_"+year + ".xlsx")
+            self.annual_xlsx_path = os.path.join(self.year_folder, client+"_"+year + ".xlsx")
             if os.path.isfile(self.annual_xlsx_path):#borra el anterior
 
                 reply = QMessageBox.question(self, 'Message',"Borrar información previa?", QMessageBox.Yes |
@@ -1361,6 +1376,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
                 self.procesaIngresos(path)
                 self.aislaNomina(path)
                 self.progressBar.setValue(progreso)
+                if p == 1:
+                    self.tabWidget.removeTab(0)
+                    self.tabWidget.removeTab(0)
 
 
             self.hazTabDeIngresos(self.paths)
@@ -1372,10 +1390,87 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
             p += 1
             progreso = int(100*(p/(len(paths)+2)))
             self.progressBar.setValue(progreso)
+
+
+            # shell_process = subprocess.Popen([self.excel_path],shell=True)
+            # print(shell_process.pid)
+            # time_old.sleep(2)
+            # parent = psutil.Process(shell_process.pid)
+            # children = parent.children(recursive=True)
+            # print(children)
+            # child_pid = children[0].pid
+            # print(child_pid)
+            # time_old.sleep(2)
+            # os.kill(child_pid, signal.SIGTERM)
+
+            self.agregaTab("Ingresos")
+            #self.agregaTab("Conceptos")
+            #self.agregaTab("IVA_anual")
+            #self.agregaTab("Importe_anual")
+
+
+
+
+
+
             self.agrega_cats.setEnabled(True)
             self.raise_()
             self.activateWindow()
             self.progressBar.hide()
+
+    def agregaTab(self, tabName):
+
+        # or
+
+
+
+        workbook = load_workbook(self.annual_xlsx_path, data_only=True)
+        ws = workbook[tabName]
+        c_max = ws.max_column - 9
+        r_max = 0
+        for r in range(2, ws.max_row+1):
+            if ws.cell(r,1).value == None:
+                r_max = r
+                break
+
+
+        self.tables[tabName] = QTableWidget(r_max,c_max)
+        self.tabWidget.addTab(self.tables[tabName], tabName)
+        self.tables[tabName].setColumnCount(c_max)
+        # self.tables[self.mes].setColumnWidth(0,30)#pdf
+        # self.tables[self.mes].setColumnWidth(1,95)#fecha
+        # self.tables[self.mes].setColumnWidth(2,70)#uuid
+        # self.tables[self.mes].setColumnWidth(3,120)#receptor-nombre
+        # self.tables[self.mes].setColumnWidth(4,120)#emisor-rfc
+        # self.tables[self.mes].setColumnWidth(5,120)#concepto
+        # self.tables[self.mes].setColumnWidth(6,75)#Subtotal
+        # self.tables[self.mes].setColumnWidth(7,80)#Descuento
+        # self.tables[self.mes].setColumnWidth(8,80)#traslados-iva
+        # self.tables[self.mes].setColumnWidth(9,80)#traslados-ieps
+        # self.tables[self.mes].setColumnWidth(10,75)#retIVA
+        # self.tables[self.mes].setColumnWidth(11,75)#retISR
+        # self.tables[self.mes].setColumnWidth(12,80)#total
+        # self.tables[self.mes].setColumnWidth(13,74)#formaDePago
+        # self.tables[self.mes].setColumnWidth(14,77)#metodoDePago
+
+        self.tables[tabName].verticalHeader().setFixedWidth(35)
+        header = self.tables[tabName].verticalHeader()
+        header.setContextMenuPolicy(Qt.CustomContextMenu)
+        header.customContextMenuRequested.connect(self.handleHeaderMenu)
+
+        lc = []
+        for cell in ws[1]:
+            lc.append(cell.value)
+
+        self.ponEncabezado(lc,tabName)
+
+        # self.tables[self.mes].cellDoubleClicked.connect(self.meDoblePicaronXML)
+        # self.tables[self.mes].horizontalHeader().sectionClicked.connect(self.reordena)
+        for r in range(2, r_max+1):
+            for c in range(1, c_max+1):
+                #print(str(r),str(c))
+                valor = ws.cell(r,c).value
+                self.tables[tabName].setItem(r-2,c-1,self.esteItem(str(valor),str(valor)))
 
     def pon_categorias_custom_por_factura(self,paths):
 
@@ -1433,7 +1528,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
             for factura in self.listaDeFacturasOrdenadas:
                 r+=1
                 tooltipTipo = "\n".join(x['tipo'] for x in factura.conceptos)
-                self.tableWidget_xml.setItem(r,13,self.esteItem(factura.conceptos[0]['tipo'],tooltipTipo))
+                self.tables[self.mes].setItem(r,13,self.esteItem(factura.conceptos[0]['tipo'],tooltipTipo))
 
     def procesaIngresos(self, path):
         self.esteFolder = join(path,"INGRESOS")
@@ -1527,15 +1622,19 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
         self.mes = self.mes.strip()
         self.meses.append(self.mes) # aqui si self.mes no se puede formar correctamantre deberia dar un error y ventanita que lo explique
         #self.conceptos[self.mes] = []
+        self.tables[self.mes] = QTableWidget(10,20)
+        self.setupTabMeses()
+        self.tabWidget.addTab(self.tables[self.mes], self.mes)
+
         if not os.path.exists(join(self.esteFolder, "huiini")):
             os.makedirs(join(self.esteFolder, "huiini"))
-        self.tableWidget_xml.clear()
+        self.tables[self.mes].clear()
         self.tableWidget_resumen.clear()
         self.tableWidget_resumen.repaint()
         lc = ["Pdf","Fecha","UUID","Receptor","Emisor","Concepto","Subtotal","Descuento","Traslado\nIVA","Traslado\nIEPS","Retención\nIVA","Retención\nISR","Total","Forma\nPago","Método\nPago","Tipo"]
-        self.ponEncabezado(lc)
-        self.tableWidget_xml.setRowCount(13)
-        self.tableWidget_xml.repaint()
+        self.ponEncabezado(lc,self.mes)
+        self.tables[self.mes].setRowCount(13)
+        self.tables[self.mes].repaint()
         cuantosDuplicados = 0
         self.listaDeDuplicados= []
         self.listaDeFacturas = []
@@ -1575,7 +1674,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
                                 contador += 1
                                 self.listaDeFacturas.append(laFactura)
         if contador > 13:
-            self.tableWidget_xml.setRowCount(contador)
+            self.tables[self.mes].setRowCount(contador)
 
         self.listaDeFacturasOrdenadas = sorted(self.listaDeFacturas, key=lambda listaDeFacturas: listaDeFacturas.fechaTimbrado)
         self.diccionarioPorRFCs = {}
@@ -1637,31 +1736,31 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV2.Ui_MainWindow):
             # print(r.text)
 
 
-            self.tableWidget_xml.setItem(contador,1,self.esteItem(factura.fechaTimbrado,factura.fechaTimbrado))
-            self.tableWidget_xml.setItem(contador,2,self.esteItem(factura.UUID,factura.UUID))
-            self.tableWidget_xml.setItem(contador,3,self.esteItem(factura.ReceptorRFC,factura.ReceptorNombre))
-            self.tableWidget_xml.setItem(contador,4,self.esteItem(factura.EmisorRFC,factura.EmisorNombre))
+            self.tables[self.mes].setItem(contador,1,self.esteItem(factura.fechaTimbrado,factura.fechaTimbrado))
+            self.tables[self.mes].setItem(contador,2,self.esteItem(factura.UUID,factura.UUID))
+            self.tables[self.mes].setItem(contador,3,self.esteItem(factura.ReceptorRFC,factura.ReceptorNombre))
+            self.tables[self.mes].setItem(contador,4,self.esteItem(factura.EmisorRFC,factura.EmisorNombre))
             mesage = ""
             for concepto in factura.conceptos:
                 mesage += concepto["descripcion"] + u'\n'
-            self.tableWidget_xml.setItem(contador,5, self.esteItem(factura.conceptos[0]['descripcion'],mesage))
-            self.tableWidget_xml.setItem(contador,6,self.esteItem(str(factura.subTotal),""))
-            self.tableWidget_xml.setItem(contador,7,self.esteItem(str(factura.descuento),""))
-            self.tableWidget_xml.setItem(contador,8,self.esteItem(str(factura.traslados["IVA"]["importe"]),""))
-            self.tableWidget_xml.setItem(contador,9,self.esteItem(str(factura.traslados["IEPS"]["importe"]),""))
-            self.tableWidget_xml.setItem(contador,10,self.esteItem(str(factura.retenciones["IVA"]),""))
-            self.tableWidget_xml.setItem(contador,11,self.esteItem(str(factura.retenciones["ISR"]),""))
-            self.tableWidget_xml.setItem(contador,12,self.esteItem(str(factura.total),""))
-            self.tableWidget_xml.setItem(contador,13,self.esteItem(factura.formaDePagoStr,""))
-            self.tableWidget_xml.setItem(contador,14, self.esteItem(factura.metodoDePago,factura.metodoDePago))
+            self.tables[self.mes].setItem(contador,5, self.esteItem(factura.conceptos[0]['descripcion'],mesage))
+            self.tables[self.mes].setItem(contador,6,self.esteItem(str(factura.subTotal),""))
+            self.tables[self.mes].setItem(contador,7,self.esteItem(str(factura.descuento),""))
+            self.tables[self.mes].setItem(contador,8,self.esteItem(str(factura.traslados["IVA"]["importe"]),""))
+            self.tables[self.mes].setItem(contador,9,self.esteItem(str(factura.traslados["IEPS"]["importe"]),""))
+            self.tables[self.mes].setItem(contador,10,self.esteItem(str(factura.retenciones["IVA"]),""))
+            self.tables[self.mes].setItem(contador,11,self.esteItem(str(factura.retenciones["ISR"]),""))
+            self.tables[self.mes].setItem(contador,12,self.esteItem(str(factura.total),""))
+            self.tables[self.mes].setItem(contador,13,self.esteItem(factura.formaDePagoStr,""))
+            self.tables[self.mes].setItem(contador,14, self.esteItem(factura.metodoDePago,factura.metodoDePago))
             tooltipTipo = "\n".join(x['tipo'] for x in factura.conceptos)
-            self.tableWidget_xml.setItem(contador,15, self.esteItem(factura.conceptos[0]['tipo'],tooltipTipo))
+            self.tables[self.mes].setItem(contador,15, self.esteItem(factura.conceptos[0]['tipo'],tooltipTipo))
 
             pdf_dir = os.path.join(os.path.dirname(factura.tex_path),"huiini")
             pdf_name = os.path.split(factura.tex_path)[1].replace("tex","pdf")
             pdf_path = os.path.join(pdf_dir,pdf_name)
             if os.path.exists(pdf_path):
-                self.tableWidget_xml.setCellWidget(contador,0, ImgWidgetPalomita(self))
+                self.tables[self.mes].setCellWidget(contador,0, ImgWidgetPalomita(self))
 
             if factura.EmisorRFC in self.diccionarioPorRFCs:
                 self.diccionarioPorRFCs[factura.EmisorRFC]['subTotal'] += float(factura.subTotal)
