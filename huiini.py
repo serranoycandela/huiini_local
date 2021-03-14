@@ -1107,10 +1107,15 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
 #                 mesage += concepto["descripcion"] + u'\n'
 #
 #             QtGui.QMessageBox.information(self, "Conceptos", mesage)
-        if column == 2:
 
-            egresos_folder = self.esteFolder.replace("INGRESOS", "EGRESOS")
-            xml =join(egresos_folder + os.sep,self.tables[self.mes].item(row, 2).text()+".xml")
+        tabName = self.tabWidget.tabText(self.tabWidget.currentIndex())
+        print(tabName)
+        folder_mes = ""
+        for file in listdir(self.year_folder):
+            if tabName in file:
+                folder_mes = join(self.year_folder,file,"EGRESOS")
+        if column == 2:
+            xml =join(folder_mes + os.sep,self.tables[tabName].item(row, 2).text()+".xml")
             #acrobatPath = r'C:/Program Files (x86)/Adobe/Acrobat Reader DC/Reader/AcroRd32.exe'
             #subprocess.Popen("%s %s" % (acrobatPath, pdf))
             try:
@@ -1121,8 +1126,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
                 QMessageBox.information(self, "Information", "El sistema no tiene una aplicación por default para abrir xmls" )
 
         if column == 0:
-            egresos_folder = self.esteFolder.replace("INGRESOS", "EGRESOS")
-            pdf = join(join(egresos_folder,"huiini"),self.tables[self.mes].item(row, 2).text()+".pdf")
+            pdf = join(join(folder_mes,"huiini"),self.tables[tabName].item(row, 2).text()+".pdf")
             #acrobatPath = r'C:/Program Files (x86)/Adobe/Acrobat Reader DC/Reader/AcroRd32.exe'
             #subprocess.Popen("%s %s" % (acrobatPath, pdf))
             try:
