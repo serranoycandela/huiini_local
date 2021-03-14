@@ -33,9 +33,9 @@ from datetime import datetime
 from copy import copy
 import ghostscript
 import locale
-import subprocess
-import psutil
-import signal
+# import subprocess
+# import psutil
+# import signal
 
 
 ##C:\Python36\Scripts\pyside2-uic.exe mainwindowV2.ui -o guiV2.py
