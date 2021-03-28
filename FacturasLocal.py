@@ -156,8 +156,8 @@ class FacturaLocal(object):
             self.selloSATKey = "SelloSAT"
             self.noCertificadoSATKey = "NoCertificadoSAT"
 
-            self.ImpLocTrasladadoKey = "TotalTrasladado" ############################################## ???????????????????????????????????????????????
-            self.TasadeTrasladoKey = "TasaTraslado"         ######################################################## ???????????????????????????????????????????
+            self.ImpLocTrasladadoKey = "ImpLocTrasladado" ############################################## ???????????????????????????????????????????????
+            self.TasadeTrasladoKey = "TasadeTraslado"         ######################################################## ???????????????????????????????????????????
 
             self.totalImpuestosTrasladadosKey = "totalImpuestosTrasladados" #############################????????????????
             self.EmisorRegimen = self.latexStr(self.EmisorTag.get("RegimenFiscal"))
@@ -624,6 +624,7 @@ class FacturaLocal(object):
                             impuestoLocal = self.latexStr(trasladosLocalesTag.get(self.ImpLocTrasladadoKey))###############################falta la version 3.3
                             tasaLocal = self.latexStr(trasladosLocalesTag.get(self.TasadeTrasladoKey))
                             importeLocal = self.latexStr(trasladosLocalesTag.get("Importe"))
+                            print(self.UUID + ", con un importe " + importeLocal + " , con tasa " + tasaLocal + " , y una imp loc " + self.arreglaSusPendejadas(impuestoLocal))
 
     #                         if self.trasladosLocales[self.arreglaSusPendejadas(impuestoLocal)]["importe"] == 0:
     #                             self.trasladosLocales[self.arreglaSusPendejadas(impuestoLocal)]["tasa"] = "NA"
@@ -633,10 +634,10 @@ class FacturaLocal(object):
                                 self.trasladosLocales[self.arreglaSusPendejadas(impuestoLocal)]["tasa"] = tasaLocal
                                 self.trasladosLocales[self.arreglaSusPendejadas(impuestoLocal)]["importe"] += float(importeLocal)
                             except:
-                                print("no pude sumar " + self.UUID)
+                                print("no pude sumar " + self.UUID + ", por un importe " + importeLocal + " , con tasa " + tasaLocal + " , y una imp loc " + impuestoLocal)
                                 self.mensaje += " no pudo sumar un traslado local"
                         except:
-                            print("no pude sumar " + self.UUID)
+                            print("no pude sumar " + self.UUID + " , por un " + impuestoLocal)
                             self.mensaje += " no pudo sumar un traslado local"
 
                         #self.sumaDeTrasladosLocales += float(importeLocal)
@@ -743,15 +744,17 @@ class FacturaLocal(object):
         #getTemplate("template.jinja").stream(context).dump(self.tex_path)
 
 
-    def conviertemeEnPDF(self):
+    def conviertemeEnPDF(self, pdfs_folder = None):
 
         ## aqui falta manejar los posibes errores al generar el pdf
+        if pdfs_folder == None:
+            if "Nomina" in self.tex_path:
+                os.chdir(os.path.join(os.path.dirname(os.path.dirname(self.tex_path)),"huiini"))
+            else:
+                os.chdir(os.path.join(os.path.dirname(self.tex_path),"huiini"))
 
-        if "Nomina" in self.tex_path:
-            os.chdir(os.path.join(os.path.dirname(os.path.dirname(self.tex_path)),"huiini"))
         else:
-            os.chdir(os.path.join(os.path.dirname(self.tex_path),"huiini"))
-
+            os.chdir(pdfs_folder)
 
         self.tex_path = self.tex_path.replace("/", "\\\\")
         print(self.pdflatex_path)

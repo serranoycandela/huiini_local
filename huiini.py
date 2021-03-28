@@ -246,17 +246,21 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
             self.listaDeFacturasOrdenadas = sorted(self.listaDeFacturasOrdenadas, key=lambda listaDeFacturasOrdenadas: listaDeFacturasOrdenadas.conceptos[0]['tipo'])
 
     def quitaCategoria(self):
-        curr_indexes = self.cats_dialog.myListWidget.selectedIndexes()
-        if len(curr_indexes)>1:
-            print("no")
-        else:
-            #confirmacion para maricas
-            categoria = self.cats_dialog.myListWidget.currentItem().text().split(" (")[0]
-            self.dicc_de_categorias.pop(categoria)
-            with open(self.json_path, "w", encoding="utf-8") as jsonfile:
-                json.dump(self.dicc_de_categorias, jsonfile)
+        reply = QMessageBox.question(self, 'Message',"Estás seguro?", QMessageBox.Yes |
+        QMessageBox.No, QMessageBox.No)
 
-            self.cats_dialog.myListWidget.takeItem(curr_indexes[0].row())
+        if reply == QMessageBox.Yes:
+            curr_indexes = self.cats_dialog.myListWidget.selectedIndexes()
+            if len(curr_indexes)>1:
+                print("no")
+            else:
+                #confirmacion para maricas
+                categoria = self.cats_dialog.myListWidget.currentItem().text().split(" (")[0]
+                self.dicc_de_categorias.pop(categoria)
+                with open(self.json_path, "w", encoding="utf-8") as jsonfile:
+                    json.dump(self.dicc_de_categorias, jsonfile)
+
+                self.cats_dialog.myListWidget.takeItem(curr_indexes[0].row())
 
     def editaCategoria(self):
         curr_indexes = self.cats_dialog.myListWidget.selectedIndexes()
@@ -1115,14 +1119,26 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
             if tabName in file:
                 folder_mes = join(self.year_folder,file,"EGRESOS")
         if column == 2:
-            xml =join(folder_mes + os.sep,self.tables[tabName].item(row, 2).text()+".xml")
+            for archivo in os.listdir(folder_mes):
+                esteUUID = self.tables[tabName].item(row, 2).text().lower()
+                path = join(folder_mes,archivo)
+                if esteUUID in archivo.lower() and archivo.endswith("xml"):
+                    xmlpath = join(folder_mes,archivo)
+                if os.path.isdir(path):
+                    for archivo2 in os.listdir(path):
+                        path2 = join(path,archivo2)
+                        if esteUUID in archivo2.lower() and archivo2.endswith("xml"):
+                            xmlpath = join(path, archivo2)
+
+            #xml =join(folder_mes + os.sep,self.tables[tabName].item(row, 2).text()+".xml")
             #acrobatPath = r'C:/Program Files (x86)/Adobe/Acrobat Reader DC/Reader/AcroRd32.exe'
             #subprocess.Popen("%s %s" % (acrobatPath, pdf))
             try:
-                print("este guey me pico:"+xml)
-                os.startfile(xml)
+                print("este guey me pico:"+xmlpath)
+                os.startfile(xmlpath)
             except:
-                print ("el sistema no tiene una aplicacion por default para abrir xmls")
+                print("el sistema no tiene una aplicacion por default para abrir xmls")
+                print(xmlpath)
                 QMessageBox.information(self, "Information", "El sistema no tiene una aplicación por default para abrir xmls" )
 
         if column == 0:
@@ -1231,12 +1247,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
 
     def hazPDFs(self):
         contador = -1
+        pdf_folder = join(self.esteFolder,"huiini")
         for factura in self.listaDeFacturasOrdenadas:
             contador += 1
             if factura.has_pdf == False:
                 xml_name = basename(factura.xml_path)
                 factura.conviertemeEnTex()
-                factura.conviertemeEnPDF()
+                factura.conviertemeEnPDF(pdfs_folder = pdf_folder)
 
 
                 factura.has_pdf = True
@@ -1275,6 +1292,18 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
         file_dialog = getFilesDlg()
         file_dialog.sendPaths.connect(self.procesaCarpetas)
         file_dialog.exec()
+
+    def quitaColumnaVacias(self,ultima,primera,tabName):
+        for columna in range(ultima,primera,-1):
+            suma = 0
+            for renglon in range(0,self.tables[tabName].rowCount()):
+                try:
+                    suma += float(self.tables[tabName].item(renglon,columna).text())
+                except:
+                    print("estaba vacio")
+
+            if suma < 0.00000001:
+                self.tables[tabName].removeColumn(columna)
 
     def procesaCarpetas(self,paths):
         self.paths = paths.copy()
@@ -1376,6 +1405,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
                 self.procesaEgresos(path)
                 self.pon_categorias_custom_por_factura(self.paths)
                 self.pon_categorias_custom_en_gui(self.paths)
+                self.quitaColumnaVacias(12,5,self.mes)
                 self.agregaMes(self.mes)
                 self.procesaIngresos(path)
                 self.aislaNomina(path)
@@ -1386,6 +1416,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
 
 
             self.hazTabDeIngresos(self.paths)
+
             p += 1
             progreso = int(100*(p/(len(paths)+2)))
             self.progressBar.setValue(progreso)
@@ -1408,6 +1439,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
             # os.kill(child_pid, signal.SIGTERM)
 
             self.agregaTab("Ingresos")
+            self.quitaColumnaVacias(12,6,"Ingresos")
             #self.agregaTab("Conceptos")
             #self.agregaTab("IVA_anual")
             #self.agregaTab("Importe_anual")
@@ -1597,7 +1629,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
 
             if self.hacerPDFs:
                 self.hazPDFs()
-                time_old.sleep(0.2*len(self.listaDeFacturasOrdenadas))
+                time_old.sleep(0.1*len(self.listaDeFacturasOrdenadas))
                 self.borraAuxiliares()
 
     def aislaNomina(self, path):
@@ -1643,42 +1675,40 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
         self.listaDeDuplicados= []
         self.listaDeFacturas = []
         self.listaDeUUIDs = []
-        contador = 0
+
+        listaDePathsXMLS = []
         for archivo in os.listdir(self.esteFolder):
-            if archivo.endswith(".xml"):
+            path = join(self.esteFolder + os.sep,archivo)
+            if os.path.isdir(path):
+                for archivo2 in os.listdir(path):
+                    if archivo2.endswith(".xml"):
+                        path2 = join(path + os.sep,archivo2)
+                        listaDePathsXMLS.append(path2)
+            else:
+                if path.endswith(".xml"):
+                    listaDePathsXMLS.append(path)
 
-                laFactura = Factura(join(self.esteFolder + os.sep,archivo))
-                if laFactura.sello == "SinSello":
-                    print("Omitiendo xml sin sello "+laFactura.xml_path)
-                else:
-                    if laFactura.version:
-                        if laFactura.UUID in self.listaDeUUIDs:
 
-                            cuantosDuplicados+=1
-                            self.listaDeDuplicados.append(laFactura.UUID)
-                        else:
-                            self.listaDeUUIDs.append(laFactura.UUID)
-                            contador += 1
-                            self.listaDeFacturas.append(laFactura)
-        if os.path.exists(join(self.esteFolder, "Nomina")):
-            for archivo in os.listdir(join(self.esteFolder, "Nomina")):
-                if archivo.endswith(".xml"):
+        contador = 0
+        for xml_path in listaDePathsXMLS:
+            laFactura = Factura(xml_path)
+            if laFactura.sello == "SinSello":
+                print("Omitiendo xml sin sello "+laFactura.xml_path)
+            else:
+                if laFactura.version:
+                    if laFactura.UUID in self.listaDeUUIDs:
 
-                    laFactura = Factura(join(join(self.esteFolder, "Nomina") + os.sep,archivo))
-                    if laFactura.sello == "SinSello":
-                        print("Omitiendo xml sin sello "+laFactura.xml_path)
+                        cuantosDuplicados+=1
+                        self.listaDeDuplicados.append(laFactura.UUID)
                     else:
-                        if laFactura.version:
-                            if laFactura.UUID in self.listaDeUUIDs:
+                        self.listaDeUUIDs.append(laFactura.UUID)
+                        contador += 1
+                        self.listaDeFacturas.append(laFactura)
 
-                                cuantosDuplicados+=1
-                                self.listaDeDuplicados.append(laFactura.UUID)
-                            else:
-                                self.listaDeUUIDs.append(laFactura.UUID)
-                                contador += 1
-                                self.listaDeFacturas.append(laFactura)
         if contador > 13:
             self.tables[self.mes].setRowCount(contador)
+
+
 
         self.listaDeFacturasOrdenadas = sorted(self.listaDeFacturas, key=lambda listaDeFacturas: listaDeFacturas.fechaTimbrado)
         self.diccionarioPorRFCs = {}
@@ -1760,9 +1790,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
             tooltipTipo = "\n".join(x['tipo'] for x in factura.conceptos)
             self.tables[self.mes].setItem(contador,15, self.esteItem(factura.conceptos[0]['tipo'],tooltipTipo))
 
-            pdf_dir = os.path.join(os.path.dirname(factura.tex_path),"huiini")
+
+
+
+
+            pdf_dir = os.path.join(self.esteFolder,"huiini")
             pdf_name = os.path.split(factura.tex_path)[1].replace("tex","pdf")
-            pdf_path = os.path.join(pdf_dir,pdf_name)
+            pdf_path = os.path.join(pdf_dir, pdf_name)
             if os.path.exists(pdf_path):
                 self.tables[self.mes].setCellWidget(contador,0, ImgWidgetPalomita(self))
 
