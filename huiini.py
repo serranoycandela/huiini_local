@@ -1637,15 +1637,18 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
 
         for archivo in os.listdir(esteFolder):
             if archivo.endswith(".xml"):
-                laFactura = Factura(join(esteFolder + os.sep,archivo))
-                if laFactura.tipoDeComprobante == "N":
-                    if not os.path.exists(join(esteFolder, "Nomina")):
-                        os.makedirs(join(esteFolder, "Nomina"))
-                    try:
-                        os.rename(join(esteFolder + os.sep,archivo), join(esteFolder, "Nomina",archivo))
+                try:
+                    laFactura = Factura(join(esteFolder + os.sep,archivo))
+                    if laFactura.tipoDeComprobante == "N":
+                        if not os.path.exists(join(esteFolder, "Nomina")):
+                            os.makedirs(join(esteFolder, "Nomina"))
+                        try:
+                            os.rename(join(esteFolder + os.sep,archivo), join(esteFolder, "Nomina",archivo))
 
-                    except:
-                        print("no pude mover una nómina")
+                        except:
+                            print("no pude mover una nómina")
+                except:
+                    print("--------------------------------------------------")
 
 
     def procesaEgresos(self, path):
@@ -1678,32 +1681,35 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
 
         listaDePathsXMLS = []
         for archivo in os.listdir(self.esteFolder):
-            path = join(self.esteFolder + os.sep,archivo)
+            path = join(self.esteFolder + os.sep, archivo)
             if os.path.isdir(path):
                 for archivo2 in os.listdir(path):
                     if archivo2.endswith(".xml"):
-                        path2 = join(path + os.sep,archivo2)
+                        path2 = join(path + os.sep, archivo2)
                         listaDePathsXMLS.append(path2)
             else:
                 if path.endswith(".xml"):
                     listaDePathsXMLS.append(path)
 
-
         contador = 0
         for xml_path in listaDePathsXMLS:
-            laFactura = Factura(xml_path)
-            if laFactura.sello == "SinSello":
-                print("Omitiendo xml sin sello "+laFactura.xml_path)
-            else:
-                if laFactura.version:
-                    if laFactura.UUID in self.listaDeUUIDs:
+            try:
+                laFactura = Factura(xml_path)
+                if laFactura.sello == "SinSello":
+                    print("Omitiendo xml sin sello "+laFactura.xml_path)
+                else:
+                    if laFactura.version:
+                        if laFactura.UUID in self.listaDeUUIDs:
 
-                        cuantosDuplicados+=1
-                        self.listaDeDuplicados.append(laFactura.UUID)
-                    else:
-                        self.listaDeUUIDs.append(laFactura.UUID)
-                        contador += 1
-                        self.listaDeFacturas.append(laFactura)
+                            cuantosDuplicados+=1
+                            self.listaDeDuplicados.append(laFactura.UUID)
+                        else:
+                            self.listaDeUUIDs.append(laFactura.UUID)
+                            contador += 1
+                            self.listaDeFacturas.append(laFactura)
+            except:
+                QMessageBox.information(self, "Information", "El xml " + xml_path + " no está bien formado")
+                print("El xml " + xml_path + " no está bien formado")
 
         if contador > 13:
             self.tables[self.mes].setRowCount(contador)
@@ -1821,7 +1827,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
                                                             }
                 print("crealo con " + str(factura.subTotal))
 
-            contador +=1
+            contador += 1
 
 
 
