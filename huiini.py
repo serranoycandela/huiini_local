@@ -258,7 +258,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
                 categoria = self.cats_dialog.myListWidget.currentItem().text().split(" (")[0]
                 self.dicc_de_categorias.pop(categoria)
                 with open(self.json_path, "w", encoding="utf-8") as jsonfile:
-                    json.dump(self.dicc_de_categorias, jsonfile)
+                    json.dump(self.dicc_de_categorias, jsonfile, indent=4, sort_keys=True)
 
                 self.cats_dialog.myListWidget.takeItem(curr_indexes[0].row())
 
@@ -281,12 +281,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
                 if nombre != categoria:
                     self.dicc_de_categorias.pop(categoria)
                 if nombre in self.dicc_de_categorias:
-                    lista_previa = self.dicc_de_categorias[nombre].copy()
-                    lista_previa.extend(claves_ps.split(", "))#el espacio no se ocupa
-                    self.dicc_de_categorias[nombre] = lista_previa
+                    #lista_previa = self.dicc_de_categorias[nombre].copy()
+
+                    #lista_previa.extend(claves_ps.strip().split(","))#el espacio no se ocupa
+                    self.dicc_de_categorias[nombre] = claves_ps.replace(" ","").split(",")
                 #self.lista_ordenada = sorted(self.lista_ordenada, key=lambda tup: tup[1])
                 with open(self.json_path, "w", encoding="utf-8") as jsonfile:
-                    json.dump(self.dicc_de_categorias, jsonfile)
+                    json.dump(self.dicc_de_categorias, jsonfile, indent=4, sort_keys=True)
                 self.cats_dialog.myListWidget.clear()
                 self.enlista_categorias()
 
@@ -314,7 +315,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
 
             #self.lista_ordenada = sorted(self.lista_ordenada, key=lambda tup: tup[1])
             with open(self.json_path, "w", encoding="utf-8") as jsonfile:
-                json.dump(self.dicc_de_categorias, jsonfile)
+                json.dump(self.dicc_de_categorias, jsonfile, indent=4, sort_keys=True)
             self.cats_dialog.myListWidget.clear()
             self.enlista_categorias()
 
