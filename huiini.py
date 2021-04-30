@@ -592,7 +592,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
                 ws_ingresos.cell(row, 8, factura.subTotal)
                 ws_ingresos.cell(row, 9, factura.traslados["IVA"]["importe"])
                 ws_ingresos.cell(row, 10, factura.importe)
-                ws_ingresos.cell(row, 11, factura.retenciones["ISR"])
+                if factura.tipoDeComprobante == "N":
+                    ws_ingresos.cell(row, 11, factura.RetencionesISRNomina)
+                else:
+                    ws_ingresos.cell(row, 11, factura.retenciones["ISR"])
                 ws_ingresos.cell(row, 12, factura.retenciones["IVA"])
                 ws_ingresos.cell(row, 13, factura.total)
                 ws_ingresos.cell(row, 14, factura.metodoDePago)
@@ -1438,9 +1441,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
             # print(child_pid)
             # time_old.sleep(2)
             # os.kill(child_pid, signal.SIGTERM)
-
-            self.agregaTab("Ingresos")
-            self.quitaColumnaVacias(12,6,"Ingresos")
+            if len(self.listaDeFacturasIngresos) > 0:
+                self.agregaTab("Ingresos")
+                self.quitaColumnaVacias(12,6,"Ingresos")
             #self.agregaTab("Conceptos")
             #self.agregaTab("IVA_anual")
             #self.agregaTab("Importe_anual")
@@ -1635,6 +1638,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
 
     def aislaNomina(self, path):
         esteFolder = join(path,"EGRESOS")
+        # esteFolderIngresos = join(path,"INGRESOS")
+        # if not os.path.exists(esteFolderIngresos):
+        #     os.makedirs(esteFolderIngresos)
 
         for archivo in os.listdir(esteFolder):
             if archivo.endswith(".xml"):
@@ -1705,6 +1711,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
                             cuantosDuplicados+=1
                             self.listaDeDuplicados.append(laFactura.UUID)
                         else:
+                            #if laFactura.tipoDeComprobante != "N":
                             self.listaDeUUIDs.append(laFactura.UUID)
                             contador += 1
                             self.listaDeFacturas.append(laFactura)
@@ -1750,7 +1757,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
                     concepto["impuestos"] = 0.0 - float(concepto['impuestos'])
                     #concepto["total"] = 0.0 - float(concepto['total'])
 
-            self.conceptos.extend(los_conceptos)
+            if factura.tipoDeComprobante != "N":
+                self.conceptos.extend(los_conceptos)
+
 
             if factura.tipoDeComprobante == "P":
                 if factura.IdDocumento in self.complementosDePago:

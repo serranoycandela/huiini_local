@@ -365,6 +365,8 @@ class FacturaLocal(object):
         self.impuestosTag = self.root.find("{http://www.sat.gob.mx/cfd/3}Impuestos")
         self.ComplementoTag = self.root.find("{http://www.sat.gob.mx/cfd/3}Complemento")
 
+
+
     def arreglaSusPendejadas(self, impuesto):
         ################################################################# nadie le creyó al macfly, se confirmo
         if impuesto == "001":
@@ -495,12 +497,10 @@ class FacturaLocal(object):
                                                 "tipo":tipo})
 
 
-
+#################################################    IMPEUSTOS TAG  ##################################################################################
 
         self.retenciones = {"IVA":0,"ISR":0,"IEPS":0,"ISH":0,"TUA":0}
 
-
-        #################################################    IMPEUSTOS TAG  ##################################################################################
         if self.impuestosTag == None:
             print("no hay impuestos")
             retImporte = "0"
@@ -665,8 +665,17 @@ class FacturaLocal(object):
             if AerolineasTag :
                 self.trasladosLocales["TUA"] = {"importe": float(AerolineasTag.get("TUA")), "tasa": "--"}
 
+            if self.tipoDeComprobante == "N":
+                self.RetencionesISRNomina = 0.0
+                self.NominaTag = self.ComplementoTag.find("{http://www.sat.gob.mx/nomina12}Nomina")
+                if self.NominaTag:
+                    self.DeduccionesNominaTag = self.NominaTag.find("{http://www.sat.gob.mx/nomina12}Deducciones")
+                    if self.DeduccionesNominaTag:
+                        self.listaDeducciones = self.DeduccionesNominaTag.findall("{http://www.sat.gob.mx/nomina12}Deduccion")
 
-
+                        for deduccion in self.listaDeducciones:
+                            if deduccion.get("TipoDeduccion") == "002":
+                                self.RetencionesISRNomina += float(deduccion.get("Importe"))
 
     def conviertemeEnTex(self):
         ## aqui va lo del template
