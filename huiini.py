@@ -29,10 +29,13 @@ from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.utils import get_column_letter
 
 
+
 from datetime import datetime
 from copy import copy
 import ghostscript
 import locale
+
+import filecmp
 # import subprocess
 # import psutil
 # import signal
@@ -1383,7 +1386,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             year = os.path.split(os.path.split(paths[0])[0])[1]
             client = os.path.split(os.path.split(os.path.split(paths[0])[0])[0])[1]
             print(client+"_"+year)
-
+            self.respaldo_anual = False
             reply = QMessageBox.question(self, 'Message',"Crear pdfs?", QMessageBox.Yes |
             QMessageBox.No, QMessageBox.No)
 
@@ -1399,7 +1402,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 QMessageBox.No, QMessageBox.No)
 
                 if reply == QMessageBox.Yes:
-                    os.remove(self.annual_xlsx_path)
+                    self.respaldo_anual = True
+                    hoy = str(datetime.now()).split(".")[0].replace(" ","T").replace("-","_").replace(":","_")
+                    self.respaldo_anual_path = self.annual_xlsx_path.split(".xlsx")[0]+"respaldo_"+hoy+".xlsx"
+                    os.rename(self.annual_xlsx_path,self.respaldo_anual_path)
 
 
 
@@ -1468,6 +1474,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             self.raise_()
             self.activateWindow()
             self.progressBar.hide()
+            if self.respaldo_anual:
+                if filecmp.cmp(self.annual_xlsx_path,self.respaldo_anual_path):
+                    os.remove(self.respaldo_anual_path)
+                else:
+                    print("se respaldó el archivo existente y el nuevo no es igual")
 
     def agregaTab(self, tabName):
 
