@@ -4,9 +4,9 @@ from PySide2.QtCore import Qt, QDir
 from PySide2.QtGui import *
 from PySide2 import QtGui, QtCore, QtWidgets
 from PySide2.QtWidgets import QTableWidget, QLineEdit, QTableWidgetItem, QFileDialog, QProgressDialog, QMessageBox, QListView, QAbstractItemView, QTreeView, QDialog, QVBoxLayout, QDialogButtonBox, QFileSystemModel, QInputDialog
-from PySide2.QtWidgets import QPushButton, QListWidget, QListWidgetItem
+from PySide2.QtWidgets import QPushButton, QListWidget, QListWidgetItem, QComboBox
 import sys
-import guiV3
+import guiV4
 from os import listdir, environ
 from os.path import isfile, join, basename
 import shutil
@@ -160,7 +160,7 @@ class ImgWidgetTache(QtWidgets.QLabel):
 
 
 
-class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
+class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
     def __init__(self, parent=None):
         super(Ui_MainWindow, self).__init__(parent)
@@ -204,7 +204,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
 
 
     def setupTabMeses(self):
-        self.tables[self.mes].setColumnCount(16)
+        self.tables[self.mes].setColumnCount(17)
         self.tables[self.mes].setColumnWidth(0,30)#pdf
         self.tables[self.mes].setColumnWidth(1,95)#fecha
         self.tables[self.mes].setColumnWidth(2,70)#uuid
@@ -220,13 +220,14 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
         self.tables[self.mes].setColumnWidth(12,80)#total
         self.tables[self.mes].setColumnWidth(13,74)#formaDePago
         self.tables[self.mes].setColumnWidth(14,77)#metodoDePago
+        self.tables[self.mes].setColumnWidth(14,77)#carpetasCoi
 
         self.tables[self.mes].verticalHeader().setFixedWidth(35)
         header = self.tables[self.mes].verticalHeader()
         header.setContextMenuPolicy(Qt.CustomContextMenu)
         header.customContextMenuRequested.connect(self.handleHeaderMenu)
 
-        lc = ["Pdf","Fecha","UUID","Receptor","Emisor","Concepto","Subtotal","Descuento","Traslado\nIVA","Traslado\nIEPS","Retención\nIVA","Retención\nISR","Total","Forma\nPago","Método\nPago","Tipo"]
+        lc = ["Pdf","Fecha","UUID","Receptor","Emisor","Concepto","Subtotal","Descuento","Traslado\nIVA","Traslado\nIEPS","Retención\nIVA","Retención\nISR","Total","Forma\nPago","Método\nPago","Tipo","Carpetas Coi"]
         self.ponEncabezado(lc,self.mes)
 
         self.tables[self.mes].cellDoubleClicked.connect(self.meDoblePicaronXML)
@@ -1248,6 +1249,15 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
         item.setFlags(item.flags() ^ Qt.ItemIsEditable)
         return item
 
+    def esteCenteredItem(self, text, tooltip):
+        item = QTableWidgetItem(QtCore.QLocale().toString(float(text),'f', 2))
+        #item.setStyleSheet("padding :15px")
+        item.setTextAlignment(Qt.AlignRight|Qt.AlignVCenter)
+        QtCore.QLocale().toString(float(text),'f', 2)
+        item.setToolTip(tooltip)
+        item.setFlags(item.flags() ^ Qt.ItemIsEditable)
+        return item
+
 
     def hazPDFs(self):
         contador = -1
@@ -1413,6 +1423,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
                 self.agregaMes(self.mes)
                 self.procesaIngresos(path)
                 self.aislaNomina(path)
+                self.aislaReconocibles(path)
                 self.progressBar.setValue(progreso)
                 if p == 1:
                     self.tabWidget.removeTab(0)
@@ -1566,9 +1577,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
         if hay_categorias_custom:
             r = 0
             for factura in self.listaDeFacturasOrdenadas:
-                r+=1
+                
                 tooltipTipo = "\n".join(x['tipo'] for x in factura.conceptos)
-                self.tables[self.mes].setItem(r,13,self.esteItem(factura.conceptos[0]['tipo'],tooltipTipo))
+                self.tables[self.mes].setItem(r,15,self.esteItem(factura.conceptos[0]['tipo'],tooltipTipo))
+                r+=1
 
     def procesaIngresos(self, path):
         self.esteFolder = join(path,"INGRESOS")
@@ -1657,12 +1669,88 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
                 except:
                     print("--------------------------------------------------")
 
+    def aislaReconocibles(self, path):
+        esteFolder = join(path,"EGRESOS")
+        # esteFolderIngresos = join(path,"INGRESOS")
+        # if not os.path.exists(esteFolderIngresos):
+        #     os.makedirs(esteFolderIngresos)
+
+        for archivo in os.listdir(esteFolder):
+            if archivo.endswith(".xml"):
+                try:
+                    laFactura = Factura(join(esteFolder + os.sep,archivo))
+                    if laFactura.tipoDeComprobante == "P":
+                        if not os.path.exists(join(esteFolder, "COMPLEMENTO_PAGO")):
+                            os.makedirs(join(esteFolder, "COMPLEMENTO_PAGO"))
+                        try:
+                            os.rename(join(esteFolder + os.sep,archivo), join(esteFolder, "COMPLEMENTO_PAGO",archivo))
+
+                        except:
+                            print("no pude mover una COMPLEMENTO_PAGO")
+
+                    if laFactura.tipoDeComprobante == "E":
+                        if not os.path.exists(join(esteFolder, "INGRESOS_NEGATIVOS")):
+                            os.makedirs(join(esteFolder, "INGRESOS_NEGATIVOS"))
+                        try:
+                            os.rename(join(esteFolder + os.sep,archivo), join(esteFolder, "INGRESOS_NEGATIVOS",archivo))
+
+                        except:
+                            print("no pude mover una INGRESOS_NEGATIVOS")
+
+                    if laFactura.conceptos[0]["clave_concepto"] == "78111808":
+                        if not os.path.exists(join(esteFolder, "UBER")):
+                            os.makedirs(join(esteFolder, "UBER"))
+                        try:
+                            os.rename(join(esteFolder + os.sep,archivo), join(esteFolder, "UBER",archivo))
+
+                        except:
+                            print("no pude mover una UBER")
+
+                    
+                except:
+                    print("--------------------------------------------------")
+
+    def mueveAcarpetaCoi(self, xml_path, renglon, sender):
+        print("me pico ",renglon,xml_path,sender.currentText())
+        xml_dir, xml_name= os.path.split(xml_path)
+        print("el xml es", xml_name)
+        if os.path.split(xml_dir)[1] == "EGRESOS":
+            mes_folder = xml_dir
+        else:
+            mes_folder = os.path.split(xml_dir)[0]
+        print("el folder de egresos es ", mes_folder)
+        
+        for (dirpath, dirnames, filenames) in os.walk(mes_folder):
+            for filename in filenames:
+                if filename == xml_name: 
+                    print("estaba en ", join(dirpath, filename), "y lo movere a ", join(mes_folder, sender.currentText()))
+                    if sender.currentText() == "--":
+                        try:
+                            os.rename(join(dirpath, filename), join(mes_folder, filename))
+
+                        except:
+                            print("no pude mover el xml : ",filename ," a ",mes_folder)
+                    else:
+                        if not os.path.exists(join(mes_folder, sender.currentText())):
+                            os.makedirs(join(mes_folder, sender.currentText()))
+                        try:
+                            os.rename(join(dirpath, filename), join(mes_folder, sender.currentText(),filename))
+
+                        except:
+                            print("no pude mover el xml : ",filename ," a ",sender.currentText())
+
 
     def procesaEgresos(self, path):
         self.folder.setText("Procesando: " + u'\n' + path)
         self.folder.show()
         self.esteFolder = join(path,"EGRESOS")
-
+        folder_cliente = os.path.split(os.path.split(path)[0])[0]
+        coi_json_path = join(folder_cliente, "carpetas_coi.json")
+        if os.path.exists(coi_json_path):
+            with open(coi_json_path, "r", encoding="utf-8") as jsonfile:
+                lista_carpetas_coi = json.load(jsonfile)
+        else:
+            lista_carpetas_coi = ["--","UBER","Nomina","COMPLEMENTO_PAGO","INGRESOS_NEGATIVOS"]
         self.mes = os.path.split(path)[1]
         self.mes = ''.join([i for i in self.mes if not i.isdigit()])
         self.mes = self.mes.strip()
@@ -1677,10 +1765,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
         self.tables[self.mes].clear()
         self.tableWidget_resumen.clear()
         self.tableWidget_resumen.repaint()
-        lc = ["Pdf","Fecha","UUID","Receptor","Emisor","Concepto","Subtotal","Descuento","Traslado\nIVA","Traslado\nIEPS","Retención\nIVA","Retención\nISR","Total","Forma\nPago","Método\nPago","Tipo"]
+        lc = ["Pdf","Fecha","UUID","Receptor","Emisor","Concepto","Subtotal","Descuento","Traslado\nIVA","Traslado\nIEPS","Retención\nIVA","Retención\nISR","Total","Forma\nPago","Método\nPago","Tipo","Carpeta Coi"]
         self.ponEncabezado(lc,self.mes)
         self.tables[self.mes].setRowCount(13)
         self.tables[self.mes].repaint()
+        self.delegate = PaddingDelegate()
+        self.tables[self.mes].setItemDelegate(self.delegate)
         cuantosDuplicados = 0
         self.listaDeDuplicados= []
         self.listaDeFacturas = []
@@ -1740,7 +1830,21 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
             QMessageBox.information(self, "Information", mensaje)
 
         contador = 0
+          
+        listacombos = []
         for factura in self.listaDeFacturasOrdenadas:
+            listacombos.append(QComboBox())
+            listacombos[contador].addItems (lista_carpetas_coi)
+            xml_dir, xml_name= os.path.split(factura.xml_path)
+            
+            if os.path.split(xml_dir)[1] == "EGRESOS":
+                mes_folder = xml_dir
+            else:
+                mes_folder, carpeta_actual = os.path.split(xml_dir)
+                listacombos[contador].setCurrentText(carpeta_actual)
+    
+            #listacombos[contador].setStyleSheet("QComboBox{margin:3px};")
+            listacombos[contador].currentIndexChanged.connect(lambda state, xml_path=factura.xml_path, renglon=contador, combo=listacombos[contador] : self.mueveAcarpetaCoi(xml_path,renglon,combo))
             factura.setFolio(contador + 1)
             los_conceptos = factura.conceptos.copy()
             for concepto in los_conceptos:
@@ -1784,7 +1888,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
             files = {'files': open(xml_path , 'rb')}
             # print(r.content
             # print(r.text)
-
+           
 
             self.tables[self.mes].setItem(contador,1,self.esteItem(factura.fechaTimbrado,factura.fechaTimbrado))
             self.tables[self.mes].setItem(contador,2,self.esteItem(factura.UUID,factura.UUID))
@@ -1794,22 +1898,19 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
             for concepto in factura.conceptos:
                 mesage += concepto["descripcion"] + u'\n'
             self.tables[self.mes].setItem(contador,5, self.esteItem(factura.conceptos[0]['descripcion'],mesage))
-            self.tables[self.mes].setItem(contador,6,self.esteItem(str(factura.subTotal),""))
-            self.tables[self.mes].setItem(contador,7,self.esteItem(str(factura.descuento),""))
-            self.tables[self.mes].setItem(contador,8,self.esteItem(str(factura.traslados["IVA"]["importe"]),""))
-            self.tables[self.mes].setItem(contador,9,self.esteItem(str(factura.traslados["IEPS"]["importe"]),""))
-            self.tables[self.mes].setItem(contador,10,self.esteItem(str(factura.retenciones["IVA"]),""))
-            self.tables[self.mes].setItem(contador,11,self.esteItem(str(factura.retenciones["ISR"]),""))
-            self.tables[self.mes].setItem(contador,12,self.esteItem(str(factura.total),""))
+            self.tables[self.mes].setItem(contador,6,self.esteCenteredItem(str(factura.subTotal),""))
+            self.tables[self.mes].setItem(contador,7,self.esteCenteredItem(str(factura.descuento),""))
+            self.tables[self.mes].setItem(contador,8,self.esteCenteredItem(str(factura.traslados["IVA"]["importe"]),""))
+            self.tables[self.mes].setItem(contador,9,self.esteCenteredItem(str(factura.traslados["IEPS"]["importe"]),""))
+            self.tables[self.mes].setItem(contador,10,self.esteCenteredItem(str(factura.retenciones["IVA"]),""))
+            self.tables[self.mes].setItem(contador,11,self.esteCenteredItem(str(factura.retenciones["ISR"]),""))
+            self.tables[self.mes].setItem(contador,12,self.esteCenteredItem(str(factura.total),""))
             self.tables[self.mes].setItem(contador,13,self.esteItem(factura.formaDePagoStr,""))
             self.tables[self.mes].setItem(contador,14, self.esteItem(factura.metodoDePago,factura.metodoDePago))
             tooltipTipo = "\n".join(x['tipo'] for x in factura.conceptos)
             self.tables[self.mes].setItem(contador,15, self.esteItem(factura.conceptos[0]['tipo'],tooltipTipo))
-
-
-
-
-
+            self.tables[self.mes].setCellWidget(contador,16,listacombos[contador])
+           
             pdf_dir = os.path.join(self.esteFolder,"huiini")
             pdf_name = os.path.split(factura.tex_path)[1].replace("tex","pdf")
             pdf_path = os.path.join(pdf_dir, pdf_name)
@@ -1839,8 +1940,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
 
             contador += 1
 
-
-
+        
 
         # for t in range(0,5):
         #     time_old.sleep(0.05*len(self.listaDeFacturasOrdenadas))
@@ -1886,7 +1986,48 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV3.Ui_MainWindow):
         self.folder.setText("Carpeta Procesada: " + u'\n' + self.esteFolder)
         self.folder.show()
 
+        
+
+class WheelEventFilter(QtCore.QObject):
+    def eventFilter(self, obj, ev):
+        if obj.inherits("QComboBox") and ev.type() == QtCore.QEvent.Wheel:
+            return True
+        return False
+class PaddingDelegate(QtWidgets.QStyledItemDelegate):
+    def __init__(self, padding=5, parent=None):
+        super(PaddingDelegate, self).__init__(parent)
+        self._padding = ' ' * max(1, padding)
+
+
+    def is_num(self,s):
+        try:
+            float(s.replace(',',''))
+        except ValueError:
+            return False
+        else:
+            return True
+
+    def displayText(self, text, locale):
+        if self.is_num(text):
+            return text + self._padding
+        else:
+            return self._padding + text
+
+    def createEditor(self, parent, option, index):
+        editor = super().createEditor(parent, option, index)
+        margins = editor.textMargins()
+        padding = editor.fontMetrics().width(self._padding) + 1
+        margins.setLeft(margins.left() + padding)
+        editor.setTextMargins(margins)
+        return editor
+
+
+
+
+#app = QtWidgets.QApplication.instance()
 app = QtWidgets.QApplication(sys.argv)
+filter = WheelEventFilter()
+app.installEventFilter(filter)
 app.setStyleSheet("QMessageBox { messagebox-text-interaction-flags: 5; }")
 form = Ui_MainWindow()
 form.show()
