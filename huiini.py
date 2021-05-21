@@ -1222,10 +1222,17 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         for renglon in range(0,self.tables[tabName].rowCount()-1):
             uuid = self.tables[tabName].item(renglon,2).text()
-            if float(self.tables[tabName].item(renglon,12).text()) < 0.000001:
+            columnaTotal = 0
+            for i in range(0,self.tables[tabName].columnCount()-1):
+                esteHeaderItem = self.tables[tabName].horizontalHeaderItem(i)
+                if esteHeaderItem.text() == "Total":
+                    columnaTotal = i
+
+            
+            if float(self.tables[tabName].item(renglon,columnaTotal).text().replace(",","")) < 0.01:
                 print("no imprimo facturas con total menores a 0")
             else:
-                if self.tables[tabName].item(renglon,14).text() == "None":
+                if self.tables[tabName].item(renglon,columnaTotal+2).text() == "None":
                     print("no imprimo pagos seño")
                 else:
 
@@ -1282,26 +1289,35 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 #     self.tableWidget_xml.setCellWidget(contador,0, ImgWidgetTache(self))
     def borraAuxiliares(self):
         contador = 0
-        for t in range(0,10):
-            time_old.sleep((1.0*len(self.listaDeFacturasOrdenadas)/10.0))
+        # for t in range(0,10):
+        #     time_old.sleep((1.0*len(self.listaDeFacturasOrdenadas)/10.0))
 
         contador = 0
         for archivo in os.listdir(self.esteFolder):
-            if ".tex" in archivo:
-                contador += 1
-                eltex = join(self.esteFolder + os.sep,archivo)
-                os.remove(eltex)
+            try:
+                if ".tex" in archivo:
+                    contador += 1
+                    eltex = join(self.esteFolder + os.sep,archivo)
+                    os.remove(eltex)
+            except:
+                print("no pude borrar "+archivo)
         for archivo in os.listdir(join(self.esteFolder,"huiini")):
-            if ".log" in archivo:
-                contador += 1
-                ellog = join(join(self.esteFolder,"huiini"),archivo)
-                os.remove(ellog)
+            try:
+                if ".log" in archivo:
+                    contador += 1
+                    ellog = join(join(self.esteFolder,"huiini"),archivo)
+                    os.remove(ellog)
+            except:
+                print("no pude borrar "+archivo)
         for archivo in os.listdir(join(self.esteFolder,"huiini")):
-            if ".aux" in archivo:
-                contador += 1
-                elaux = join(join(self.esteFolder,"huiini"),archivo)
-                os.remove(elaux)
-
+            try:
+                if ".aux" in archivo:
+                    contador += 1
+                    elaux = join(join(self.esteFolder,"huiini"),archivo)
+                    os.remove(elaux)
+            except:
+                print("no pude borrar "+archivo)
+                
         self.progressBar.hide()
 
     def cualCarpeta(self):
@@ -1656,7 +1672,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
             if self.hacerPDFs:
                 self.hazPDFs()
-                time_old.sleep(0.1*len(self.listaDeFacturasOrdenadas))
+                #time_old.sleep(0.1*len(self.listaDeFacturasOrdenadas))
                 self.borraAuxiliares()
 
     def aislaNomina(self, path):
@@ -1961,7 +1977,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         if self.hacerPDFs:
             self.hazPDFs()
-            time_old.sleep(0.2*len(self.listaDeFacturasOrdenadas))
+            #time_old.sleep(0.2*len(self.listaDeFacturasOrdenadas))
             self.borraAuxiliares()
 
 

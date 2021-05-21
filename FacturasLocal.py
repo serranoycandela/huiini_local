@@ -768,8 +768,8 @@ class FacturaLocal(object):
         self.tex_path = self.tex_path.replace("/", "\\\\")
         print(self.pdflatex_path)
         print(self.tex_path)
-        subprocess.run([self.pdflatex_path, "-interaction=nonstopmode", self.tex_path],shell=True)
-
+        a = subprocess.run([self.pdflatex_path, "-interaction=nonstopmode", self.tex_path],shell=True)
+        print(a.stdout)
 
 #
 #
