@@ -4,7 +4,7 @@ from PySide2.QtCore import Qt, QDir
 from PySide2.QtGui import *
 from PySide2 import QtGui, QtCore, QtWidgets
 from PySide2.QtWidgets import QTableWidget, QLineEdit, QTableWidgetItem, QFileDialog, QProgressDialog, QMessageBox, QListView, QAbstractItemView, QTreeView, QDialog, QVBoxLayout, QDialogButtonBox, QFileSystemModel, QInputDialog
-from PySide2.QtWidgets import QPushButton, QListWidget, QListWidgetItem, QComboBox
+from PySide2.QtWidgets import QPushButton, QListWidget, QListWidgetItem, QComboBox, QMenu, QAction
 import sys
 import guiV4
 from os import listdir, environ
@@ -171,6 +171,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         print(scriptDirectory)
         logoPix = QtGui.QPixmap(join(scriptDirectory,"logo.png"))
+        with open(join(scriptDirectory,"conceptos.json"), "r") as jsonfile:
+            self.concepto = json.load(jsonfile)
         self.labelLogo.setPixmap(logoPix)
         self.pdflatex_path = "C:/Program Files/MiKTeX 2.9/miktex/bin/x64/pdflatex.exe"
 
@@ -512,10 +514,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         #print(por_categorias_wide)
 
         if variable == "importeConcepto":
-            col_sum = "H"
+            col_sum = "G"
 
         if variable == "impuestos":
-            col_sum = "I"
+            col_sum = "J"
 
 
 
@@ -528,7 +530,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         for i in range(2,self.columna_totales):
             letra = get_column_letter(i)
             for j in range(2,self.sumas_row):
-                ws_cats.cell(j,i,"=SUMIFS(Conceptos!"+col_sum+":"+col_sum+",Conceptos!K:K,"+letra+"1,Conceptos!A:A,A"+str(j)+',Conceptos!L:L,"Pagado")')
+                ws_cats.cell(j,i,"=SUMIFS(Conceptos!"+col_sum+":"+col_sum+",Conceptos!L:L,"+letra+"1,Conceptos!A:A,A"+str(j)+',Conceptos!M:M,"Pagado")')
 
 
 
@@ -742,6 +744,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             r += 1
             ws_lista_cats.cell(r, 1, cat)
 
+        status_column = 0
+        primer_mes = workbook[self.meses[0]]
+
+        for i in range(1,primer_mes.max_column+1):
+            if primer_mes.cell(1, i).value == "Status":
+                status_column = i - 2
         for mes in self.meses:
             ws_mes = workbook[mes]
             for row in range(2,len(ws_mes["A"])):
@@ -757,16 +765,18 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         if ws_todos.max_row == 1:
             ws_todos.cell(1, 1, "mes")
             ws_todos.cell(1, 2, 'clave_concepto')
-            ws_todos.cell(1, 3, 'UUID')
-            ws_todos.cell(1, 4, 'cantidad')
-            ws_todos.cell(1, 5, 'descripcion')
-            ws_todos.cell(1, 6, 'importeConcepto')
-            ws_todos.cell(1, 7, 'descuento')
-            ws_todos.cell(1, 8, 'subTotal')
-            ws_todos.cell(1, 9, 'impuestos')
-            ws_todos.cell(1, 10, 'total')
-            ws_todos.cell(1, 11, 'tipo')
-            ws_todos.cell(1, 12, 'status')
+            ws_todos.cell(1, 3, 'concepto_sat')
+            #self.concepto
+            ws_todos.cell(1, 4, 'UUID')
+            ws_todos.cell(1, 5, 'cantidad')
+            ws_todos.cell(1, 6, 'descripcion')
+            ws_todos.cell(1, 7, 'importeConcepto')
+            ws_todos.cell(1, 8, 'descuento')
+            ws_todos.cell(1, 9, 'subTotal')
+            ws_todos.cell(1, 10, 'impuestos')
+            ws_todos.cell(1, 11, 'total')
+            ws_todos.cell(1, 12, 'tipo')
+            ws_todos.cell(1, 13, 'status')
             row = 1
         else:
             row = ws_todos.max_row
@@ -782,19 +792,21 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         for concepto in self.conceptos:
             if not self.yaEstaba[concepto['mes']]:
                 row += 1
+                clave = concepto['clave_concepto']
                 ws_todos.cell(row, 1, concepto['mes'])
-                ws_todos.cell(row, 2, concepto['clave_concepto'])
-                ws_todos.cell(row, 3, concepto['UUID'])
-                ws_todos.cell(row, 4, concepto['cantidad'])
-                ws_todos.cell(row, 5, concepto['descripcion'])
-                ws_todos.cell(row, 6, concepto['importeConcepto'])
-                ws_todos.cell(row, 7, concepto['descuento'])
-                ws_todos.cell(row, 8, concepto['importeConcepto'] - concepto['descuento'])
-                ws_todos.cell(row, 9, concepto['impuestos'])
-                ws_todos.cell(row, 10, (concepto['importeConcepto'] - concepto['descuento']) + concepto['impuestos'])
-                dv_categorias.add(ws_todos.cell(row, 11))
-                ws_todos.cell(row, 11, concepto['tipo'])
-                ws_todos.cell(row, 12, "=VLOOKUP(C"+str(row)+","+concepto['mes']+"!C:N,12,FALSE)")
+                ws_todos.cell(row, 2, clave)
+                ws_todos.cell(row, 3, self.concepto[clave])
+                ws_todos.cell(row, 4, concepto['UUID'])
+                ws_todos.cell(row, 5, concepto['cantidad'])
+                ws_todos.cell(row, 6, concepto['descripcion'])
+                ws_todos.cell(row, 7, concepto['importeConcepto'])
+                ws_todos.cell(row, 8, concepto['descuento'])
+                ws_todos.cell(row, 9, concepto['importeConcepto'] - concepto['descuento'])
+                ws_todos.cell(row, 10, concepto['impuestos'])
+                ws_todos.cell(row, 11, (concepto['importeConcepto'] - concepto['descuento']) + concepto['impuestos'])
+                dv_categorias.add(ws_todos.cell(row, 12))
+                ws_todos.cell(row, 12, concepto['tipo'])
+                ws_todos.cell(row, 13, "=VLOOKUP(D"+str(row)+","+concepto['mes']+"!C:Q,"+str(status_column)+",FALSE)")
 
         df = pd.DataFrame(self.conceptos)
 
@@ -829,6 +841,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             workbook.remove_sheet(sheet1)
             self.yaEstaba[mes] = False
 
+        #TUA	IEPS	ISH
+
         if not self.yaEstaba[mes]:
             ws_mes.cell(1, 1, "clave_ps")
             ws_mes.cell(1, 2,     "Fecha")
@@ -839,13 +853,16 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             ws_mes.cell(1, 7,     "Sub")
             ws_mes.cell(1, 8,     "Descuento")
             ws_mes.cell(1, 9,     "IVA")
-            ws_mes.cell(1, 10,     "Total")
-            ws_mes.cell(1, 11,     "F-Pago")
-            ws_mes.cell(1, 12,     "M-Pago")
-            ws_mes.cell(1, 13,     "Tipo")
-            ws_mes.cell(1, 14,     "Status")
-            ws_mes.cell(1, 15,     "TipoDeComprobante")
-            ws_mes.cell(1, 16,     "complementosDePago")
+            ws_mes.cell(1, 10,     "TUA")
+            ws_mes.cell(1, 11,     "ISH")
+            ws_mes.cell(1, 12,     "IEPS")
+            ws_mes.cell(1, 13,     "Total")
+            ws_mes.cell(1, 14,     "F-Pago")
+            ws_mes.cell(1, 15,     "M-Pago")
+            ws_mes.cell(1, 16,     "Tipo")
+            ws_mes.cell(1, 17,     "Status")
+            ws_mes.cell(1, 18,     "TipoDeComprobante")
+            ws_mes.cell(1, 19,     "complementosDePago")
 
             dv = DataValidation(type="list", formula1='"Pendiente,Pagado"', allow_blank=True)
             ws_mes.add_data_validation(dv)
@@ -863,15 +880,21 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                     ws_mes.cell(row, 7, 0.0 - factura.subTotal)
                     ws_mes.cell(row, 8, 0.0 - factura.descuento)
                     ws_mes.cell(row, 9, 0.0 - factura.traslados["IVA"]["importe"])
-                    ws_mes.cell(row, 10, 0.0 - factura.total)
+                    ws_mes.cell(row, 10, 0.0)
+                    ws_mes.cell(row, 11, 0.0)
+                    ws_mes.cell(row, 12, 0.0)
+                    ws_mes.cell(row, 13, 0.0 - factura.total)
                 else:
                     ws_mes.cell(row, 7, factura.subTotal)
                     ws_mes.cell(row, 8, factura.descuento)
                     ws_mes.cell(row, 9, factura.traslados["IVA"]["importe"])
-                    ws_mes.cell(row, 10, factura.total)
-                ws_mes.cell(row, 11, factura.formaDePagoStr)
-                ws_mes.cell(row, 12, factura.metodoDePago)
-                ws_mes.cell(row, 13, factura.conceptos[0]['tipo'])
+                    ws_mes.cell(row, 10, factura.trasladosLocales["TUA"]["importe"])
+                    ws_mes.cell(row, 11, factura.trasladosLocales["ISH"]["importe"])
+                    ws_mes.cell(row, 12, factura.traslados["IEPS"]["importe"])
+                    ws_mes.cell(row, 13, factura.total)
+                ws_mes.cell(row, 14, factura.formaDePagoStr)
+                ws_mes.cell(row, 15, factura.metodoDePago)
+                ws_mes.cell(row, 16, factura.conceptos[0]['tipo'])
                 status = "Pendiente"
                 if factura.metodoDePago == "PUE":
                     status = "Pagado"
@@ -882,11 +905,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 if factura.tipoDeComprobante == "P":
                     status = "Pagado"
 
-                dv.add(ws_mes.cell(row, 14))
-                ws_mes.cell(row, 14, status)
-                ws_mes.cell(row, 15, factura.tipoDeComprobante)
+                dv.add(ws_mes.cell(row, 17))
+                ws_mes.cell(row, 17, status)
+                ws_mes.cell(row, 18, factura.tipoDeComprobante)
                 if factura.UUID in self.complementosDePago:
-                    ws_mes.cell(row, 16, self.complementosDePago[factura.UUID]["suma"])
+                    ws_mes.cell(row, 19, self.complementosDePago[factura.UUID]["suma"])
 
                 if factura.tipoDeComprobante == "P":
                     print("segun "+ factura.UUID + "del mes " +mes+ ", aqui buscaria en todos los meses el uuid "+factura.IdDocumento+" y si encuentra su factura modificaria, la columna 13 del renglon de esa factura en el mes que esté, a Pagado")
@@ -1001,8 +1024,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
 
     def handleHeaderMenu(self, pos):
-        menu = QtGui.QMenu()
-        deleteAction = QtGui.QAction('&Delete', self)
+        menu = QMenu()
+        deleteAction = QAction('&Delete', self)
         #deleteAction = QtGui.QAction("Delete")
         deleteAction.triggered.connect(lambda: self.quitaRenglon(self.tables[self.mes].verticalHeader().logicalIndexAt(pos)))
         menu.addAction(deleteAction)
@@ -1039,10 +1062,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.numeroDeFacturasValidas -= 1
         self.sumale(1)
 
-        url_get =  "%s/remove/%s/%s" % (url_server, self.hash_carpeta, elNombre)
+        # url_get =  "%s/remove/%s/%s" % (url_server, self.hash_carpeta, elNombre)
 
-        r = requests.get(url_get, stream=True,
-                        auth=(self.w.username.text(), self.w.password.text()))
+        # r = requests.get(url_get, stream=True,
+        #                 auth=(self.w.username.text(), self.w.password.text()))
 
 
         self.hazResumenDiot(self.esteFolder)
@@ -1317,7 +1340,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                     os.remove(elaux)
             except:
                 print("no pude borrar "+archivo)
-                
+
         self.progressBar.hide()
 
     def cualCarpeta(self):

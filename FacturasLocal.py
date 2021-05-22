@@ -47,8 +47,7 @@ class FacturaLocal(object):
         except NameError:  # We are the main py2exe script, not a module
             self.scriptDirectory = os.path.dirname(os.path.abspath(sys.argv[0]))
 
-        with open(join(self.scriptDirectory,"conceptos.json"), "r") as jsonfile:
-            self.concepto = json.load(jsonfile)
+        
 
         with open(join(self.scriptDirectory,"catUsoCfdi.json"), "r") as jsonfile:
             self.uso = json.load(jsonfile)
