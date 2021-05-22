@@ -42,7 +42,7 @@ import filecmp
 
 
 ##C:\Python36\Scripts\pyside2-uic.exe mainwindowV2.ui -o guiV2.py
-##C:\Python36\Scripts\pyside2-uic.exe mainwindowV3.ui -o guiV3.py
+##C:\Python36\Scripts\pyside2-uic.exe mainwindowV4.ui -o guiV4.py
 ##C:\Python36\Scripts\pyinstaller.exe huiini.py
 
 
