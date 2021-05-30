@@ -186,6 +186,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         self.listaDeImpresoras.currentItemChanged.connect(self.cambiaSeleccionDeImpresora)
         self.tables = {}
+        self.facturas = {}
+        self.sumaRFC = {}
 
 
 
@@ -207,7 +209,18 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.tableWidget_resumen.cellDoubleClicked.connect(self.meDoblePicaronResumen)
         self.progressBar.hide()
 
+        self.tabWidget.currentChanged.connect(self.tabChanged)
+        self.numeroDeFacturasValidas = {}
 
+    def tabChanged(self, index):
+        print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA estoy cambiando a ",str(index))
+        name = self.tabWidget.tabText(index)
+        if name == "Ingresos":
+            print("aquí haría algo")
+        else:
+            self.mes = name
+            self.sumale()
+        
     def setupTabMeses(self):
         self.tables[self.mes].setColumnCount(17)
         self.tables[self.mes].setColumnWidth(0,30)#pdf
@@ -246,10 +259,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         print("reodenaria")
         if column == 2:
             print("reodenaria con uuid")
-            self.listaDeFacturasOrdenadas = sorted(self.listaDeFacturasOrdenadas, key=lambda listaDeFacturasOrdenadas: listaDeFacturasOrdenadas.UUID)
+            self.facturas[self.mes] = sorted(self.facturas[self.mes], key=lambda facturas: facturas.UUID)
         if column == 15:
             print("reodenaria con tipo")
-            self.listaDeFacturasOrdenadas = sorted(self.listaDeFacturasOrdenadas, key=lambda listaDeFacturasOrdenadas: listaDeFacturasOrdenadas.conceptos[0]['tipo'])
+            self.facturas[self.mes] = sorted(self.facturas[self.mes], key=lambda facturas: facturas.conceptos[0]['tipo'])
 
     def quitaCategoria(self):
         reply = QMessageBox.question(self, 'Message',"Estás seguro?", QMessageBox.Yes |
@@ -712,7 +725,15 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
             workbook.save(self.annual_xlsx_path)
 
-    def hazAgregados(self,paths):
+    def getDescription(self, clave):
+        desc = ""
+        try:
+            desc = self.concepto[clave]
+        except:
+            desc = ""
+        return desc
+
+    def hazAgregados(self, paths):
         print(self.complementosDePago)
 
 
@@ -795,7 +816,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 clave = concepto['clave_concepto']
                 ws_todos.cell(row, 1, concepto['mes'])
                 ws_todos.cell(row, 2, clave)
-                ws_todos.cell(row, 3, self.concepto[clave])
+                ws_todos.cell(row, 3, self.getDescription(clave))
                 ws_todos.cell(row, 4, concepto['UUID'])
                 ws_todos.cell(row, 5, concepto['cantidad'])
                 ws_todos.cell(row, 6, concepto['descripcion'])
@@ -868,7 +889,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             ws_mes.add_data_validation(dv)
 
             row = 1
-            for factura in self.listaDeFacturasOrdenadas:
+            for factura in self.facturas[self.mes]:
                 row += 1
                 ws_mes.cell(row, 1, factura.conceptos[0]['clave_concepto'])
                 ws_mes.cell(row, 2, factura.fechaTimbrado)
@@ -938,7 +959,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         # ws_rfc.cell(1, 6,     "TOTAL")
 
         row = 5
-        for key, value in self.diccionarioPorRFCs.items():
+        for key, value in self.sumaRFC[self.mes].items():
             row += 1
             if row > 9:
                 ws_rfc.insert_rows(row)
@@ -975,7 +996,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         ws_factura.cell(1, 12,     "Tipo")
 
         row = 1
-        for factura in self.listaDeFacturasOrdenadas:
+        for factura in self.facturas[self.mes]:
             row += 1
             ws_factura.cell(row, 1, factura.conceptos[0]['clave_concepto'])
             ws_factura.cell(row, 2, factura.fechaTimbrado)
@@ -1019,7 +1040,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
     def hazListadeUuids(self):
         self.listadeUuids = []
-        for renglon in range(self.numeroDeFacturasValidas):
+        for renglon in range(self.numeroDeFacturasValidas[self.mes]):
             self.listadeUuids.append(self.tables[self.mes].item(renglon,1).text())
 
 
@@ -1035,7 +1056,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
     def quitaRenglon(self,row):
         elNombre = self.tables[self.mes].item(row,2).text()
         suRFC = ""
-        for factura in self.listaDeFacturasOrdenadas:
+        for factura in self.facturas[self.mes]:
             if factura.UUID == elNombre:
                 print("i found it!")
                 suRFC = factura.EmisorRFC
@@ -1049,17 +1070,17 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         suImporte = float(self.tables[self.mes].item(row,6).text())-float(self.tables[self.mes].item(row,7).text())
         self.tables[self.mes].removeRow(row)
 
-        if suRFC in self.diccionarioPorRFCs:
-            self.diccionarioPorRFCs[suRFC]['subTotal'] -= suSubtotal
-            self.diccionarioPorRFCs[suRFC]['descuento'] -= suDescuento
-            self.diccionarioPorRFCs[suRFC]['trasladoIVA'] -= suTrasladoIVA
-            self.diccionarioPorRFCs[suRFC]['importe'] -= suImporte
+        if suRFC in self.sumaRFC[self.mes]:
+            self.sumaRFC[self.mes][suRFC]['subTotal'] -= suSubtotal
+            self.sumaRFC[self.mes][suRFC]['descuento'] -= suDescuento
+            self.sumaRFC[self.mes][suRFC]['trasladoIVA'] -= suTrasladoIVA
+            self.sumaRFC[self.mes][suRFC]['importe'] -= suImporte
 
-            if math.fabs(self.diccionarioPorRFCs[suRFC]['subTotal']) < 0.0001 and math.fabs(self.diccionarioPorRFCs[suRFC]['descuento']) < 0.0001 and math.fabs(self.diccionarioPorRFCs[suRFC]['trasladoIVA']) < 0.0001 and math.fabs(self.diccionarioPorRFCs[suRFC]['importe']) < 0.0001:
-                self.diccionarioPorRFCs.pop(suRFC,0)
+            if math.fabs(self.sumaRFC[self.mes][suRFC]['subTotal']) < 0.0001 and math.fabs(self.sumaRFC[self.mes][suRFC]['descuento']) < 0.0001 and math.fabs(self.sumaRFC[self.mes][suRFC]['trasladoIVA']) < 0.0001 and math.fabs(self.sumaRFC[self.mes][suRFC]['importe']) < 0.0001:
+                self.sumaRFC[self.mes].pop(suRFC,0)
 
 
-        self.numeroDeFacturasValidas -= 1
+        self.numeroDeFacturasValidas[self.mes] -= 1
         self.sumale(1)
 
         # url_get =  "%s/remove/%s/%s" % (url_server, self.hash_carpeta, elNombre)
@@ -1080,11 +1101,17 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
 
     def sumale(self, renglonResumen=0):
-        for columna in range(6,13):
+        total_col = 13
+        for i in range(6,self.tables[self.mes].columnCount()):
+            estaTabla = self.tables[self.mes]
+            if estaTabla.horizontalHeaderItem(i).text() == "Total":
+                total_col =  i
+        print(str(self.numeroDeFacturasValidas[self.mes]))
+        for columna in range(6,total_col):
             suma = 0
-            for renglon in range(self.numeroDeFacturasValidas):
+            for renglon in range(self.numeroDeFacturasValidas[self.mes]):
                 try:
-                    suma += float(self.tables[self.mes].item(renglon, columna).text())
+                    suma += float(self.tables[self.mes].item(renglon, columna).text().replace(",",""))
                 except:
                     print("no puedo")
 
@@ -1131,7 +1158,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 #         if column == 5:
 #             suUUID = self.tableWidget_xml.item(row,2).text()
 #             laFactura = None
-#             for factura in self.listaDeFacturasOrdenadas:
+#             for factura in self.facturas[self.mes]:
 #                 if factura.UUID == suUUID:
 #                     print("i found it!")
 #                     laFactura = factura
@@ -1150,20 +1177,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             if tabName in file:
                 folder_mes = join(self.year_folder,file,"EGRESOS")
         if column == 2:
-            for archivo in os.listdir(folder_mes):
-                esteUUID = self.tables[tabName].item(row, 2).text().lower()
-                path = join(folder_mes,archivo)
-                if esteUUID in archivo.lower() and archivo.endswith("xml"):
-                    xmlpath = join(folder_mes,archivo)
-                if os.path.isdir(path):
-                    for archivo2 in os.listdir(path):
-                        path2 = join(path,archivo2)
-                        if esteUUID in archivo2.lower() and archivo2.endswith("xml"):
-                            xmlpath = join(path, archivo2)
-
-            #xml =join(folder_mes + os.sep,self.tables[tabName].item(row, 2).text()+".xml")
-            #acrobatPath = r'C:/Program Files (x86)/Adobe/Acrobat Reader DC/Reader/AcroRd32.exe'
-            #subprocess.Popen("%s %s" % (acrobatPath, pdf))
+            esteUUID = self.tables[tabName].item(row, 2).text().lower()
+            for root, dirs, files in os.walk(folder_mes, topdown=False):
+                for name in files:
+                    if esteUUID in name.lower() and name.endswith("xml"):
+                        xmlpath = os.path.join(root, name)
             try:
                 print("este guey me pico:"+xmlpath)
                 os.startfile(xmlpath)
@@ -1295,7 +1313,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
     def hazPDFs(self):
         contador = -1
         pdf_folder = join(self.esteFolder,"huiini")
-        for factura in self.listaDeFacturasOrdenadas:
+        for factura in self.facturas[self.mes]:
             contador += 1
             if factura.has_pdf == False:
                 xml_name = basename(factura.xml_path)
@@ -1311,35 +1329,38 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 # except:
                 #     self.tableWidget_xml.setCellWidget(contador,0, ImgWidgetTache(self))
     def borraAuxiliares(self):
-        contador = 0
-        # for t in range(0,10):
-        #     time_old.sleep((1.0*len(self.listaDeFacturasOrdenadas)/10.0))
-
-        contador = 0
-        for archivo in os.listdir(self.esteFolder):
-            try:
-                if ".tex" in archivo:
-                    contador += 1
-                    eltex = join(self.esteFolder + os.sep,archivo)
-                    os.remove(eltex)
-            except:
-                print("no pude borrar "+archivo)
-        for archivo in os.listdir(join(self.esteFolder,"huiini")):
-            try:
-                if ".log" in archivo:
-                    contador += 1
-                    ellog = join(join(self.esteFolder,"huiini"),archivo)
-                    os.remove(ellog)
-            except:
-                print("no pude borrar "+archivo)
-        for archivo in os.listdir(join(self.esteFolder,"huiini")):
-            try:
-                if ".aux" in archivo:
-                    contador += 1
-                    elaux = join(join(self.esteFolder,"huiini"),archivo)
-                    os.remove(elaux)
-            except:
-                print("no pude borrar "+archivo)
+        for root, dirs, files in os.walk(self.esteFolder, topdown=False):
+            for name in files:
+                if name.endswith(".tex") or name.endswith(".log") or name.endswith(".aux"): 
+                    elpath = os.path.join(root, name)
+                    try:
+                        os.remove(elpath)
+                    except:
+                        print("no pude borrar "+name)
+        # for archivo in os.listdir(self.esteFolder):
+        #     try:
+        #         if ".tex" in archivo:
+        #             contador += 1
+        #             eltex = join(self.esteFolder + os.sep,archivo)
+        #             os.remove(eltex)
+        #     except:
+        #         print("no pude borrar "+archivo)
+        # for archivo in os.listdir(join(self.esteFolder,"huiini")):
+        #     try:
+        #         if ".log" in archivo:
+        #             contador += 1
+        #             ellog = join(join(self.esteFolder,"huiini"),archivo)
+        #             os.remove(ellog)
+        #     except:
+        #         print("no pude borrar "+archivo)
+        # for archivo in os.listdir(join(self.esteFolder,"huiini")):
+        #     try:
+        #         if ".aux" in archivo:
+        #             contador += 1
+        #             elaux = join(join(self.esteFolder,"huiini"),archivo)
+        #             os.remove(elaux)
+        #     except:
+        #         print("no pude borrar "+archivo)
 
         self.progressBar.hide()
 
@@ -1365,6 +1386,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.paths = paths.copy()
         self.progressBar.show()
         self.progressBar.setValue(1)
+
+        self.tabWidget.clear()
 
         folder_cliente = os.path.split(os.path.split(self.paths[0])[0])[0]
         self.json_path = join(folder_cliente, "categorias_dicc_huiini.json")
@@ -1470,9 +1493,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 self.aislaNomina(path)
                 self.aislaReconocibles(path)
                 self.progressBar.setValue(progreso)
-                if p == 1:
-                    self.tabWidget.removeTab(0)
-                    self.tabWidget.removeTab(0)
+                # if p == 1:
+                #     self.tabWidget.removeTab(0)
+                #     self.tabWidget.removeTab(0)
 
 
             self.hazTabDeIngresos(self.paths)
@@ -1518,6 +1541,18 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                     os.remove(self.respaldo_anual_path)
                 else:
                     print("se respaldó el archivo existente y el nuevo no es igual")
+            curr_index = self.tabWidget.currentIndex() 
+            name = self.tabWidget.tabText(curr_index)
+            self.mes = name       
+            self.sumale()
+
+
+        if name == "Ingresos":
+            print("aquí haría algo")
+        else:
+            self.mes = name
+
+
 
     def agregaTab(self, tabName):
 
@@ -1585,7 +1620,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
 
         if hay_categorias_custom:
-            for factura in self.listaDeFacturasOrdenadas:
+            for factura in self.facturas[self.mes]:
                 for concepto in factura.conceptos:
                     clave = concepto["clave_concepto"]
 
@@ -1626,7 +1661,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         if hay_categorias_custom:
             r = 0
-            for factura in self.listaDeFacturasOrdenadas:
+            for factura in self.facturas[self.mes]:
                 
                 tooltipTipo = "\n".join(x['tipo'] for x in factura.conceptos)
                 self.tables[self.mes].setItem(r,15,self.esteItem(factura.conceptos[0]['tipo'],tooltipTipo))
@@ -1664,7 +1699,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                     except:
                         QMessageBox.information(self, "Information", "La factura : " + join(self.esteFolder + os.sep,archivo) + " está corrupta")
 
-            self.listaDeFacturasOrdenadas = sorted(self.listaDeFacturas, key=lambda listaDeFacturas: listaDeFacturas.fechaTimbrado)
+            self.facturas[self.mes] = sorted(self.listaDeFacturas, key=lambda listaDeFacturas: listaDeFacturas.fechaTimbrado)
             if cuantosDuplicados > 0:
                 mensaje = "En ingresos hay "+str(cuantosDuplicados)+" duplicados\n"
                 chunks = []
@@ -1675,14 +1710,14 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 QMessageBox.information(self, "Information", mensaje)
 
             # for t in range(0,5):
-            #     time_old.sleep(0.05*len(self.listaDeFacturasOrdenadas))
+            #     time_old.sleep(0.05*len(self.facturas[self.mes]))
             #     self.pd.setValue(self.pd.value() + ( (100 - self.pd.value()) / 2))
             contador = 0
 
-            los_facturas = self.listaDeFacturasOrdenadas.copy()
+            los_facturas = self.facturas[self.mes].copy()
             self.listaDeFacturasIngresos.extend(los_facturas)
-            for factura in self.listaDeFacturasOrdenadas:
-                #self.pd.setValue(50*((contador + 1)/len(self.listaDeFacturasOrdenadas)))
+            for factura in self.facturas[self.mes]:
+                #self.pd.setValue(50*((contador + 1)/len(self.facturas[self.mes])))
                 factura.setFolio(contador + 1)
                 if factura.tipoDeComprobante == "P":
                     if factura.IdDocumento in self.complementosDePago:
@@ -1695,7 +1730,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
             if self.hacerPDFs:
                 self.hazPDFs()
-                #time_old.sleep(0.1*len(self.listaDeFacturasOrdenadas))
+                #time_old.sleep(0.1*len(self.facturas[self.mes]))
                 self.borraAuxiliares()
 
     def aislaNomina(self, path):
@@ -1827,16 +1862,23 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.listaDeUUIDs = []
 
         listaDePathsXMLS = []
-        for archivo in os.listdir(self.esteFolder):
-            path = join(self.esteFolder + os.sep, archivo)
-            if os.path.isdir(path):
-                for archivo2 in os.listdir(path):
-                    if archivo2.endswith(".xml"):
-                        path2 = join(path + os.sep, archivo2)
-                        listaDePathsXMLS.append(path2)
-            else:
-                if path.endswith(".xml"):
-                    listaDePathsXMLS.append(path)
+        # for archivo in os.listdir(self.esteFolder):
+        #     path = join(self.esteFolder + os.sep, archivo)
+        #     if os.path.isdir(path):
+        #         for archivo2 in os.listdir(path):
+        #             if archivo2.endswith(".xml"):
+        #                 path2 = join(path + os.sep, archivo2)
+        #                 listaDePathsXMLS.append(path2)
+        #     else:
+        #         if path.endswith(".xml"):
+        #             listaDePathsXMLS.append(path)
+
+        for root, dirs, files in os.walk(self.esteFolder, topdown=False):
+            for name in files:
+                if name.endswith(".xml"):
+                    listaDePathsXMLS.append(os.path.join(root, name))
+           
+        
 
         contador = 0
         for xml_path in listaDePathsXMLS:
@@ -1862,11 +1904,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         if contador > 13:
             self.tables[self.mes].setRowCount(contador)
 
-
-
-        self.listaDeFacturasOrdenadas = sorted(self.listaDeFacturas, key=lambda listaDeFacturas: listaDeFacturas.fechaTimbrado)
-        self.diccionarioPorRFCs = {}
-        print(self.listaDeFacturasOrdenadas)
+ 
+        
+        self.facturas[self.mes] = sorted(self.listaDeFacturas, key=lambda listaDeFacturas: listaDeFacturas.fechaTimbrado)
+        
+        
+        print(self.facturas[self.mes])
 
 
 
@@ -1882,7 +1925,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         contador = 0
           
         listacombos = []
-        for factura in self.listaDeFacturasOrdenadas:
+        self.sumaRFC[self.mes] = {}
+        for factura in self.facturas[self.mes]:
             listacombos.append(QComboBox())
             listacombos[contador].addItems (lista_carpetas_coi)
             xml_dir, xml_name= os.path.split(factura.xml_path)
@@ -1966,18 +2010,18 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             pdf_path = os.path.join(pdf_dir, pdf_name)
             if os.path.exists(pdf_path):
                 self.tables[self.mes].setCellWidget(contador,0, ImgWidgetPalomita(self))
-
-            if factura.EmisorRFC in self.diccionarioPorRFCs:
-                self.diccionarioPorRFCs[factura.EmisorRFC]['subTotal'] += float(factura.subTotal)
-                self.diccionarioPorRFCs[factura.EmisorRFC]['descuento'] += float(factura.descuento)
-                self.diccionarioPorRFCs[factura.EmisorRFC]['trasladoIVA'] += float(factura.traslados['IVA']['importe'])
-                self.diccionarioPorRFCs[factura.EmisorRFC]['importe'] += float(factura.subTotal)-float(factura.descuento)
-                self.diccionarioPorRFCs[factura.EmisorRFC]['total'] += float(factura.total)
-                self.diccionarioPorRFCs[factura.EmisorRFC]['importeStr'] += "+"+str(float(factura.subTotal)-float(factura.descuento))
-                self.diccionarioPorRFCs[factura.EmisorRFC]['trasladoIVAStr'] += "+"+str(factura.traslados['IVA']['importe'])
+            
+            if factura.EmisorRFC in self.sumaRFC[self.mes]:
+                self.sumaRFC[self.mes][factura.EmisorRFC]['subTotal'] += float(factura.subTotal)
+                self.sumaRFC[self.mes][factura.EmisorRFC]['descuento'] += float(factura.descuento)
+                self.sumaRFC[self.mes][factura.EmisorRFC]['trasladoIVA'] += float(factura.traslados['IVA']['importe'])
+                self.sumaRFC[self.mes][factura.EmisorRFC]['importe'] += float(factura.subTotal)-float(factura.descuento)
+                self.sumaRFC[self.mes][factura.EmisorRFC]['total'] += float(factura.total)
+                self.sumaRFC[self.mes][factura.EmisorRFC]['importeStr'] += "+"+str(float(factura.subTotal)-float(factura.descuento))
+                self.sumaRFC[self.mes][factura.EmisorRFC]['trasladoIVAStr'] += "+"+str(factura.traslados['IVA']['importe'])
                 print("sumale " + str(factura.subTotal) )
             else:
-                self.diccionarioPorRFCs[factura.EmisorRFC] = {'subTotal': float(factura.subTotal),
+                self.sumaRFC[self.mes][factura.EmisorRFC] = {'subTotal': float(factura.subTotal),
                                                               'descuento': float(factura.descuento),
                                                               'trasladoIVA': float(factura.traslados['IVA']['importe']),
                                                               'importe': float(factura.subTotal)-float(factura.descuento),
@@ -1993,24 +2037,24 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         
 
         # for t in range(0,5):
-        #     time_old.sleep(0.05*len(self.listaDeFacturasOrdenadas))
+        #     time_old.sleep(0.05*len(self.facturas[self.mes]))
         #     self.pd.setValue(self.pd.value() + ( (100 - self.pd.value()) / 2))
 
 
 
         if self.hacerPDFs:
             self.hazPDFs()
-            #time_old.sleep(0.2*len(self.listaDeFacturasOrdenadas))
+            #time_old.sleep(0.2*len(self.facturas[self.mes]))
             self.borraAuxiliares()
 
 
         contador = -1
 
-        # time_old.sleep(0.5*len(self.listaDeFacturasOrdenadas))
+        # time_old.sleep(0.5*len(self.facturas[self.mes]))
 
         self.imprimir.setEnabled(True)
 
-        self.numeroDeFacturasValidas = len(self.listaDeFacturasOrdenadas)
+        self.numeroDeFacturasValidas[self.mes] = len(self.facturas[self.mes])
 
 
         self.sumale()
@@ -2024,7 +2068,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         #obtener los warnings de las facturas
         mensajeAlerta =""
-        for factura in self.listaDeFacturasOrdenadas:
+        for factura in self.facturas[self.mes]:
             if not factura.mensaje == "":
                 mensajeAlerta += factura.UUID + factura.mensaje + r'\n'
         if not mensajeAlerta == "":
