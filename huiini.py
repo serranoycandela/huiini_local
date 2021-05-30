@@ -369,33 +369,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         self.enlista_categorias()
         self.cats_dialog.exec()
-        # folder_cliente = os.path.split(os.path.split(self.paths[0])[0])[0]
-        # json_path = join(folder_cliente,"categorias_huiini.json")
-        # if os.path.exists(json_path):
-        #     with open(json_path, "r") as jsonfile:
-        #         lista_de_tuplas = json.load(jsonfile)
-        # else:
-        #     lista_de_tuplas = []
-        #
-        #
-        #
-        # nombre, ok = QInputDialog().getText(self, "Nombre de la Categoría",
-        #                              "Nombre de la categoría:", QLineEdit.Normal,
-        #                              QDir().home().dirName())
-        # claves_ps, ok = QInputDialog().getText(self, "Lista de claves de producto o servicio",
-        #                              "clave_ps:", QLineEdit.Normal,
-        #                              QDir().home().dirName())
-        #
-        # claves_ps.strip()
-        #
-        # for clave in claves_ps.split(","):
-        #     lista_de_tuplas.append([clave,nombre])
-        # with open(json_path, "w") as jsonfile:
-        #     json.dump(lista_de_tuplas, jsonfile)
-
-
-
-
 
     def as_text(self,value):
         if value is None:
@@ -1019,25 +992,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         workbook.save(xlsx_path)
 
 
-
-
-
-
-
-
-        #url_get = "http://huiini.pythonanywhere.com/resumen"
-
-
-        # r = requests.get(url_get, stream=True,
-        #                 auth=(self.w.username.text(), self.w.password.text()))
-        # time_old.sleep(1)
-        # if r.status_code == 200:
-        #     with open(join(join(self.esteFolder,"huiini"), 'resumenDiot.xlsx'),'wb') as f:
-        #         r.raw.decode_content = True
-        #         shutil.copyfileobj(r.raw, f)
-
-
-
     def hazListadeUuids(self):
         self.listadeUuids = []
         for renglon in range(self.numeroDeFacturasValidas[self.mes]):
@@ -1083,22 +1037,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.numeroDeFacturasValidas[self.mes] -= 1
         self.sumale(1)
 
-        # url_get =  "%s/remove/%s/%s" % (url_server, self.hash_carpeta, elNombre)
-
-        # r = requests.get(url_get, stream=True,
-        #                 auth=(self.w.username.text(), self.w.password.text()))
-
 
         self.hazResumenDiot(self.esteFolder)
-        # try:
-        #     if os.path.exists(os.path.join(os.path.join(self.esteFolder,"huiini"),"resumenDiot.pdf")):
-        #
-        #         os.remove(os.path.join(os.path.join(self.esteFolder,"huiini"),"resumenDiot.pdf"))
-        #
-        #     os.rename(os.path.join(self.esteFolder,"resumenDiot.pdf"), os.path.join(os.path.join(self.esteFolder,"huiini"),"resumenDiot.pdf"))
-        # except:
-        #     QtGui.QMessageBox.information(self, "Information", "tienes abierto el resumenDiot.pdf")
-
 
     def sumale(self, renglonResumen=0):
         total_col = 13
@@ -1132,43 +1072,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             n += 1
             self.tables[tabName].setHorizontalHeaderItem (n, QTableWidgetItem(columna))
 
-
-
-
-        # self.tableWidget_xml.setHorizontalHeaderItem (0, QTableWidgetItem("Pdf"))
-        # self.tableWidget_xml.setHorizontalHeaderItem (1, QTableWidgetItem("Fecha"))
-        # self.tableWidget_xml.setHorizontalHeaderItem (2, QTableWidgetItem("UUID"))
-        # self.tableWidget_xml.setHorizontalHeaderItem (3, QTableWidgetItem("Receptor"))
-        # self.tableWidget_xml.setHorizontalHeaderItem (4, QTableWidgetItem("Emisor"))
-        # self.tableWidget_xml.setHorizontalHeaderItem (5, QTableWidgetItem("Concepto"))
-        # self.tableWidget_xml.setHorizontalHeaderItem (7, QTableWidgetItem("Subtotal"))
-        # self.tableWidget_xml.setHorizontalHeaderItem (8, QTableWidgetItem("Descuento"))
-        # self.tableWidget_xml.setHorizontalHeaderItem (9, QTableWidgetItem("Traslado\nIVA"))
-        # self.tableWidget_xml.setHorizontalHeaderItem (10, QTableWidgetItem("Traslado\nIEPS"))
-        # self.tableWidget_xml.setHorizontalHeaderItem (11, QTableWidgetItem("Retención\nIVA"))
-        # self.tableWidget_xml.setHorizontalHeaderItem (12, QTableWidgetItem("Retención\nISR"))
-        # self.tableWidget_xml.setHorizontalHeaderItem (13, QTableWidgetItem("Total"))
-        # self.tableWidget_xml.setHorizontalHeaderItem (14, QTableWidgetItem("Forma\nPago"))
-        # self.tableWidget_xml.setHorizontalHeaderItem (15, QTableWidgetItem("Método\nPago"))
-
-
-
     def meDoblePicaronXML(self, row,column):
         print("me picaron en : " +str(row)+", " +str(column))
-#         if column == 5:
-#             suUUID = self.tableWidget_xml.item(row,2).text()
-#             laFactura = None
-#             for factura in self.facturas[self.mes]:
-#                 if factura.UUID == suUUID:
-#                     print("i found it!")
-#                     laFactura = factura
-#
-#                     break
-#             mesage = ""
-#             for concepto in laFactura.conceptos:
-#                 mesage += concepto["descripcion"] + u'\n'
-#
-#             QtGui.QMessageBox.information(self, "Conceptos", mesage)
 
         tabName = self.tabWidget.tabText(self.tabWidget.currentIndex())
         print(tabName)
@@ -1192,8 +1097,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         if column == 0:
             pdf = join(join(folder_mes,"huiini"),self.tables[tabName].item(row, 2).text()+".pdf")
-            #acrobatPath = r'C:/Program Files (x86)/Adobe/Acrobat Reader DC/Reader/AcroRd32.exe'
-            #subprocess.Popen("%s %s" % (acrobatPath, pdf))
             try:
                 print("este guey me pico:"+pdf)
                 os.startfile(pdf)
@@ -1204,9 +1107,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
     def meDoblePicaronResumen(self, row,column):
         print("me picaron en : " +str(row)+", " +str(column))
-        #excel = join(join(self.esteFolder,"huiini"),"resumen.xlsx")
-        #acrobatPath = r'C:/Program Files (x86)/Adobe/Acrobat Reader DC/Reader/AcroRd32.exe'
-        #subprocess.Popen("%s %s" % (acrobatPath, pdf))
         try:
             os.startfile(self.excel_path)
             print("este guey me pico:"+self.excel_path)
@@ -1231,10 +1131,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         phandle = win32print.OpenPrinter(win32print.GetDefaultPrinter())
 
         print_jobs = win32print.EnumJobs(phandle, 0, -1, 1)
-        # jobs = []
-        # if print_jobs:
-        #     jobs.extend(list(print_jobs))
-
         for job in print_jobs:
 
             print(job['TotalPages'])
@@ -1337,31 +1233,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                         os.remove(elpath)
                     except:
                         print("no pude borrar "+name)
-        # for archivo in os.listdir(self.esteFolder):
-        #     try:
-        #         if ".tex" in archivo:
-        #             contador += 1
-        #             eltex = join(self.esteFolder + os.sep,archivo)
-        #             os.remove(eltex)
-        #     except:
-        #         print("no pude borrar "+archivo)
-        # for archivo in os.listdir(join(self.esteFolder,"huiini")):
-        #     try:
-        #         if ".log" in archivo:
-        #             contador += 1
-        #             ellog = join(join(self.esteFolder,"huiini"),archivo)
-        #             os.remove(ellog)
-        #     except:
-        #         print("no pude borrar "+archivo)
-        # for archivo in os.listdir(join(self.esteFolder,"huiini")):
-        #     try:
-        #         if ".aux" in archivo:
-        #             contador += 1
-        #             elaux = join(join(self.esteFolder,"huiini"),archivo)
-        #             os.remove(elaux)
-        #     except:
-        #         print("no pude borrar "+archivo)
-
         self.progressBar.hide()
 
     def cualCarpeta(self):
@@ -1509,26 +1380,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             progreso = int(100*(p/(len(paths)+2)))
             self.progressBar.setValue(progreso)
 
-
-            # shell_process = subprocess.Popen([self.excel_path],shell=True)
-            # print(shell_process.pid)
-            # time_old.sleep(2)
-            # parent = psutil.Process(shell_process.pid)
-            # children = parent.children(recursive=True)
-            # print(children)
-            # child_pid = children[0].pid
-            # print(child_pid)
-            # time_old.sleep(2)
-            # os.kill(child_pid, signal.SIGTERM)
             if len(self.listaDeFacturasIngresos) > 0:
                 self.agregaTab("Ingresos")
                 self.quitaColumnaVacias(12,6,"Ingresos")
             #self.agregaTab("Conceptos")
             #self.agregaTab("IVA_anual")
             #self.agregaTab("Importe_anual")
-
-
-
 
 
 
@@ -1573,21 +1430,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.tables[tabName] = QTableWidget(r_max,c_max)
         self.tabWidget.addTab(self.tables[tabName], tabName)
         self.tables[tabName].setColumnCount(c_max)
-        # self.tables[self.mes].setColumnWidth(0,30)#pdf
-        # self.tables[self.mes].setColumnWidth(1,95)#fecha
-        # self.tables[self.mes].setColumnWidth(2,70)#uuid
-        # self.tables[self.mes].setColumnWidth(3,120)#receptor-nombre
-        # self.tables[self.mes].setColumnWidth(4,120)#emisor-rfc
-        # self.tables[self.mes].setColumnWidth(5,120)#concepto
-        # self.tables[self.mes].setColumnWidth(6,75)#Subtotal
-        # self.tables[self.mes].setColumnWidth(7,80)#Descuento
-        # self.tables[self.mes].setColumnWidth(8,80)#traslados-iva
-        # self.tables[self.mes].setColumnWidth(9,80)#traslados-ieps
-        # self.tables[self.mes].setColumnWidth(10,75)#retIVA
-        # self.tables[self.mes].setColumnWidth(11,75)#retISR
-        # self.tables[self.mes].setColumnWidth(12,80)#total
-        # self.tables[self.mes].setColumnWidth(13,74)#formaDePago
-        # self.tables[self.mes].setColumnWidth(14,77)#metodoDePago
 
         self.tables[tabName].verticalHeader().setFixedWidth(35)
         header = self.tables[tabName].verticalHeader()
@@ -1862,24 +1704,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.listaDeUUIDs = []
 
         listaDePathsXMLS = []
-        # for archivo in os.listdir(self.esteFolder):
-        #     path = join(self.esteFolder + os.sep, archivo)
-        #     if os.path.isdir(path):
-        #         for archivo2 in os.listdir(path):
-        #             if archivo2.endswith(".xml"):
-        #                 path2 = join(path + os.sep, archivo2)
-        #                 listaDePathsXMLS.append(path2)
-        #     else:
-        #         if path.endswith(".xml"):
-        #             listaDePathsXMLS.append(path)
-
         for root, dirs, files in os.walk(self.esteFolder, topdown=False):
             for name in files:
                 if name.endswith(".xml"):
                     listaDePathsXMLS.append(os.path.join(root, name))
            
-        
-
         contador = 0
         for xml_path in listaDePathsXMLS:
             try:
@@ -1971,18 +1800,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             if factura.tipoDeComprobante == "N":
                 self.listaDeFacturasIngresos.append(factura)
 
-
-            #url = "http://huiini.pythonanywhere.com/upload"
-            #url =  "%s/upload/%s/" % (url_server, self.hash_carpeta)
-
-            ####################################################Definir puerto  80 80   ################################
             xml_path = factura.xml_path
 
-            #xml_path = 'C:/Users/SICAD/Dropbox/Araceli/2017/JUNIO/EGRESOS/DE820CD4-2F37-4751-9D38-0FD6947CB287.xml'
             files = {'files': open(xml_path , 'rb')}
-            # print(r.content
-            # print(r.text)
-           
 
             self.tables[self.mes].setItem(contador,1,self.esteItem(factura.fechaTimbrado,factura.fechaTimbrado))
             self.tables[self.mes].setItem(contador,2,self.esteItem(factura.UUID,factura.UUID))
@@ -2033,14 +1853,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 print("crealo con " + str(factura.subTotal))
 
             contador += 1
-
-        
-
-        # for t in range(0,5):
-        #     time_old.sleep(0.05*len(self.facturas[self.mes]))
-        #     self.pd.setValue(self.pd.value() + ( (100 - self.pd.value()) / 2))
-
-
 
         if self.hacerPDFs:
             self.hazPDFs()
