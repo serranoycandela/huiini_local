@@ -539,58 +539,64 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             else:
                 ws_ingresos = workbook["Ingresos"]
 
-            ws_ingresos.cell(1, 1, "MesEmision")
-            ws_ingresos.cell(1, 2,     "MesPago")
-            ws_ingresos.cell(1, 3,     "uuid")
-            ws_ingresos.cell(1, 4,     "FECHA")
-            ws_ingresos.cell(1, 5,     "RFC (Receptor)")
-            ws_ingresos.cell(1, 6,     "RAZON SOCIAL")
-            ws_ingresos.cell(1, 7,     "DESCRIPCION")
-            ws_ingresos.cell(1, 8,     "SUBTOTAL")
-            ws_ingresos.cell(1, 9,     "I.V.A.")
-            ws_ingresos.cell(1, 10,     "IMPORTE")
-            ws_ingresos.cell(1, 11,     "RET ISR")
-            ws_ingresos.cell(1, 12,     "RET IVA")
-            ws_ingresos.cell(1, 13,     "T O T A L")
-            ws_ingresos.cell(1, 14,     "M-Pago")
-            ws_ingresos.cell(1, 15,     "Status")
-            ws_ingresos.cell(1, 16,     "complementosDePago")
-            ws_ingresos.cell(1, 17,     "Tipo")
-
-
-            row = 1
+            if ws_ingresos.max_row == 1:
+                ws_ingresos.cell(1, 1, "MesEmision")
+                ws_ingresos.cell(1, 2,     "MesPago")
+                ws_ingresos.cell(1, 3,     "uuid")
+                ws_ingresos.cell(1, 4,     "FECHA")
+                ws_ingresos.cell(1, 5,     "RFC (Receptor)")
+                ws_ingresos.cell(1, 6,     "RAZON SOCIAL")
+                ws_ingresos.cell(1, 7,     "DESCRIPCION")
+                ws_ingresos.cell(1, 8,     "SUBTOTAL")
+                ws_ingresos.cell(1, 9,     "I.V.A.")
+                ws_ingresos.cell(1, 10,     "IMPORTE")
+                ws_ingresos.cell(1, 11,     "RET ISR")
+                ws_ingresos.cell(1, 12,     "RET IVA")
+                ws_ingresos.cell(1, 13,     "T O T A L")
+                ws_ingresos.cell(1, 14,     "M-Pago")
+                ws_ingresos.cell(1, 15,     "Status")
+                ws_ingresos.cell(1, 16,     "complementosDePago")
+                ws_ingresos.cell(1, 17,     "Tipo")
+                row = 1
+            else:
+                max_row_for_a = max((c.row for c in ws_ingresos['C'] if c.value is not None))
+                row = max_row_for_a
+                #row = ws_ingresos.max_row
+            
             dv = DataValidation(type="list", formula1='"Pendiente,Pagado"', allowBlank=True)
             ws_ingresos.add_data_validation(dv)
             dv_mes = DataValidation(type="list", formula1='"ENERO,FEBRERO,MARZO,ABRIL,MAYO,JUNIO,JULIO,AGOSTO,SEPTIEMBRE,OCTUBRE,NOVIEMBRE,DICIEMBRE,--"', allow_blank=True)
             ws_ingresos.add_data_validation(dv_mes)
 
             for factura in self.listaDeFacturasIngresos:
-
-                row += 1
                 numeroDeMes = int(factura.fechaTimbrado.split("-")[1])
-                dv_mes.add(ws_ingresos.cell(row, 1))
-                dv_mes.add(ws_ingresos.cell(row, 2))
-                ws_ingresos.cell(row, 1, self.todos_los_meses[numeroDeMes-1])
-                if factura.metodoDePago == "PUE" or factura.tipoDeComprobante == "P":
-                    ws_ingresos.cell(row, 2, self.todos_los_meses[numeroDeMes-1])
-                if factura.UUID in self.complementosDePago:
-                    numeroDeMesP = int(self.complementosDePago[factura.UUID]["fechaUltimoPago"].split("-")[1])
-                    ws_ingresos.cell(row, 2, self.todos_los_meses[numeroDeMesP-1])
-                ws_ingresos.cell(row, 3, factura.UUID)
-                ws_ingresos.cell(row, 4, factura.fechaTimbrado)
-                ws_ingresos.cell(row, 5, factura.ReceptorRFC)
-                ws_ingresos.cell(row, 6, factura.ReceptorNombre)
-                ws_ingresos.cell(row, 7, factura.conceptos[0]['descripcion'])
-                ws_ingresos.cell(row, 8, factura.subTotal)
-                ws_ingresos.cell(row, 9, factura.traslados["IVA"]["importe"])
-                ws_ingresos.cell(row, 10, factura.importe)
-                if factura.tipoDeComprobante == "N":
-                    ws_ingresos.cell(row, 11, factura.RetencionesISRNomina)
-                else:
-                    ws_ingresos.cell(row, 11, factura.retenciones["ISR"])
-                ws_ingresos.cell(row, 12, factura.retenciones["IVA"])
-                ws_ingresos.cell(row, 13, factura.total)
-                ws_ingresos.cell(row, 14, factura.metodoDePago)
+                este_mes = self.todos_los_meses[numeroDeMes-1]
+                if not self.yaEstaba[este_mes]:
+                    row += 1
+                    
+                    dv_mes.add(ws_ingresos.cell(row, 1))
+                    dv_mes.add(ws_ingresos.cell(row, 2))
+                    ws_ingresos.cell(row, 1, self.todos_los_meses[numeroDeMes-1])
+                    if factura.metodoDePago == "PUE" or factura.tipoDeComprobante == "P":
+                        ws_ingresos.cell(row, 2, self.todos_los_meses[numeroDeMes-1])
+                    if factura.UUID in self.complementosDePago:
+                        numeroDeMesP = int(self.complementosDePago[factura.UUID]["fechaUltimoPago"].split("-")[1])
+                        ws_ingresos.cell(row, 2, self.todos_los_meses[numeroDeMesP-1])
+                    ws_ingresos.cell(row, 3, factura.UUID)
+                    ws_ingresos.cell(row, 4, factura.fechaTimbrado)
+                    ws_ingresos.cell(row, 5, factura.ReceptorRFC)
+                    ws_ingresos.cell(row, 6, factura.ReceptorNombre)
+                    ws_ingresos.cell(row, 7, factura.conceptos[0]['descripcion'])
+                    ws_ingresos.cell(row, 8, factura.subTotal)
+                    ws_ingresos.cell(row, 9, factura.traslados["IVA"]["importe"])
+                    ws_ingresos.cell(row, 10, factura.importe)
+                    if factura.tipoDeComprobante == "N":
+                        ws_ingresos.cell(row, 11, factura.RetencionesISRNomina)
+                    else:
+                        ws_ingresos.cell(row, 11, factura.retenciones["ISR"])
+                    ws_ingresos.cell(row, 12, factura.retenciones["IVA"])
+                    ws_ingresos.cell(row, 13, factura.total)
+                    ws_ingresos.cell(row, 14, factura.metodoDePago)
 
                 status = "Pendiente"
                 if factura.metodoDePago == "PUE":
@@ -610,6 +616,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
                 if factura.tipoDeComprobante == "N":
                     ws_ingresos.cell(row, 17, "Nómina")
+                else:
+                    ws_ingresos.cell(row, 17, "Facturado")
 
 
             ws_ingresos.cell(row+1, 8, "=SUM(H2:H"+str(row)+")")
@@ -642,12 +650,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             ws_ingresos.cell(15, 20, "DICIEMBRE")
 
             for renglonMes in range(4,16):
-                ws_ingresos.cell(renglonMes, 21, '=SUMIFS(H:H,B:B,T'+str(renglonMes)+',O:O,"Pagado",Q:Q,"<>Nómina")')
-                ws_ingresos.cell(renglonMes, 22, '=SUMIFS(I:I,B:B,T'+str(renglonMes)+',O:O,"Pagado",Q:Q,"<>Nómina")')
-                ws_ingresos.cell(renglonMes, 23, '=SUMIFS(J:J,B:B,T'+str(renglonMes)+',O:O,"Pagado",Q:Q,"<>Nómina")')
-                ws_ingresos.cell(renglonMes, 24, '=SUMIFS(K:K,B:B,T'+str(renglonMes)+',O:O,"Pagado",Q:Q,"<>Nómina")')
-                ws_ingresos.cell(renglonMes, 25, '=SUMIFS(L:L,B:B,T'+str(renglonMes)+',O:O,"Pagado",Q:Q,"<>Nómina")')
-                ws_ingresos.cell(renglonMes, 26, '=SUMIFS(M:M,B:B,T'+str(renglonMes)+',O:O,"Pagado",Q:Q,"<>Nómina")')
+                ws_ingresos.cell(renglonMes, 21, '=SUMIFS(H:H,B:B,T'+str(renglonMes)+',O:O,"Pagado",Q:Q,"Facturado")')
+                ws_ingresos.cell(renglonMes, 22, '=SUMIFS(I:I,B:B,T'+str(renglonMes)+',O:O,"Pagado",Q:Q,"Facturado")')
+                ws_ingresos.cell(renglonMes, 23, '=SUMIFS(J:J,B:B,T'+str(renglonMes)+',O:O,"Pagado",Q:Q,"Facturado")')
+                ws_ingresos.cell(renglonMes, 24, '=SUMIFS(K:K,B:B,T'+str(renglonMes)+',O:O,"Pagado",Q:Q,"Facturado")')
+                ws_ingresos.cell(renglonMes, 25, '=SUMIFS(L:L,B:B,T'+str(renglonMes)+',O:O,"Pagado",Q:Q,"Facturado")')
+                ws_ingresos.cell(renglonMes, 26, '=SUMIFS(M:M,B:B,T'+str(renglonMes)+',O:O,"Pagado",Q:Q,"Facturado")')
 
             ws_ingresos.cell(16, 21, "=SUM(U4:U15)")
             ws_ingresos.cell(16, 22, "=SUM(V4:V15)")
