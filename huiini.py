@@ -44,8 +44,7 @@ import filecmp
 ##C:\Python36\Scripts\pyside2-uic.exe mainwindowV2.ui -o guiV2.py
 ##C:\Python36\Scripts\pyside2-uic.exe mainwindowV4.ui -o guiV4.py
 ##C:\Python36\Scripts\pyinstaller.exe huiini.py
-
-
+## C:\Users\Mio\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.9_qbz5n2kfra8p0\LocalCache\local-packages\Python39\Scripts\pyinstaller.exe huiini.py
 
 
 
