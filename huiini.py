@@ -598,26 +598,26 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                     ws_ingresos.cell(row, 13, factura.total)
                     ws_ingresos.cell(row, 14, factura.metodoDePago)
 
-                status = "Pendiente"
-                if factura.metodoDePago == "PUE":
-                    status = "Pagado"
-                if factura.metodoDePago == "PPD":
+                    status = "Pendiente"
+                    if factura.metodoDePago == "PUE":
+                        status = "Pagado"
+                    if factura.metodoDePago == "PPD":
+                        if factura.UUID in self.complementosDePago:
+                            if factura.total - self.complementosDePago[factura.UUID]["suma"] < 0.5:
+                                status = "Pagado"
+                    if factura.tipoDeComprobante == "P":
+                        status = "Pagado"
+
+                    dv.add(ws_ingresos.cell(row, 15))
+                    ws_ingresos.cell(row, 15, status)
+
                     if factura.UUID in self.complementosDePago:
-                        if factura.total - self.complementosDePago[factura.UUID]["suma"] < 0.5:
-                            status = "Pagado"
-                if factura.tipoDeComprobante == "P":
-                    status = "Pagado"
+                        ws_ingresos.cell(row, 16, self.complementosDePago[factura.UUID]["suma"])
 
-                dv.add(ws_ingresos.cell(row, 15))
-                ws_ingresos.cell(row, 15, status)
-
-                if factura.UUID in self.complementosDePago:
-                    ws_ingresos.cell(row, 16, self.complementosDePago[factura.UUID]["suma"])
-
-                if factura.tipoDeComprobante == "N":
-                    ws_ingresos.cell(row, 17, "Nómina")
-                else:
-                    ws_ingresos.cell(row, 17, "Facturado")
+                    if factura.tipoDeComprobante == "N":
+                        ws_ingresos.cell(row, 17, "Nómina")
+                    else:
+                        ws_ingresos.cell(row, 17, "Facturado")
 
 
             ws_ingresos.cell(row+1, 8, "=SUM(H2:H"+str(row)+")")
