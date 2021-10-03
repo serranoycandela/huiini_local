@@ -74,13 +74,37 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="1" rowspan="2" colspan="5">
+         <item row="5" column="1">
+          <widget class="QProgressBar" name="progressBar">
+           <property name="value">
+            <number>24</number>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0" rowspan="3">
+          <widget class="QLabel" name="labelLogo">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QPushButton" name="agrega_cats">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>Editar categorías</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1" rowspan="3" colspan="5">
           <widget class="QTableWidget" name="tableWidget_resumen">
            <property name="autoScroll">
             <bool>true</bool>
            </property>
            <attribute name="horizontalHeaderVisible">
-            <bool>false</bool>
+            <bool>true</bool>
            </attribute>
            <attribute name="horizontalHeaderHighlightSections">
             <bool>false</bool>
@@ -93,24 +117,7 @@
            </attribute>
           </widget>
          </item>
-         <item row="1" column="0">
-          <widget class="QPushButton" name="agrega_cats">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="text">
-            <string>Editar categorías</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0" rowspan="3">
-          <widget class="QLabel" name="labelLogo">
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="3" colspan="2">
+         <item row="3" column="3" colspan="2">
           <widget class="QPushButton" name="imprimir">
            <property name="enabled">
             <bool>false</bool>
@@ -120,45 +127,48 @@
            </property>
           </widget>
          </item>
-         <item row="4" column="1">
-          <widget class="QProgressBar" name="progressBar">
-           <property name="value">
-            <number>24</number>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="5" rowspan="3">
-          <widget class="QListWidget" name="listaDeImpresoras">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="2" rowspan="2">
-          <widget class="QLabel" name="folder">
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="2">
+         <item row="5" column="2">
           <widget class="QLabel" name="folderPDF">
            <property name="text">
             <string/>
            </property>
           </widget>
          </item>
-         <item row="3" column="3" rowspan="2">
+         <item row="3" column="2" rowspan="2">
+          <widget class="QLabel" name="folder">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="5" rowspan="3">
+          <widget class="QListWidget" name="listaDeImpresoras">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="3" rowspan="2">
           <widget class="QPushButton" name="botonCancela">
            <property name="text">
             <string>Cancelar impresión</string>
            </property>
           </widget>
          </item>
-         <item row="3" column="4" rowspan="2">
+         <item row="4" column="4" rowspan="2">
           <widget class="QPushButton" name="impresora">
            <property name="text">
             <string>Selecciona Impresora</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QPushButton" name="excel_anual_button">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>Excel Anual</string>
            </property>
           </widget>
          </item>

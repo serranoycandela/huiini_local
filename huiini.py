@@ -177,6 +177,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         self.carpetaChooser.clicked.connect(self.cualCarpeta)
         self.agrega_cats.clicked.connect(self.edita_categorias)
+        self.excel_anual_button.clicked.connect(self.abre_excel_anual)
         #self.descarga_bt.clicked.connect(self.descarga_mesta)
         self.imprimir.clicked.connect(self.imprime)
 
@@ -214,10 +215,43 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
     def tabChanged(self, index):
         print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA estoy cambiando a ",str(index))
         name = self.tabWidget.tabText(index)
+        folder_mes = {"ENERO":"01 ENERO",
+                    "FEBRERO":"02 FEBRERO",
+                    "MARZO":"03 MARZO",
+                    "ABRIL":"04 ABRIL",
+                    "MAYO":"05 MAYO",
+                    "JUNIO":"06 JUNIO",
+                    "JULIO":"07 JULIO",
+                    "AGOSTO":"08 AGOSTO",
+                    "SEPTIEMBRE":"09 SEPTIEMBRE",
+                    "OCTUBRE":"10 OCTUBRE",
+                    "NOVIEMBRE":"11 NOVIEMBRE",
+                    "DICIEMBRE":"12 DICIEMBRE",
+                    }
+        self.excel_path = join(self.folder_year, folder_mes[name],"EGRESOS","huiini","resumen.xlsx")
+        
+        self.tableWidget_resumen.clear()
+        self.tableWidget_resumen.setCellWidget(0,0, ImgWidgetPalomita(self))
         if name == "Ingresos":
             print("aquí haría algo")
         else:
             self.mes = name
+            n = -1
+            lc = ["Excel"]
+
+            for i in range(6,self.tables[self.mes].columnCount()):
+                try: 
+                    f = float(self.tables[self.mes].item(0,i).text())
+                    header = self.tables[self.mes].horizontalHeaderItem(i).text()
+                    lc.append(header)
+                except:
+                    print("noesnumero")
+            
+            for columna in lc:
+                n += 1
+                self.tableWidget_resumen.setHorizontalHeaderItem (n, QTableWidgetItem(columna))
+            for clumna_superflua in range(len(lc),10):
+                self.tableWidget_resumen.setHorizontalHeaderItem (clumna_superflua, QTableWidgetItem(""))
             self.sumale()
         
     def setupTabMeses(self):
@@ -349,6 +383,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             #     i.setBackground(QtGui.QColor("#ababab"))
             self.cats_dialog.myListWidget.addItem(i)
 
+    def abre_excel_anual(self):
+        try:
+            os.startfile(self.annual_xlsx_path)
+            print("este guey me pico:"+self.annual_xlsx_path)
+        except:
+            print ("el sistema no tiene una aplicacion por default para abrir exceles")
+            QMessageBox.information(self, "Information", "El sistema no tiene una aplicación por default para abrir exceles" )
     def edita_categorias(self):
         self.cats_dialog = categorias_widget()
         self.cats_dialog.remove_button.clicked.connect(self.quitaCategoria)
@@ -1049,12 +1090,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
     def sumale(self, renglonResumen=0):
         total_col = 13
+        
         for i in range(6,self.tables[self.mes].columnCount()):
             estaTabla = self.tables[self.mes]
             if estaTabla.horizontalHeaderItem(i).text() == "Total":
                 total_col =  i
         print(str(self.numeroDeFacturasValidas[self.mes]))
-        for columna in range(6,total_col):
+        for columna in range(6,total_col+1):
             suma = 0
             for renglon in range(self.numeroDeFacturasValidas[self.mes]):
                 try:
@@ -1062,7 +1104,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 except:
                     print("no puedo")
 
-            self.tableWidget_resumen.setItem(renglonResumen,columna-3,QTableWidgetItem(str(suma)))
+            self.tableWidget_resumen.setItem(renglonResumen,columna-5,QTableWidgetItem(str(suma)))
 
         if renglonResumen == 1:
             self.tableWidget_resumen.setItem(0,1,QTableWidgetItem("            ---------"))
@@ -1115,8 +1157,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
     def meDoblePicaronResumen(self, row,column):
         print("me picaron en : " +str(row)+", " +str(column))
         try:
-            os.startfile(self.excel_path)
             print("este guey me pico:"+self.excel_path)
+            os.startfile(self.excel_path)
+            
         except:
             print ("el sistema no tiene una aplicacion por default para abrir exceles")
             QMessageBox.information(self, "Information", "El sistema no tiene una aplicación por default para abrir exceles" )
@@ -1268,6 +1311,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.tabWidget.clear()
 
         folder_cliente = os.path.split(os.path.split(self.paths[0])[0])[0]
+        self.folder_year = os.path.split(self.paths[0])[0]
         self.json_path = join(folder_cliente, "categorias_dicc_huiini.json")
         if os.path.exists(self.json_path):
             with open(self.json_path, "r", encoding="utf-8") as jsonfile:
@@ -1351,10 +1395,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
 
 
-            if len(self.paths) > 1:
-                self.excel_path = self.annual_xlsx_path
-            else:
-                self.excel_path = join(self.paths[0],"EGRESOS","huiini","resumen.xlsx")
+           
+            self.excel_path = join(self.paths[0],"EGRESOS","huiini","resumen.xlsx")
 
             self.listaDeFacturasIngresos = []
 
@@ -1397,6 +1439,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
 
             self.agrega_cats.setEnabled(True)
+            self.excel_anual_button.setEnabled(True)
             self.raise_()
             self.activateWindow()
             self.progressBar.hide()
@@ -1817,7 +1860,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             self.tables[self.mes].setItem(contador,4,self.esteItem(factura.EmisorRFC,factura.EmisorNombre))
             mesage = ""
             for concepto in factura.conceptos:
-                mesage += concepto["descripcion"] + u'\n'
+                mesage += self.concepto[concepto["clave_concepto"]] + u'\n'
             self.tables[self.mes].setItem(contador,5, self.esteItem(factura.conceptos[0]['descripcion'],mesage))
             self.tables[self.mes].setItem(contador,6,self.esteCenteredItem(str(factura.subTotal),""))
             self.tables[self.mes].setItem(contador,7,self.esteCenteredItem(str(factura.descuento),""))
