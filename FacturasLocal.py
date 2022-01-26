@@ -11,8 +11,12 @@ import subprocess
 from os.path import join
 import json
 import re
-from pdflatex import PDFLaTeX
-import pdflatex
+try:
+    from pdflatex import PDFLaTeX
+    import pdflatex
+except:
+    print("soy linux")
+
 
 
 class FacturaLocal(object):

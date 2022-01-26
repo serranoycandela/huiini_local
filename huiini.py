@@ -11,8 +11,11 @@ from os import listdir, environ
 from os.path import isfile, join, basename
 import shutil
 import os
-import win32print
-import win32api
+try:
+    import win32print
+    import win32api
+except:
+    print("soy linux")
 import time as time_old
 from subprocess import Popen
 from FacturasLocal import FacturaLocal as Factura
