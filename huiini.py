@@ -178,6 +178,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.labelLogo.setPixmap(logoPix)
         self.pdflatex_path = "C:/Program Files/MiKTeX 2.9/miktex/bin/x64/pdflatex.exe"
 
+        self.actionEscoger_cliente.triggered.connect(self.escoger_cliente)
+
+
+
         self.carpetaChooser.clicked.connect(self.cualCarpeta)
         self.agrega_cats.clicked.connect(self.edita_categorias)
         self.excel_anual_button.clicked.connect(self.abre_excel_anual)
@@ -214,6 +218,24 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         self.tabWidget.currentChanged.connect(self.tabChanged)
         self.numeroDeFacturasValidas = {}
+
+    def escoger_cliente(self):
+        file_dialog = getFilesDlg()
+        file_dialog.sendPaths.connect(self.despliega_cliente)
+        file_dialog.exec()
+    def despliega_cliente(self,paths):
+        self.cliente_path = paths.copy()[0]
+        with open(join(self.cliente_path,"Doc_Fiscal","claves.txt")) as fp:
+            nombre = ""
+            rfc = ""
+            Lines = fp.readlines()
+            for line in Lines:
+                if "Nombre: " in line:
+                    nombre = line.split("Nombre: ")[1]
+                if "RFC: " in line:
+                    rfc = line.split("RFC: ")[1]
+        
+        self.header_cliente.setText(nombre+"    RFC: "+rfc)
 
     def tabChanged(self, index):
         print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA estoy cambiando a ",str(index))

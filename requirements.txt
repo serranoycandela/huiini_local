@@ -5,3 +5,4 @@ python3-ghostscript
 win32printing
 pyinstaller
 pandas
+pyside2
