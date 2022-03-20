@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Huiini"
-#define MyAppVersion "1.7.1"
+#define MyAppVersion "1.8.1"
 #define MyAppPublisher "Huiini"
 #define MyAppURL "http://huiini.com.mx"
 #define MyAppExeName "huiini.exe"

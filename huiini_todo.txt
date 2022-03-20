@@ -1,0 +1,247 @@
+Buenas tardes Fidel 
+
+Te mando los puntos y pendientes que se realizaron el fin de semana
+
+mejora para viaticos segunda etapa
+
+VIATICOS
+
+1.- Prellenar formatos de gastos de viaje por trabajador seleccionando la o las carpetas de viaje
+2.-Proyecto  y nombre , listas en excel. @Araceli C favor de pasar estos datos de Metropolitana e integradora
+3.- Aregar la funcionalidad de remover los xml procesados de la carpeta de descarga del SAT
+
+precio: 5800 iva incluido pago de Integradora en Octubre
+
+DATOS DE PRUEBA EN CARPETA mETROLITANA/ADM/VIATICOS
+CARPETA DE PRUEBA MENSUAL METROPOLITANA/CONTABILIDAD/2020/
+@Araceli C Favor de hacer un formato en excel  del personal a viaticar de las dos compañias
+dos columnas
+La primera: con el nombre del personal bien escrito, completo (ej: "Johnny Leonardo Ambrosio Motiel")
+La segunda: el nombre de la carpeta que usa para viaticar "JOHNNY LEONARDO"
+
+EJEMPLOS EN METROPOLITANA/ADMIN/VIATICOS/AGOSTO
+
+@Kary  LA LISTA DE PROYECTOS Y CLAVES, @Araceli C (modificado) 
+
+HUIINI
+1.- BORRAR LOG Y TEX
+2.- ERRORES, folio inicial siempre es el 2. (@Maria Gabriela Rodriguez @Araceli C armar lista de errores pendientes de huiini 
+fechal ilimite martes 22 de septiembre) @Maria Gabriela Rodriguez urge hagas una lista de los errores con foto de la ventana "negra"
+ y/o direccion de la carpeta que no se procese.
+3.- PIMPEAR pdf, ponerle el logo de SicAD (@Araceli C envio al correo serranoyca...)   string en forma de pago en el PDF, cadena completas
+ del sello digital y del certificado del SAT @Araceli C envio de logo...
+
+HATA QUI SE PAGARA CON 5000 MIL EN EFECTIVO pagar para el 25 de Sep
+
+CAJA CHICA:
+LLENADO DE FORMATO
+Aregar la funcionalidad de remover los xml procesados de la carpeta de descarga del SAT
+
+5800 Metropolitana 1A semana de octubre con factura de Manuela
+
+CAJA CHICA
+HUIINI 1.2
+
+CAJA CHICA.
+SE ENTREGA FORMATO Y SE DECIDIRÁ DONDE INSTALAR LA INTERFACE GRAFICA, CORTE DE CAJA CADA VIERNES , AMAR CAJACHICA/AGOSTO/12 AGOSTO....
+
+HUIINI 1.2
+- BOTÓN DE CANCELAR IMPRESIÓN
+- 2 pestañas en xcel que sean agregadas por año o por una cantidad de meses(una pestaña de impuesto, importes)
+	- permitir que el usuario seleccione varios meses
+	- las categorias deben ser por concepto
+	- en las sumas de los agregados de varios meses se debe separar correspondientemente cada concepto en su tipo
+- DEPURAR GUI (QUITAR COLUMNAS (ELIMINAR VERSION DEL XML, OCULTAR COLUMNA CUANDO TODOS LOS RENGLONES =  0s (DESCUENTO) (modificado) 
+- QUE NO IMPRIMA PAGOS (hint TipoDeComprobante I=Ingreso, E=Egreso, T=Traslado, P=Pago N=Nómina)
+- Agregar template en la hoja por RFC del resumen DIOT  https://docs.google.com/spreadsheets/d/1vD-eTgK2DXViI2jeYLGA_NYJ7styDH2NCUeZIkwvaEE/edit#gid=1705561525
+
+precio super amigo, de  5000 sin iva en efectivo.
+
+
+
+HUIINI 1.3
+
+- que cuando calcules mas de un mes te ponga el resumen anual en la interfaz (poder abrir el excel del resumen anual desde la interfaz)
+- crear nuevas categorias desde la interfaz grafica
+- categorias costumizadas para cada cliente
+- una pestaña de ingresos en las agregadas
+ 	- quitar de egresos los de nomina
+	- una pestaña de todas las facturas de ingresos incluidas las de nomina que 
+	hay que agarrar de egresos, con las propiedades de cada factura mas, mesEmision, mesPago, Pagado
+	- una pestaña por mes de pago con todas las facturas que se pagaron en ese mes y la suma
+- Que no chingue cuando imprime
+
+
+
+
+HUIINI 1.4
+- que el instalador respete los archivos de documentos si ya existen -ya
+- poder quitar categorias -ya
+- manejar las intersecciones de categorias -ya
+- que te salga la lista de posibles tipos(categorias) en la columna de tipo del excel anual -ya
+- permitir copiar en los mensajes de duplicados -ya
+- que el file chooser te ponga en el anterior y/o empiece siempre en sicad -ya
+- mejorar la barra de progreso -ya
+- que si no creaste los pdfs de todas formas aparesca la palomita o el tache en la primera columna reflejando si ya está o no el pdf -ya
+- que en los resumenes diot ponga la suma por rfc como formula - ya
+- imprimir en el orden que esté en la interfaz de huiini - ya
+- QUE SEPARE XML DE NOMINAS EN DROPBOX (cliente/año/mes/INGRESOS/NOMINA) - ya
+
+
+1.5 Ya y será la 1.5.2
+
+- que si hay subcarpetas en egresos huiini escanee todas esas carpetas para obtener los xmls Ya
+- pregunta gallinita confirmacion de eliminacion de categoria Ya
+- DEPURAR GUI (OCULTAR COLUMNA CUANDO TODOS LOS RENGLONES =  0s ej. DESCUENTO) Ya
+- pestañas con lo mismo que sale en los exceles Ya (para la impresion faltan los ingresos y para hacerlo
+ hay que buscar en todas las carpetas de ingresos de los meses y en las carpetas de nomina dentro de egresos)
+- agregar la columna de categoria en las pestañas de huiini Ya
+- que si ya hay un xls anual, solo agregue los meses que no estaban? o las facturas que no estaban? - Ya
+- mejora en la ventana de edicion de categorias Ya
+
+
+
+
+
+1.6
+
+- Clasificar los xmls en carpetas
+	- que huiini mueva automaticamente los xmls reconocibles como los de (UBER 78111808, no deducibles (por clave ) NOMINA (N) tipo de cfdi , COMPLEMENTO PAGO (P), egresos (E) tipo de cfdi igual que Nomina N)??
+	  a su carpeta ya
+	- que huiini permita desde la interfaz mover los xmls a las carpetas  ya
+	  CAJA CHICA, VIATICOS, (UBER, NOMINA, COMPLEMENTO PAGO)?si?
+
+
+- que si hay subcarpetas en egresos huiini escanee todas esas carpetas para obtener los xmls Ya
+- sesion de errores (para que no le chilles) ya
+- Respaldo automatico de resumenes anuales (copia si ya hay un xlsx, crea el nuevo, verifica si el nuevo es igual a la copia creada previamente, y si si borra la copia)
+ya
+
+
+
+1.7
+
+- Agregar columnas de traslados locales de ISH y TUA, ieps en el excel anual Ya
+- Agregar en el excel columna de descripcion sat del concepto Ya
+- Detectar cuando se concluye con los PDF´s para evitar el sleep. Ya
+- Verificar que no se rompa con facutras mal formadas como las que hay en 2020 de metropolitana Ya
+- La listadeFacturasOrdenadas y el diccionarioPorRFC deben ser diccionarios de meses (osea self.facturas["ENERO"] será la antigua listaDeFacturasOrdenadas
+  self.sumaRFC["ENERO"] será el antiguo diccionariPorRFC Ya 
+- cambiar los totales cuando cambies de tab  ya 
+- mas niveles hacia adentro de la carpeta de EGRESOS ahorita slo lee la facturas en un folder adentro pero no dos o mas Ya
+- cuando ya usaste huiini en unos folders y pides otros, quitar los anteriores Ya
+
+
+
+
+
+
+
+
+
+1.8
+
+- Agregar en tooltip la descripción sat de cada concepto en el gui Ya
+- Agregar header a la tabla de sumas en el gui Ya
+- Agregar botón de resumen anual Ya
+- que la palomita de las sumatorias te lleve al resumen diot del mes Ya 
+- que el resumen diot se llame resumen_"elcliente"_"elmes".xlxs
+- header de todas las hojas de excel con la info del cliente e iconos de huiini y sicad
+- Agregar a la suma del total por concepto todos los impuestos
+- Agragar formato y hojas de calculo de impuestos (IVA e ISR) en el excel.
+- En las hojas de iva anual e importe anual, separar lo no duducible y el gasto personal, nomina eliminar 
+- Agregar columnas de traslados locales de ISH y TUA, ieps en el qTablewidget
+
+
+
+
+1.9
+
+- Llenado de una hoja nueva en el excel de gasto personal (declaracion anual)
+- Identificar canceladas (son xmls complementarios que hacen referencia a el uuid de un xml previo)
+- Modificar el pie de los exceles (poniendo que?)
+- Manual de funciones. video
+- Actualizar Jsons de catalogos, unidades de medida, para cada catalogo crear su propio scrip de python que se encargue de actualizar eñ Json (ej. consepto2json.py)
+- Depurar UI y Exceles formatos,
+- Mejorar formatos DIOT , que se llene la mayor cantidad de informacion posible
+
+????
+
+
+
+
+
+
+
+- Checar entre los 2 que son los impuestos que salen en la hoja de iva_anual
+
+
+- Agregar columnas de traslados locales de ISH y TUA, ieps en el pdf ( hay que ver donde ) 
+- icono del app 
+- que no salga un renglon con puro None al final en el tab de ingresos de la interfaz qt
+- que no se rompa si no hay ingresos
+- Dar al usuario chance de abrir el resumen diot y/o el resumen anual (osea los exceles) desde la interfaz de huiini
+
+- Mover los xmls con tipoDeComprovante = I a la carpeta ingresos y contarlo con los demas ingresos
+- Areglar las mamadas de los xmls de bancomer (intereses?)
+- editar categorias sin correr ningun mes? (osea talvez agregar un boton de escoger cliente?)
+- Eliminar tabs en la interface QT cuando escojas meses.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+prioridades
+huiini 1.0  27 de sep aprox (5000)
+huiini 1.2   3 de oct aprox (5000)
+HUIINI 1.3 ya
+HUIINI 1.4 15 enero (5000)
+huiini 1.5 pagado
+HUIINI 1.6 pagado 9 de abril 
+huiini 1.7 adelanto 08/Mayo (2500)
+huiini 1.7 pago 29 /Mayo (2500)
+
+
+
+
+
+\usepackage{seqsplit}
+
+
+\bigskip
+\seqsplit{selloCFD:\ {{selloCFD}}}
+\medskip
+
+\seqsplit{selloSAT:\ {{selloSAT}}}
+
+\bigskip
+\seqsplit{certificado:\ {{certificado}}}
+
+
+
+
+
+
+
+en el contexto de los tabs de agregados anuales, que impuestos se quiere separar? y esos impuestos se leen de la factura? o de cada concepto?
+
+
+para los resumenes diot, sie es PUE se suma, si es PPD y hay un complemento pago (osea un xml con tipoDeComprobante = P) se suma, y si es un PPD sin complemento pago no se suma
+
+- nayeli dijo que le serviría separar en una carpeta las de INGRESOS de nomina
+
+- hacer huiini compatible con pantallas chicas (720p)
+
+- agregar un mensaje de error si no encuentra ghostscript
+
+
+
