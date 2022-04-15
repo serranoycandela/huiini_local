@@ -35,7 +35,7 @@ class Ui_MainWindow(object):
         self.header_cliente.setObjectName(u"header_cliente")
         self.header_cliente.setMinimumSize(QSize(0, 30))
         font = QFont()
-        font.setPointSize(24)
+        font.setPointSize(18)
         self.header_cliente.setFont(font)
 
         self.verticalLayout.addWidget(self.header_cliente)

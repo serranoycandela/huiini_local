@@ -66,12 +66,13 @@ class FacturaLocal(object):
         tree = etree.parse(xml_path)
 
         self.root = tree.getroot()
-
-        self.getTags()
-
         self.version = self.root.get ("Version")
         if self.version == None:
             self.version = self.root.get ("version")
+
+        self.getTags()
+
+        
         if self.version == "3.2":
 
 
@@ -117,11 +118,11 @@ class FacturaLocal(object):
 
             self.totalImpuestosTrasladadosKey = "totalImpuestosTrasladados"
 
-            RegimenFiscalTag = self.EmisorTag.find("{http://www.sat.gob.mx/cfd/3}RegimenFiscal")
+            RegimenFiscalTag = self.EmisorTag.find("{http://www.sat.gob.mx/cfd/"+self.N+"}RegimenFiscal")
             self.EmisorRegimen = self.latexStr(RegimenFiscalTag.get("Regimen"))
 
 
-        if self.version == "3.3":
+        if float(self.version) > 3.2: 
             self.folioKey = "Folio"
             self.serieKey = "Serie"
             self.formaDePagoKey = "FormaPago"
@@ -361,12 +362,13 @@ class FacturaLocal(object):
 
 
     def getTags (self):
-        self.EmisorTag = self.root.find("{http://www.sat.gob.mx/cfd/3}Emisor")
-        self.ReceptorTag = self.root.find("{http://www.sat.gob.mx/cfd/3}Receptor")
+        self.N = str(round(float(self.version)))
+        self.EmisorTag = self.root.find("{http://www.sat.gob.mx/cfd/"+self.N+"}Emisor")
+        self.ReceptorTag = self.root.find("{http://www.sat.gob.mx/cfd/"+self.N+"}Receptor")
         self.conceptos = []
-        self.conceptosTag = self.root.find("{http://www.sat.gob.mx/cfd/3}Conceptos")
-        self.impuestosTag = self.root.find("{http://www.sat.gob.mx/cfd/3}Impuestos")
-        self.ComplementoTag = self.root.find("{http://www.sat.gob.mx/cfd/3}Complemento")
+        self.conceptosTag = self.root.find("{http://www.sat.gob.mx/cfd/"+self.N+"}Conceptos")
+        self.impuestosTag = self.root.find("{http://www.sat.gob.mx/cfd/"+self.N+"}Impuestos")
+        self.ComplementoTag = self.root.find("{http://www.sat.gob.mx/cfd/"+self.N+"}Complemento")
 
 
 
@@ -440,7 +442,7 @@ class FacturaLocal(object):
         if self.conceptosTag == None:
             print("no hay traslados")
         else:
-            listaconceptosTag = self.conceptosTag.findall ("{http://www.sat.gob.mx/cfd/3}Concepto")
+            listaconceptosTag = self.conceptosTag.findall ("{http://www.sat.gob.mx/cfd/"+self.N+"}Concepto")
             for conceptoTag in listaconceptosTag:
                 if conceptoTag == None:
                     print("no hay traslados")
@@ -469,10 +471,10 @@ class FacturaLocal(object):
 
                         try: #segun mcfly faltan retenciones para ingresos
 
-                            ImpuestosTag = conceptoTag.find("{http://www.sat.gob.mx/cfd/3}Impuestos")
-                            TrasladosTag = ImpuestosTag.findall("{http://www.sat.gob.mx/cfd/3}Traslados")
+                            ImpuestosTag = conceptoTag.find("{http://www.sat.gob.mx/cfd/"+self.N+"}Impuestos")
+                            TrasladosTag = ImpuestosTag.findall("{http://www.sat.gob.mx/cfd/"+self.N+"}Traslados")
                             elPrimerTraslado = TrasladosTag[0]
-                            trasladoTag = elPrimerTraslado.find("{http://www.sat.gob.mx/cfd/3}Traslado")
+                            trasladoTag = elPrimerTraslado.find("{http://www.sat.gob.mx/cfd/"+self.N+"}Traslado")
                             impuestos = trasladoTag.get("Importe")
 
                         except:
@@ -512,13 +514,13 @@ class FacturaLocal(object):
             self.totalImpuestosTrasladados = self.latexStr(self.impuestosTag.get(self.totalImpuestosTrasladadosKey))
 
 
-            retencionesTag = self.impuestosTag.find ("{http://www.sat.gob.mx/cfd/3}Retenciones")
+            retencionesTag = self.impuestosTag.find ("{http://www.sat.gob.mx/cfd/"+self.N+"}Retenciones")
             if retencionesTag == None:
                 retImporte = "0"
                 retImpuestoString = "Retencion de IVA"
                 retImpuestoString = "Retencion de ISR"
             else:
-                listaRetencionTag = retencionesTag.findall ("{http://www.sat.gob.mx/cfd/3}Retencion")
+                listaRetencionTag = retencionesTag.findall ("{http://www.sat.gob.mx/cfd/"+self.N+"}Retencion")
 
 
                 for retencionTag in listaRetencionTag:
@@ -540,7 +542,7 @@ class FacturaLocal(object):
 
         self.traslados = {"IVA":{"importe":0,"tasa":0},"ISR":{"importe":0,"tasa":0},"IEPS":{"importe":0,"tasa":0},"ISH":{"importe":0,"tasa":0},"TUA":{"importe":0,"tasa":0}}
         try:
-            trasladosTag = self.impuestosTag.find("{http://www.sat.gob.mx/cfd/3}Traslados")
+            trasladosTag = self.impuestosTag.find("{http://www.sat.gob.mx/cfd/"+self.N+"}Traslados")
         except:
             trasladosTag = None
             print("no hay traslados en " + self.xml_name )
@@ -550,7 +552,7 @@ class FacturaLocal(object):
             importe = "0"
             trasImpuestoString = "Traslado"
         else:
-            listatrasladosTag = trasladosTag.findall ("{http://www.sat.gob.mx/cfd/3}Traslado")
+            listatrasladosTag = trasladosTag.findall ("{http://www.sat.gob.mx/cfd/"+self.N+"}Traslado")
 
 
             for trasladoTag in listatrasladosTag:

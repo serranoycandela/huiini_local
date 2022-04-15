@@ -245,3 +245,9 @@ para los resumenes diot, sie es PUE se suma, si es PPD y hay un complemento pago
 
 
 
+
+
+- Encontrar un mejor lugar para los archivos de huiini porque el folder de Documents tiene la falla de que es distinto en cada compu
+ejemplo en la p1 es por default en C:/Users/fidel/Onedrive/documentos mejor aprender a usar la carpeta de Appdata?
+
+

@@ -48,7 +48,7 @@ import filecmp
 ##C:\Python36\Scripts\pyside2-uic.exe mainwindowV4.ui -o guiV4.py
 ##C:\Python36\Scripts\pyinstaller.exe huiini.py
 ## C:\Users\Mio\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.9_qbz5n2kfra8p0\LocalCache\local-packages\Python39\Scripts\pyinstaller.exe huiini.py
-
+## C:\Users\Mio\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.9_qbz5n2kfra8p0\LocalCache\local-packages\Python39\Scripts\pyside2-uic.exe mainwindowV4.ui -o guiV4.py
 
 
 try:
@@ -498,12 +498,20 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
             cell.border = cell_border
 
-        for column_cells in ws.columns:
-            #length = max(len(self.as_text(cell.value)) for cell in column_cells)
-            length = len(self.as_text(column_cells[0].value))
-            ws.column_dimensions[column_cells[0].column_letter].width = length+5
-
-        ws.column_dimensions['A'].width = 12
+        ws.column_dimensions['A'].width = 10
+        ws.column_dimensions['B'].width = 10
+        ws.column_dimensions['C'].width = 40
+        ws.column_dimensions['D'].width = 15
+        ws.column_dimensions['E'].width = 20
+        ws.column_dimensions['F'].width = 40
+        ws.column_dimensions['G'].width = 9
+        ws.column_dimensions['H'].width = 9
+        ws.column_dimensions['I'].width = 9
+        ws.column_dimensions['J'].width = 9
+        ws.column_dimensions['K'].width = 9
+        ws.column_dimensions['L'].width = 9
+        ws.column_dimensions['M'].width = 9
+        ws.column_dimensions['N'].width = 9
 
         # for cell in ws['A']:
         #     cell.font = Font(bold=True)
@@ -627,7 +635,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 max_row_for_a = max((c.row for c in ws_ingresos['C'] if c.value is not None))
                 row = max_row_for_a
                 #row = ws_ingresos.max_row
-            
             dv = DataValidation(type="list", formula1='"Pendiente,Pagado"', allowBlank=True)
             ws_ingresos.add_data_validation(dv)
             dv_mes = DataValidation(type="list", formula1='"ENERO,FEBRERO,MARZO,ABRIL,MAYO,JUNIO,JULIO,AGOSTO,SEPTIEMBRE,OCTUBRE,NOVIEMBRE,DICIEMBRE,--"', allow_blank=True)
@@ -844,6 +851,19 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             ws_todos.cell(1, 11, 'total')
             ws_todos.cell(1, 12, 'tipo')
             ws_todos.cell(1, 13, 'status')
+            ws_todos.column_dimensions['A'].width = 9
+            ws_todos.column_dimensions['B'].width = 10
+            ws_todos.column_dimensions['C'].width = 40
+            ws_todos.column_dimensions['D'].width = 40
+            ws_todos.column_dimensions['E'].width = 10
+            ws_todos.column_dimensions['F'].width = 40
+            ws_todos.column_dimensions['G'].width = 9
+            ws_todos.column_dimensions['H'].width = 9
+            ws_todos.column_dimensions['I'].width = 9
+            ws_todos.column_dimensions['J'].width = 9
+            ws_todos.column_dimensions['K'].width = 9
+            ws_todos.column_dimensions['L'].width = 15
+            ws_todos.column_dimensions['M'].width = 9
             row = 1
         else:
             row = ws_todos.max_row
@@ -930,6 +950,25 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             ws_mes.cell(1, 17,     "Status")
             ws_mes.cell(1, 18,     "TipoDeComprobante")
             ws_mes.cell(1, 19,     "complementosDePago")
+            ws_mes.column_dimensions['A'].width = 10
+            ws_mes.column_dimensions['B'].width = 20
+            ws_mes.column_dimensions['C'].width = 40
+            ws_mes.column_dimensions['D'].width = 35
+            ws_mes.column_dimensions['E'].width = 16
+            ws_mes.column_dimensions['F'].width = 30
+            ws_mes.column_dimensions['G'].width = 9
+            ws_mes.column_dimensions['H'].width = 9
+            ws_mes.column_dimensions['I'].width = 9
+            ws_mes.column_dimensions['J'].width = 9
+            ws_mes.column_dimensions['K'].width = 9
+            ws_mes.column_dimensions['L'].width = 9
+            ws_mes.column_dimensions['M'].width = 9
+            ws_mes.column_dimensions['N'].width = 20
+            ws_mes.column_dimensions['O'].width = 7
+            ws_mes.column_dimensions['P'].width = 20
+            ws_mes.column_dimensions['Q'].width = 20
+            ws_mes.column_dimensions['R'].width = 10
+            ws_mes.column_dimensions['S'].width = 7
 
             dv = DataValidation(type="list", formula1='"Pendiente,Pagado"', allow_blank=True)
             ws_mes.add_data_validation(dv)
@@ -1351,6 +1390,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         for categoria, claves in self.dicc_de_categorias.items():
             if not categoria in self.lista_categorias_default:
                 self.lista_categorias_default.append(categoria)
+
+        self.despliega_cliente([folder_cliente])
 
         self.todos_los_meses = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"]
 
