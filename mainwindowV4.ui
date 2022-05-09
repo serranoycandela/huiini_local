@@ -14,188 +14,163 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Huiini 1.7</string>
+   <string>Huiini 1.8.3</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
-    <item>
-     <widget class="QLabel" name="header_cliente">
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>30</height>
-       </size>
-      </property>
-      <property name="font">
-       <font>
-        <pointsize>18</pointsize>
-       </font>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QTabWidget" name="tabWidget">
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>370</height>
-       </size>
-      </property>
-      <property name="currentIndex">
-       <number>1</number>
-      </property>
-      <widget class="QWidget" name="tab">
-       <attribute name="title">
-        <string>Tab 1</string>
-       </attribute>
+   <widget class="QTabWidget" name="tabWidget">
+    <property name="geometry">
+     <rect>
+      <x>9</x>
+      <y>130</y>
+      <width>1091</width>
+      <height>501</height>
+     </rect>
+    </property>
+    <property name="minimumSize">
+     <size>
+      <width>0</width>
+      <height>370</height>
+     </size>
+    </property>
+    <property name="currentIndex">
+     <number>1</number>
+    </property>
+    <widget class="QWidget" name="tab">
+     <attribute name="title">
+      <string>Tab 1</string>
+     </attribute>
+    </widget>
+    <widget class="QWidget" name="tab_2">
+     <attribute name="title">
+      <string>Tab 2</string>
+     </attribute>
+    </widget>
+   </widget>
+   <widget class="QFrame" name="frame">
+    <property name="geometry">
+     <rect>
+      <x>9</x>
+      <y>645</y>
+      <width>1081</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="maximumSize">
+     <size>
+      <width>16777215</width>
+      <height>180</height>
+     </size>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+    <widget class="QWidget" name="">
+     <property name="geometry">
+      <rect>
+       <x>11</x>
+       <y>11</y>
+       <width>614</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QPushButton" name="carpetaChooser">
+        <property name="minimumSize">
+         <size>
+          <width>200</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Selecciona Carpeta</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="excel_anual_button">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>200</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Excel Anual</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QProgressBar" name="progressBar">
+        <property name="minimumSize">
+         <size>
+          <width>200</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="value">
+         <number>24</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="">
+    <property name="geometry">
+     <rect>
+      <x>9</x>
+      <y>9</y>
+      <width>1287</width>
+      <height>102</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLabel" name="header_cliente">
+       <property name="minimumSize">
+        <size>
+         <width>950</width>
+         <height>100</height>
+        </size>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>16</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
       </widget>
-      <widget class="QWidget" name="tab_2">
-       <attribute name="title">
-        <string>Tab 2</string>
-       </attribute>
+     </item>
+     <item>
+      <widget class="QLabel" name="labelLogo">
+       <property name="minimumSize">
+        <size>
+         <width>79</width>
+         <height>79</height>
+        </size>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
       </widget>
-     </widget>
-    </item>
-    <item>
-     <widget class="QFrame" name="frame">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="maximumSize">
-       <size>
-        <width>16777215</width>
-        <height>180</height>
-       </size>
-      </property>
-      <property name="frameShape">
-       <enum>QFrame::StyledPanel</enum>
-      </property>
-      <property name="frameShadow">
-       <enum>QFrame::Raised</enum>
-      </property>
-      <layout class="QGridLayout" name="gridLayout_2">
-       <item row="0" column="0">
-        <layout class="QGridLayout" name="gridLayout">
-         <property name="sizeConstraint">
-          <enum>QLayout::SetNoConstraint</enum>
-         </property>
-         <item row="5" column="2">
-          <widget class="QProgressBar" name="progressBar">
-           <property name="value">
-            <number>24</number>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="6" rowspan="3">
-          <widget class="QListWidget" name="listaDeImpresoras">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QPushButton" name="agrega_cats">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="text">
-            <string>Editar categorías</string>
-           </property>
-          </widget>
-         </item>
-         <item row="5" column="3">
-          <widget class="QLabel" name="folderPDF">
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="5" rowspan="2">
-          <widget class="QPushButton" name="impresora">
-           <property name="text">
-            <string>Selecciona Impresora</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <widget class="QPushButton" name="carpetaChooser">
-           <property name="text">
-            <string>Selecciona Carpeta</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="4" rowspan="2">
-          <widget class="QPushButton" name="botonCancela">
-           <property name="text">
-            <string>Cancelar impresión</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="3" rowspan="2">
-          <widget class="QLabel" name="folder">
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0" rowspan="3">
-          <widget class="QLabel" name="labelLogo">
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QPushButton" name="excel_anual_button">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="text">
-            <string>Excel Anual</string>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="4" colspan="2">
-          <widget class="QPushButton" name="imprimir">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="text">
-            <string>Imprimir</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QTableWidget" name="tableWidget_resumen">
-           <property name="autoScroll">
-            <bool>true</bool>
-           </property>
-           <attribute name="horizontalHeaderVisible">
-            <bool>true</bool>
-           </attribute>
-           <attribute name="horizontalHeaderMinimumSectionSize">
-            <number>50</number>
-           </attribute>
-           <attribute name="horizontalHeaderHighlightSections">
-            <bool>false</bool>
-           </attribute>
-           <attribute name="verticalHeaderVisible">
-            <bool>false</bool>
-           </attribute>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </widget>
-    </item>
-   </layout>
+     </item>
+    </layout>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
@@ -215,7 +190,23 @@
     <addaction name="action_editar_Categor_as"/>
     <addaction name="actionActualizar_Exceles"/>
    </widget>
+   <widget class="QMenu" name="menuImprimir">
+    <property name="title">
+     <string>Imprimir</string>
+    </property>
+    <addaction name="actionImprimir"/>
+    <addaction name="actionCancelar_Impresi_n"/>
+    <addaction name="separator"/>
+    <addaction name="actionSelccionar_Impresora"/>
+   </widget>
+   <widget class="QMenu" name="menuProcesar">
+    <property name="title">
+     <string>Procesar</string>
+    </property>
+   </widget>
    <addaction name="menuCliente"/>
+   <addaction name="menuImprimir"/>
+   <addaction name="menuProcesar"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -232,13 +223,45 @@
    </property>
   </action>
   <action name="action_editar_Categor_as">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Editar Categorías</string>
    </property>
   </action>
   <action name="actionActualizar_Exceles">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Actualizar Exceles</string>
+   </property>
+  </action>
+  <action name="actionCancelar_Impresi_n">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Cancelar Impresión</string>
+   </property>
+  </action>
+  <action name="actionImprimir">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Imprimir</string>
+   </property>
+  </action>
+  <action name="actionsdnsodk">
+   <property name="text">
+    <string>sdnsodk</string>
+   </property>
+  </action>
+  <action name="actionSelccionar_Impresora">
+   <property name="text">
+    <string>Selccionar Impresora</string>
    </property>
   </action>
  </widget>

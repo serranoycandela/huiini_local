@@ -71,6 +71,20 @@ class categorias_widget(QDialog):
         layout.addWidget(self.myListWidget)
         self.setLayout(layout)
 
+class impresoras_widget(QDialog):
+    def __init__(self, parent=None):
+        super(impresoras_widget, self).__init__(parent)
+        self.setMinimumSize(200, 100)
+        layout = QVBoxLayout()
+        self.lista = QListWidget()
+        layout.addWidget(self.lista)
+        self.setLayout(layout)
+        self.lista.currentItemChanged.connect(self.cambiaSeleccionDeImpresora)
+
+    def cambiaSeleccionDeImpresora(self, curr, prev):
+        print(curr.text())
+        self.impresoraDefault = curr.text()
+        win32print.SetDefaultPrinter(self.impresoraDefault)
 
 class getFilesDlg(QDialog):
 
@@ -183,37 +197,25 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
 
         self.carpetaChooser.clicked.connect(self.cualCarpeta)
-        self.agrega_cats.clicked.connect(self.edita_categorias)
+        self.action_editar_Categor_as.triggered.connect(self.edita_categorias)
+        self.actionImprimir.triggered.connect(self.imprime)
         self.excel_anual_button.clicked.connect(self.abre_excel_anual)
         #self.descarga_bt.clicked.connect(self.descarga_mesta)
-        self.imprimir.clicked.connect(self.imprime)
+        self.actionImprimir.triggered.connect(self.imprime)
 
-        self.impresora.clicked.connect(self.cambiaImpresora)
-        self.botonCancela.clicked.connect(self.cancelaImpresion)
+        self.actionSelccionar_Impresora.triggered.connect(self.cambiaImpresora)
+        self.actionCancelar_Impresi_n.triggered.connect(self.cancelaImpresion)
 
-        self.listaDeImpresoras.currentItemChanged.connect(self.cambiaSeleccionDeImpresora)
+        
         self.tables = {}
         self.facturas = {}
         self.sumaRFC = {}
 
 
 
-        self.tableWidget_resumen.setColumnCount(10)
-        self.tableWidget_resumen.setColumnWidth(0,30)
-        self.tableWidget_resumen.setColumnWidth(1,122)
-        self.tableWidget_resumen.setColumnWidth(2,176)
-        self.tableWidget_resumen.setColumnWidth(3,75)
-        self.tableWidget_resumen.setColumnWidth(4,80)
-        self.tableWidget_resumen.setColumnWidth(5,80)
-        self.tableWidget_resumen.setColumnWidth(6,80)
-        self.tableWidget_resumen.setColumnWidth(7,75)
-        self.tableWidget_resumen.setColumnWidth(8,75)
-        self.tableWidget_resumen.setColumnWidth(9,80)
-        self.tableWidget_resumen.setRowCount(2)
-        #self.tableWidget_resumen.verticalHeader().setFixedWidth(35)
 
 
-        self.tableWidget_resumen.cellDoubleClicked.connect(self.meDoblePicaronResumen)
+        #self.tableWidget_resumen.cellDoubleClicked.connect(self.meDoblePicaronResumen)
         self.progressBar.hide()
 
         self.tabWidget.currentChanged.connect(self.tabChanged)
@@ -235,7 +237,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 if "RFC: " in line:
                     rfc = line.split("RFC: ")[1]
         
-        self.header_cliente.setText(nombre+"    RFC: "+rfc)
+        self.header_cliente.setText("Nombre: "+nombre+"\nRFC: "+rfc)
 
     def tabChanged(self, index):
         print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA estoy cambiando a ",str(index))
@@ -253,13 +255,15 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                     "NOVIEMBRE":"11 NOVIEMBRE",
                     "DICIEMBRE":"12 DICIEMBRE",
                     }
-        self.excel_path = join(self.folder_year, folder_mes[name],"EGRESOS","huiini","resumen.xlsx")
         
-        self.tableWidget_resumen.clear()
-        self.tableWidget_resumen.setCellWidget(0,0, ImgWidgetPalomita(self))
+        
+        
         if name == "Ingresos":
             print("aquí haría algo")
+            self.mes = ""
         else:
+            self.excel_path = join(self.folder_year, folder_mes[name],"EGRESOS","huiini","resumen.xlsx")
+            
             self.mes = name
             n = -1
             lc = ["Excel"]
@@ -272,11 +276,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 except:
                     print("noesnumero")
             
-            for columna in lc:
-                n += 1
-                self.tableWidget_resumen.setHorizontalHeaderItem (n, QTableWidgetItem(columna))
-            for clumna_superflua in range(len(lc),10):
-                self.tableWidget_resumen.setHorizontalHeaderItem (clumna_superflua, QTableWidgetItem(""))
+            
             self.sumale()
         
     def setupTabMeses(self):
@@ -1168,17 +1168,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 except:
                     print("no puedo")
 
-            self.tableWidget_resumen.setItem(renglonResumen,columna-5,QTableWidgetItem(str(suma)))
-
-        if renglonResumen == 1:
-            self.tableWidget_resumen.setItem(0,1,QTableWidgetItem("            ---------"))
-            self.tableWidget_resumen.setItem(0,2,QTableWidgetItem("Sumatoria del Periodo Original"))
-            self.tableWidget_resumen.setItem(1,1,QTableWidgetItem("Resumen Diot Actualizado"))
-            self.tableWidget_resumen.setItem(1,2,QTableWidgetItem("Sumatoria del Periodo Actualizada"))
-            self.tableWidget_resumen.setCellWidget(1,0,ImgWidgetPalomita(self))
-            self.tableWidget_resumen.setCellWidget(0,0,ImgWidgetTache(self))
-
-
     def ponEncabezado(self,lista_columnas,tabName):
         n = -1
         for columna in lista_columnas:
@@ -1228,17 +1217,15 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             print ("el sistema no tiene una aplicacion por default para abrir exceles")
             QMessageBox.information(self, "Information", "El sistema no tiene una aplicación por default para abrir exceles" )
 
-    def cambiaSeleccionDeImpresora(self, curr, prev):
-        print(curr.text())
-        self.impresoraDefault = curr.text()
-        win32print.SetDefaultPrinter(self.impresoraDefault)
+
 
     def cambiaImpresora(self):
         # self.tabWidget.setCurrentIndex(1)
-        self.listaDeImpresoras.setEnabled(True)
-
+        #self.listaDeImpresoras.setEnabled(True)
+        self.impresoras = impresoras_widget()
         for (a,b,name,d) in win32print.EnumPrinters(win32print.PRINTER_ENUM_LOCAL):
-            self.listaDeImpresoras.addItem(name)
+            self.impresoras.lista.addItem(name)
+        self.impresoras.exec()
 
     def cancelaImpresion(self):
         print("cancelaria")
@@ -1350,7 +1337,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.progressBar.hide()
 
     def cualCarpeta(self):
-        self.folder.hide()
+        #self.folder.hide()
         file_dialog = getFilesDlg()
         file_dialog.sendPaths.connect(self.procesaCarpetas)
         file_dialog.exec()
@@ -1504,7 +1491,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
 
 
-            self.agrega_cats.setEnabled(True)
+            self.action_editar_Categor_as.setEnabled(True)
+            self.actionImprimir.setEnabled(True)
             self.excel_anual_button.setEnabled(True)
             self.raise_()
             self.activateWindow()
@@ -1784,8 +1772,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
 
     def procesaEgresos(self, path):
-        self.folder.setText("Procesando: " + u'\n' + path)
-        self.folder.show()
+        #self.folder.setText("Procesando: " + u'\n' + path)
+        #self.folder.show()
         self.esteFolder = join(path,"EGRESOS")
         folder_cliente = os.path.split(os.path.split(path)[0])[0]
         coi_json_path = join(folder_cliente, "carpetas_coi.json")
@@ -1806,8 +1794,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         if not os.path.exists(join(self.esteFolder, "huiini")):
             os.makedirs(join(self.esteFolder, "huiini"))
         self.tables[self.mes].clear()
-        self.tableWidget_resumen.clear()
-        self.tableWidget_resumen.repaint()
         lc = ["Pdf","Fecha","UUID","Receptor","Emisor","Concepto","Subtotal","Descuento","Traslado\nIVA","Traslado\nIEPS","Retención\nIVA","Retención\nISR","Total","Forma\nPago","Método\nPago","Tipo","Carpeta Coi"]
         self.ponEncabezado(lc,self.mes)
         self.tables[self.mes].setRowCount(13)
@@ -1980,8 +1966,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         # time_old.sleep(0.5*len(self.facturas[self.mes]))
 
-        self.imprimir.setEnabled(True)
-
         self.numeroDeFacturasValidas[self.mes] = len(self.facturas[self.mes])
 
 
@@ -1989,11 +1973,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         self.hazResumenDiot(self.esteFolder)
         #if len(paths)>2:
-
-        self.tableWidget_resumen.setItem(0,1,QTableWidgetItem("Resumen Diot"))
-        self.tableWidget_resumen.setItem(0,2,QTableWidgetItem("Sumatoria del Periodo"))
-        self.tableWidget_resumen.setCellWidget(0,0, ImgWidgetPalomita(self))
-
         #obtener los warnings de las facturas
         mensajeAlerta =""
         for factura in self.facturas[self.mes]:
@@ -2005,8 +1984,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
 
 
-        self.folder.setText("Carpeta Procesada: " + u'\n' + self.esteFolder)
-        self.folder.show()
+        #self.folder.setText("Carpeta Procesada: " + u'\n' + self.esteFolder)
+        #self.folder.show()
 
         
 
