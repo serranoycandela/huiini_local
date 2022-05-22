@@ -11,11 +11,7 @@ import subprocess
 from os.path import join
 import json
 import re
-try:
-    from pdflatex import PDFLaTeX
-    import pdflatex
-except:
-    print("soy linux")
+import shutil
 
 
 
@@ -30,10 +26,14 @@ class FacturaLocal(object):
         # path_localappdata = os.getenv('LOCALAPPDATA')
         # self.pdflatex_path = join(path_localappdata,"Programs","MiKTeX","miktex","bin","x64","pdflatex.exe")
         # self.pdflatex_path = self.pdflatex_path.replace("\\","\\\\")
-        home = os.path.expanduser('~')
-        pdflatex_folder_path = os.path.join(home, 'Documents', 'huiini')
-        with open(os.path.join(pdflatex_folder_path,"pdflatex_path.txt")) as f:
-            self.pdflatex_path = f.readline()
+        
+        appdatapath = os.path.expandvars('%APPDATA%\huiini')
+        try:
+            with open(os.path.join(appdatapath,"pdflatex_path.txt")) as f:
+                self.pdflatex_path = f.readline()
+        except:
+            print("Falta la ruta a pdflatex")
+
 
         #self.pdflatex_path = "C:\\Program Files\\MiKTeX\\miktex\\bin\\x64\\pdflatex.exe"
         #print(self.pdflatex_path)

@@ -35,7 +35,10 @@ from openpyxl.utils import get_column_letter
 
 from datetime import datetime
 from copy import copy
-import ghostscript
+try:
+    import ghostscript
+except:
+    print("ghostscript no está instalado")
 import locale
 
 import filecmp
@@ -122,11 +125,11 @@ class getFilesDlg(QDialog):
         layout.addWidget(self.btnBox)
         self.setLayout(layout)
         self.treeView.setRootIndex(self.fsModel.index(""))
-        home = os.path.expanduser('~')
-        pdflatex_folder_path = os.path.join(home, 'Documents', 'huiini')
+        appdatapath = os.path.expandvars('%APPDATA%\huiini')
+        
         self.huiini_home_folder_path = ""
-        if os.path.exists(os.path.join(pdflatex_folder_path,"huiini_home_folder_path.txt")):
-            with open(os.path.join(pdflatex_folder_path,"huiini_home_folder_path.txt")) as f:
+        if os.path.exists(os.path.join(appdatapath,"huiini_home_folder_path.txt")):
+            with open(os.path.join(appdatapath,"huiini_home_folder_path.txt")) as f:
                 self.huiini_home_folder_path = f.readline()
         print(self.huiini_home_folder_path)
 
@@ -150,18 +153,18 @@ class getFilesDlg(QDialog):
     	# For some reason duplicates were being returned when they weren't supposed to.
     	# This obtains the selected files from the dialog and only returns individual
     	# paths.
-    	indexes = self.treeView.selectedIndexes()
-    	if indexes:
-    		self.fileDlgPaths = []
-    		for i in indexes:
+        indexes = self.treeView.selectedIndexes()
+        if indexes:
+            self.fileDlgPaths = []
+            for i in indexes:
 
     			# Possible permission error occuring here
     			# unable to replicate at this time
-    			path = self.fsModel.filePath(i)
-    			if path not in self.fileDlgPaths:
-    				self.fileDlgPaths.append(path)
-    		self.close() # To close the dialog on an accept signal
-    		self.sendPaths.emit(self.fileDlgPaths)
+                path = self.fsModel.filePath(i)
+                if path not in self.fileDlgPaths:
+                    self.fileDlgPaths.append(path)
+            self.close() # To close the dialog on an accept signal
+            self.sendPaths.emit(self.fileDlgPaths)
 
 class ImgWidgetPalomita(QtWidgets.QLabel):
 
@@ -190,7 +193,30 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         with open(join(scriptDirectory,"conceptos.json"), "r") as jsonfile:
             self.concepto = json.load(jsonfile)
         self.labelLogo.setPixmap(logoPix)
-        self.pdflatex_path = "C:/Program Files/MiKTeX 2.9/miktex/bin/x64/pdflatex.exe"
+        appdatapath = os.path.expandvars('%APPDATA%\huiini')
+        self.tiene_pdflatex = True
+        try:
+            with open(os.path.join(appdatapath,"pdflatex_path.txt")) as f:
+                self.pdflatex_path = f.readline()
+        except:
+            if shutil.which('pdflatex'):
+                with open(os.path.join(appdatapath,"pdflatex_path.txt"), "w") as f:
+                    f.write(shutil.which('pdflatex').replace("\\","\\\\"))
+            else:
+                reply = QMessageBox.question(self, 'No se detectó Miktex',"¿está Miktex instalado?\n contesta que si para buscar la ruta de pdflatex manualmete\n o no para cancelar", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+
+                if reply == QMessageBox.Yes:
+                    path_to_file, _ = QFileDialog.getOpenFileName(self, "ruta de pdflatex", "~")
+                    if "pdflatex.exe" in path_to_file.lower():
+                        with open(os.path.join(appdatapath,"pdflatex_path.txt"), "w") as f:
+                            f.write(path_to_file.replace("\\","\\\\"))
+                    else:
+                        QMessageBox.information(self, "Advertencia", "ruta incorrecta, la creación de pdfs quedará desactivada")
+                        self.tiene_pdflatex = False
+                if reply == QMessageBox.No:
+                    QMessageBox.information(self, "Advertencia", "la creación de pdfs quedará desactivada")
+                    self.tiene_pdflatex = False
+
 
         self.actionEscoger_cliente.triggered.connect(self.escoger_cliente)
 
@@ -1023,9 +1049,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             workbook.save(self.annual_xlsx_path)
 
     def hazResumenDiot(self,currentDir):
-        home = os.path.expanduser('~')
-        template_folder = os.path.join(home, 'Documents', 'huiini')
-        workbook = load_workbook(os.path.join(template_folder,"template_diot.xlsx"))
+        appdatapath = os.path.expandvars('%APPDATA%\huiini')
+        workbook = load_workbook(os.path.join(appdatapath,"template_diot.xlsx"))
         ws_rfc = workbook[workbook.get_sheet_names()[0]]
         xlsx_path = os.path.join(currentDir,os.path.join("huiini","resumen.xlsx"))
         #workbook = xlsxwriter.Workbook(xlsx_path)
@@ -1286,7 +1311,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
                     encoding = locale.getpreferredencoding()
                     args = [a.encode(encoding) for a in args]
-                    ghostscript.Ghostscript(*args)
+                    try:
+                        ghostscript.Ghostscript(*args)
+                    except:
+                        QMessageBox.information(self, "Error", "Para imprimir se requiere instalar Ghostscript\n https://www.ghostscript.com")
 
 
 
@@ -1393,10 +1421,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         huiini_home_folder = os.path.split(os.path.split(self.year_folder)[0])[0]
         print(huiini_home_folder)
-
-        home = os.path.expanduser('~')
-        pdflatex_folder_path = os.path.join(home, 'Documents', 'huiini')
-        with open(os.path.join(pdflatex_folder_path,"huiini_home_folder_path.txt"), "w") as f:
+        appdatapath = os.path.expandvars('%APPDATA%\huiini')
+        with open(os.path.join(appdatapath,"huiini_home_folder_path.txt"), "w") as f:
             f.write(huiini_home_folder)
         meses = []
         for path in paths:
@@ -1424,11 +1450,14 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             client = os.path.split(os.path.split(os.path.split(paths[0])[0])[0])[1]
             print(client+"_"+year)
             self.respaldo_anual = False
-            reply = QMessageBox.question(self, 'Message',"Crear pdfs?", QMessageBox.Yes |
-            QMessageBox.No, QMessageBox.No)
+            if self.tiene_pdflatex:
+                reply = QMessageBox.question(self, 'Message',"Crear pdfs?", QMessageBox.Yes |
+                QMessageBox.No, QMessageBox.No)
 
-            if reply == QMessageBox.Yes:
-                self.hacerPDFs = True
+                if reply == QMessageBox.Yes:
+                    self.hacerPDFs = True
+                else:
+                    self.hacerPDFs = False
             else:
                 self.hacerPDFs = False
 

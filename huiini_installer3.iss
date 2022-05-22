@@ -39,8 +39,7 @@ Source: "dist\huiini\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs c
 Source: "*.png"; DestDir: "{app}"; Flags: ignoreversion
 Source: "*.json"; DestDir: "{app}"; Flags: ignoreversion
 Source: "*.jinja"; DestDir: "{app}"; Flags: ignoreversion
-Source: "huiini_aux_files\pdflatex_path.txt"; DestDir: "{userdocs}\huiini"; Flags: ignoreversion onlyifdoesntexist uninsneveruninstall
-Source: "huiini_aux_files\template_diot.xlsx"; DestDir: "{userdocs}\huiini"; Flags: ignoreversion
+Source: "huiini_aux_files\template_diot.xlsx"; DestDir: "{userappdata}\huiini"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
