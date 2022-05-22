@@ -62,7 +62,13 @@ except NameError:  # We are the main py2exe script, not a module
 class categorias_widget(QDialog):
     def __init__(self, parent=None):
         super(categorias_widget, self).__init__(parent)
-        self.setMinimumSize(520, 850)
+        import ctypes
+        user32 = ctypes.windll.user32
+        user32.SetProcessDPIAware()
+        screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
+        print(screensize)
+        h = min(round(screensize[1]*0.8),850)
+        self.setMinimumSize(520, h)
         layout = QVBoxLayout()
         self.add_button = QPushButton("Nueva")
         layout.addWidget(self.add_button)
@@ -97,8 +103,13 @@ class getFilesDlg(QDialog):
 
     def __init__(self, parent=None):
         super(getFilesDlg, self).__init__(parent)
-
-        self.setMinimumSize(520,850)
+        import ctypes
+        user32 = ctypes.windll.user32
+        user32.SetProcessDPIAware()
+        screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
+        print(screensize)
+        h = min(round(screensize[1]*0.8),850)
+        self.setMinimumSize(520,h)
 
         self.fileDlgPaths = []
 
