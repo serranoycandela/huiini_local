@@ -35,12 +35,12 @@ import subprocess
 import sys
 
 if sys.platform == 'win32':
-    args = '"C:\\\\Program Files\\\\gs\\\\gs9.56.1\\\\bin\\\\gswin64c" ' \
+    args = '"gswin64c" ' \
            '-sDEVICE=mswinpr2 ' \
            '-dBATCH ' \
            '-dNOPAUSE ' \
            '-dFitPage ' \
-           '-sOutputFile="%printer%{win32print.GetDefaultPrinter()}" '
+           '-dQueryUser=3 '
     ghostscript = args + pdf_path
     subprocess.call(ghostscript, shell=True)
 

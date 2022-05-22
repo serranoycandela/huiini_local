@@ -17,7 +17,7 @@ try:
 except:
     print("soy linux")
 import time as time_old
-from subprocess import Popen
+from subprocess import Popen, call
 from FacturasLocal import FacturaLocal as Factura
 import math
 import json
@@ -217,6 +217,30 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                     QMessageBox.information(self, "Advertencia", "la creación de pdfs quedará desactivada")
                     self.tiene_pdflatex = False
 
+        self.tiene_gswin64c = True
+        try:
+            with open(os.path.join(appdatapath,"gswin64c_path.txt")) as f:
+                self.gswin64c_path = f.readline()
+        except:
+            if shutil.which('gswin64c'):
+                with open(os.path.join(appdatapath,"gswin64c_path.txt"), "w") as f:
+                    f.write(shutil.which('gswin64c').replace("\\","\\\\"))
+                self.gswin64c_path = shutil.which('gswin64c').replace("\\","\\\\")
+            else:
+                reply = QMessageBox.question(self, 'No se detectó Ghostscript',"¿está Ghostscript instalado?\n contesta que si para buscar la ruta de gswin64c manualmete\n o no para cancelar", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+
+                if reply == QMessageBox.Yes:
+                    path_to_file, _ = QFileDialog.getOpenFileName(self, "ruta de gswin64c", "~")
+                    if "gswin64c.exe" in path_to_file.lower():
+                        with open(os.path.join(appdatapath,"gswin64c_path.txt"), "w") as f:
+                            f.write(path_to_file.replace("\\","\\\\"))
+                        self.gswin64c_path = path_to_file.replace("\\","\\\\")
+                    else:
+                        QMessageBox.information(self, "Advertencia", "ruta incorrecta, la impresión quedará desactivada")
+                        self.tiene_gswin64c = False
+                if reply == QMessageBox.No:
+                    QMessageBox.information(self, "Advertencia", "la impresión quedará desactivada")
+                    self.tiene_gswin64c = False
 
         self.actionEscoger_cliente.triggered.connect(self.escoger_cliente)
 
@@ -232,7 +256,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.actionSelccionar_Impresora.triggered.connect(self.cambiaImpresora)
         self.actionCancelar_Impresi_n.triggered.connect(self.cancelaImpresion)
 
-        
+        if self.tiene_gswin64c == False:
+            print("desabilitando la impresión....")
+            self.actionCancelar_Impresi_n.setEnabled(False)
+            self.actionSelccionar_Impresora.setEnabled(False)
+            self.actionImprimir.setEnabled(False)
+
         self.tables = {}
         self.facturas = {}
         self.sumaRFC = {}
@@ -1271,7 +1300,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
     def imprime(self):
         #objetosMagicosOrdenados = sorted(self.objetosMagicos, key=lambda objetosMagicos: objetosMagicos.fecha)
-
+        self.actionCancelar_Impresi_n.setEnabled(True)
         tabName = self.tabWidget.tabText(self.tabWidget.currentIndex())
         print(tabName)
         folder_mes = ""
@@ -1298,26 +1327,16 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 if self.tables[tabName].item(renglon,columnaTotal+2).text() == "None":
                     print("no imprimo pagos seño")
                 else:
-
-                    pdf_path = join(folder_mes, uuid+".pdf")
-                    args = [
-                            "-dPrinted", "-dBATCH", "-dNOSAFER", "-dNOPAUSE", "-dNOPROMPT"
-                            "-q",
-                            "-dNumCopies#1",
-                            "-sDEVICE#mswinpr2",
-                            f'-sOutputFile#"%printer%{win32print.GetDefaultPrinter()}"',
-                            f'"{pdf_path}"'
-                        ]
-
-                    encoding = locale.getpreferredencoding()
-                    args = [a.encode(encoding) for a in args]
-                    try:
-                        ghostscript.Ghostscript(*args)
-                    except:
-                        QMessageBox.information(self, "Error", "Para imprimir se requiere instalar Ghostscript\n https://www.ghostscript.com")
-
-
-
+                    pdf_path = '"'+join(folder_mes, uuid+".pdf")+'"'
+                    args = '"'+self.gswin64c_path+'" ' \
+                            '-sDEVICE=mswinpr2 ' \
+                            '-dBATCH ' \
+                            '-dNOPAUSE ' \
+                            '-dFitPage ' \
+                            '-dQueryUser=3 '
+                    ghostscript = args + pdf_path
+                    call(ghostscript, shell=True)
+        
         #hh = win32api.ShellExecute(0, "print", join(join(self.esteFolder,"huiini"), "resumenDiot.pdf") , None,  ".",  0)
     def esteItem(self, text, tooltip):
         item = QTableWidgetItem(text)
@@ -1521,7 +1540,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
 
             self.action_editar_Categor_as.setEnabled(True)
-            self.actionImprimir.setEnabled(True)
+            if self.tiene_gswin64c == True:
+                self.actionImprimir.setEnabled(True)
             self.excel_anual_button.setEnabled(True)
             self.raise_()
             self.activateWindow()
