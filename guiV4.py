@@ -62,7 +62,7 @@ class Ui_MainWindow(object):
         self.frame.setFrameShadow(QFrame.Raised)
         self.layoutWidget = QWidget(self.frame)
         self.layoutWidget.setObjectName(u"layoutWidget")
-        self.layoutWidget.setGeometry(QRect(11, 0, 614, 25))
+        self.layoutWidget.setGeometry(QRect(11, 0, 820, 25))
         self.horizontalLayout_2 = QHBoxLayout(self.layoutWidget)
         self.horizontalLayout_2.setSpacing(6)
         self.horizontalLayout_2.setContentsMargins(11, 11, 11, 11)
@@ -80,6 +80,13 @@ class Ui_MainWindow(object):
         self.excel_anual_button.setMinimumSize(QSize(200, 0))
 
         self.horizontalLayout_2.addWidget(self.excel_anual_button)
+
+        self.excel_mensual_button = QPushButton(self.layoutWidget)
+        self.excel_mensual_button.setObjectName(u"excel_mensual_button")
+        self.excel_mensual_button.setEnabled(False)
+        self.excel_mensual_button.setMinimumSize(QSize(200, 0))
+
+        self.horizontalLayout_2.addWidget(self.excel_mensual_button)
 
         self.progressBar = QProgressBar(self.layoutWidget)
         self.progressBar.setObjectName(u"progressBar")
@@ -162,6 +169,7 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), QCoreApplication.translate("MainWindow", u"Tab 2", None))
         self.carpetaChooser.setText(QCoreApplication.translate("MainWindow", u"Selecciona Carpeta", None))
         self.excel_anual_button.setText(QCoreApplication.translate("MainWindow", u"Excel Anual", None))
+        self.excel_mensual_button.setText(QCoreApplication.translate("MainWindow", u"Excel mensual", None))
         self.header_cliente.setText("")
         self.labelLogo.setText("")
         self.menuCliente.setTitle(QCoreApplication.translate("MainWindow", u"Cliente", None))

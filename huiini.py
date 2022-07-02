@@ -3,7 +3,7 @@ from PySide2.QtCore import *
 from PySide2.QtCore import Qt, QDir
 from PySide2.QtGui import *
 from PySide2 import QtGui, QtCore, QtWidgets
-from PySide2.QtWidgets import QTableWidget, QLineEdit, QTableWidgetItem, QFileDialog, QProgressDialog, QMessageBox, QListView, QAbstractItemView, QTreeView, QDialog, QVBoxLayout, QDialogButtonBox, QFileSystemModel, QInputDialog
+from PySide2.QtWidgets import QTableView, QTableWidget, QLineEdit, QTableWidgetItem, QFileDialog, QProgressDialog, QMessageBox, QListView, QAbstractItemView, QTreeView, QDialog, QVBoxLayout, QDialogButtonBox, QFileSystemModel, QInputDialog
 from PySide2.QtWidgets import QPushButton, QListWidget, QListWidgetItem, QComboBox, QMenu, QAction
 import sys
 import guiV4
@@ -42,6 +42,8 @@ except:
 import locale
 
 import filecmp
+
+
 # import subprocess
 # import psutil
 # import signal
@@ -58,6 +60,65 @@ try:
     scriptDirectory = os.path.dirname(os.path.abspath(__file__))
 except NameError:  # We are the main py2exe script, not a module
     scriptDirectory = os.path.dirname(os.path.abspath(sys.argv[0]))
+
+
+
+
+class PandasModel(QAbstractTableModel):
+    """A model to interface a Qt view with pandas dataframe """
+
+    def __init__(self, dataframe: pd.DataFrame, parent=None):
+        QAbstractTableModel.__init__(self, parent)
+        self._dataframe = dataframe
+
+    def rowCount(self, parent=QModelIndex()) -> int:
+        """ Override method from QAbstractTableModel
+
+        Return row count of the pandas DataFrame
+        """
+        if parent == QModelIndex():
+            return len(self._dataframe)
+
+        return 0
+
+    def columnCount(self, parent=QModelIndex()) -> int:
+        """Override method from QAbstractTableModel
+
+        Return column count of the pandas DataFrame
+        """
+        if parent == QModelIndex():
+            return len(self._dataframe.columns)
+        return 0
+
+    def data(self, index: QModelIndex, role=Qt.ItemDataRole):
+        """Override method from QAbstractTableModel
+
+        Return data cell from the pandas DataFrame
+        """
+        if not index.isValid():
+            return None
+
+        if role == Qt.DisplayRole:
+            return str(self._dataframe.iloc[index.row(), index.column()])
+
+        return None
+
+    def headerData(
+        self, section: int, orientation: Qt.Orientation, role: Qt.ItemDataRole
+    ):
+        """Override method from QAbstractTableModel
+
+        Return dataframe index as vertical header data and columns as horizontal header data.
+        """
+        if role == Qt.DisplayRole:
+            if orientation == Qt.Horizontal:
+                return str(self._dataframe.columns[section])
+
+            if orientation == Qt.Vertical:
+                return str(self._dataframe.index[section])
+
+        return None
+
 
 class categorias_widget(QDialog):
     def __init__(self, parent=None):
@@ -198,6 +259,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
     def __init__(self, parent=None):
         super(Ui_MainWindow, self).__init__(parent)
         self.setupUi(self)
+        self.todos_los_meses = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"]
 
         print(scriptDirectory)
         logoPix = QtGui.QPixmap(join(scriptDirectory,"logo.png"))
@@ -287,12 +349,26 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.tabWidget.currentChanged.connect(self.tabChanged)
         self.numeroDeFacturasValidas = {}
 
+    def checkIfValuesExists1(self, dfObj, listOfValues):
+        resultDict = {}
+        # Iterate over the list of elements one by one
+        for elem in listOfValues:
+            # Check if the element exists in dataframe values
+            if elem in dfObj.values:
+                resultDict[elem] = True
+            else:
+                resultDict[elem] = False
+        # Returns a dictionary of values & thier existence flag        
+        return resultDict
+
+
     def escoger_cliente(self):
         file_dialog = getFilesDlg()
-        file_dialog.sendPaths.connect(self.despliega_cliente)
+        file_dialog.sendPaths.connect(self.procesa_cliente)
         file_dialog.exec()
-    def despliega_cliente(self,paths):
-        self.cliente_path = paths.copy()[0]
+
+    def despliega_cliente(self):
+        
         with open(join(self.cliente_path,"Doc_Fiscal","claves.txt")) as fp:
             nombre = ""
             rfc = ""
@@ -304,6 +380,99 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                     rfc = line.split("RFC: ")[1]
         
         self.header_cliente.setText("Nombre: "+nombre+"\nRFC: "+rfc)
+       
+    def procesa_cliente(self,paths):
+        self.cliente_path = paths.copy()[0]
+        self.carpeta_this_year = join(self.cliente_path, str(datetime.now().year))
+        self.folder_year = str(datetime.now().year)
+        self.despliega_cliente()
+
+        
+        
+        
+        #############################################################
+        # leer el excel anual de este año y hacer dataframes
+        #############################################################
+        import re
+        
+        
+        cliente_str = os.path.basename(os.path.normpath(self.cliente_path))
+        if os.path.exists(join(self.carpeta_this_year, cliente_str+"_"+str(datetime.now().year)+".xlsx")):
+            self.dataFrames = {}
+            self.annual_xlsx_path = join(self.carpeta_this_year, cliente_str+"_"+str(datetime.now().year)+".xlsx")
+            workbook = load_workbook(self.annual_xlsx_path)
+            for sheetname in workbook.sheetnames:
+                print(sheetname)
+                if sheetname in self.todos_los_meses:
+                    print("facturas de "+sheetname+" en "+cliente_str+"_"+str(datetime.now().year)+".xlsx")
+                    ws = workbook[sheetname]
+                    data = ws.values
+                    # Get the first line in file as a header line
+                    columns = next(data)[0:]
+                    # Create a DataFrame based on the second and subsequent lines of data
+                    self.dataFrames[sheetname] = pd.DataFrame(data, columns=columns)
+
+            los_meses = []
+            for filename in os.listdir(self.carpeta_this_year):
+                if os.path.isdir(join(self.carpeta_this_year,filename)):
+                    print(filename)
+                    los_meses.append(join(self.carpeta_this_year,filename))
+
+            for folder_mes in los_meses:
+                self.esteFolder = join(folder_mes,"EGRESOS")
+                el_mes = re.sub(r'\s*\d+\s*', '', os.path.basename(folder_mes)) 
+                cuantosDuplicados = 0
+                self.listaDeDuplicados = []
+                self.listaDeFacturas = []
+                self.listaDeUUIDs = []
+                contador = 0
+                for filename in os.listdir(self.esteFolder):
+                    if filename.endswith(".xml"):
+                        try:
+                            print(join(self.esteFolder, filename))
+                            laFactura = Factura(join(self.esteFolder + os.sep,filename))
+                            if laFactura.sello == "SinSello":
+                                print("Omitiendo xml sin sello "+laFactura.xml_path)
+                            else:
+                                if laFactura.version:
+                                    if laFactura.UUID in self.listaDeUUIDs:
+
+                                        cuantosDuplicados+=1
+                                        self.listaDeDuplicados.append(laFactura.UUID)
+                                    else:
+                                        self.listaDeUUIDs.append(laFactura.UUID)            
+                        except:
+                            print("falla")
+
+                print(self.dataFrames[el_mes]) 
+                print(self.listaDeUUIDs)
+                result = self.checkIfValuesExists1(self.dataFrames[el_mes], self.listaDeUUIDs)
+                print(result)    
+                message = "Se actualizará el mes de "+ el_mes + "\ncon las siguinetes facturas:"
+                for key, value in result.items():
+                    if not value:
+                        message += "\n"+key
+
+                QMessageBox.information(self, "Actualización del excel anual", message)
+                self.annual_xlsx_path
+                self.mes = el_mes
+                self.rellena_mes_gui_from_excel()
+        
+                
+                #self.agregaTabMes(sheetname)
+           
+        else:
+            print(self.carpeta_this_year)
+            los_meses = []
+            for filename in os.listdir(self.carpeta_this_year):
+                if os.path.isdir(join(self.carpeta_this_year,filename)):
+                    print(filename)
+                    los_meses.append(join(self.carpeta_this_year,filename))
+
+            #self.procesaCarpetas(los_meses)      
+             
+        
+        
 
     def tabChanged(self, index):
         print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA estoy cambiando a ",str(index))
@@ -343,7 +512,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                     print("noesnumero")
             
             
-            self.sumale()
+            #self.sumale()
         
     def setupTabMeses(self):
         self.tables[self.mes].setColumnCount(17)
@@ -974,6 +1143,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         workbook.save(self.annual_xlsx_path)
 
+
+
+
     def agregaMes(self, mes):
         if os.path.isfile(self.annual_xlsx_path):
             workbook = load_workbook(self.annual_xlsx_path)
@@ -1412,13 +1584,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             if suma < 0.00000001:
                 self.tables[tabName].removeColumn(columna)
 
-    def procesaCarpetas(self,paths):
-        self.paths = paths.copy()
-        self.progressBar.show()
-        self.progressBar.setValue(1)
-
-        self.tabWidget.clear()
-
+    def cargaCategorias(self):
         folder_cliente = os.path.split(os.path.split(self.paths[0])[0])[0]
         self.folder_year = os.path.split(self.paths[0])[0]
         self.json_path = join(folder_cliente, "categorias_dicc_huiini.json")
@@ -1436,9 +1602,17 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             if not categoria in self.lista_categorias_default:
                 self.lista_categorias_default.append(categoria)
 
-        self.despliega_cliente([folder_cliente])
+        self.cliente_path = folder_cliente
 
-        self.todos_los_meses = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"]
+    def procesaCarpetas(self,paths):
+        self.paths = paths.copy()
+        self.progressBar.show()
+        self.progressBar.setValue(1)
+
+        self.tabWidget.clear()
+
+        self.cargaCategorias()
+        self.despliega_cliente()
 
         self.conceptos = []
         self.yaEstaba = {}
@@ -1502,10 +1676,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                     hoy = str(datetime.now()).split(".")[0].replace(" ","T").replace("-","_").replace(":","_")
                     self.respaldo_anual_path = self.annual_xlsx_path.split(".xlsx")[0]+"respaldo_"+hoy+".xlsx"
                     os.rename(self.annual_xlsx_path,self.respaldo_anual_path)
-
-
-
-
 
            
             self.excel_path = join(self.paths[0],"EGRESOS","huiini","resumen.xlsx")
@@ -1572,6 +1742,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             print("aquí haría algo")
         else:
             self.mes = name
+
+    
+
 
 
 
@@ -1830,6 +2003,72 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                         except:
                             print("no pude mover el xml : ",filename ," a ",sender.currentText())
 
+
+
+
+    def rellena_mes_gui_from_excel(self):
+        workbook = load_workbook(self.annual_xlsx_path)
+        if not self.mes in workbook.sheetnames:
+            print("Ese mes no está:",self.mes)
+        else:
+
+            conceptos = {}
+            ws_conceptos = workbook["Conceptos"]
+            rows = ws_conceptos.rows
+            for row in rows:
+                print(row[3].value)
+                if row[3].value in conceptos:
+                    conceptos[row[3].value] +=  u'\n' + row[2].value
+                else:
+                    conceptos[row[3].value] = row[2].value
+
+            self.tables[self.mes] = QTableWidget(10,20)
+            self.setupTabMeses()
+            self.tabWidget.addTab(self.tables[self.mes], self.mes)
+            self.tables[self.mes].clear()
+            lc = ["Pdf","Fecha","UUID","Receptor","Emisor","Concepto","Subtotal","Descuento","Traslado\nIVA","Traslado\nIEPS","Retención\nIVA","Retención\nISR","Total","Forma\nPago","Método\nPago","Tipo","Carpeta Coi"]
+            self.ponEncabezado(lc,self.mes)
+            self.tables[self.mes].setRowCount(13)
+            self.tables[self.mes].repaint()
+            self.delegate = PaddingDelegate()
+            self.tables[self.mes].setItemDelegate(self.delegate)
+            contador = -2
+            ws_mes = workbook[self.mes]
+            rows = ws_mes.rows
+            for row in rows:
+                contador += 1
+                if contador > -1:
+                    if contador > 13:
+                        self.tables[self.mes].setRowCount(contador)
+                    self.tables[self.mes].setItem(contador,1,self.esteItem(row[1].value,row[1].value))
+                    self.tables[self.mes].setItem(contador,2,self.esteItem(row[2].value,row[2].value))
+                    self.tables[self.mes].setItem(contador,3,self.esteItem("receptorRFC","receptorNombre"))
+                    self.tables[self.mes].setItem(contador,4,self.esteItem(row[4].value,row[3].value))
+                    message = ""
+                    try:
+                        message = conceptos[row[2].value]
+                    except:
+                        print("no tiene conceptos")
+                    self.tables[self.mes].setItem(contador,5, self.esteItem(row[5].value,message))
+                    self.tables[self.mes].setItem(contador,6,self.esteCenteredItem(str(row[6].value),""))
+                    self.tables[self.mes].setItem(contador,7,self.esteCenteredItem(str(row[7].value),""))
+                    self.tables[self.mes].setItem(contador,8,self.esteCenteredItem(str(row[8].value),""))
+                    self.tables[self.mes].setItem(contador,9,self.esteCenteredItem(str(row[11].value),""))
+                    self.tables[self.mes].setItem(contador,10,self.esteCenteredItem("0",""))
+                    self.tables[self.mes].setItem(contador,11,self.esteCenteredItem("0",""))
+                    self.tables[self.mes].setItem(contador,12,self.esteCenteredItem(str(row[12].value),""))
+                    #self.tables[self.mes].setItem(contador,12,self.esteItem(row[12].value,""))
+                    self.tables[self.mes].setItem(contador,13, self.esteItem(row[13].value,row[13].value))
+                    self.tables[self.mes].setItem(contador,14, self.esteItem(row[14].value,row[14].value))
+                    # tooltipTipo = "\n".join(x['tipo'] for x in factura.conceptos)
+                    tooltipTipo = row[14].value
+                    self.tables[self.mes].setItem(contador,15, self.esteItem(row[15].value,tooltipTipo))
+                    # self.tables[self.mes].setCellWidget(contador,16,listacombos[contador])
+                    pdf_dir = os.path.join(self.esteFolder,"huiini")
+                    pdf_name = row[2].value+".pdf"
+                    pdf_path = os.path.join(pdf_dir, pdf_name)
+                    if os.path.exists(pdf_path):
+                        self.tables[self.mes].setCellWidget(contador,0, ImgWidgetPalomita(self))
 
     def procesaEgresos(self, path):
         #self.folder.setText("Procesando: " + u'\n' + path)

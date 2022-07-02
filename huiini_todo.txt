@@ -239,9 +239,9 @@ para los resumenes diot, sie es PUE se suma, si es PPD y hay un complemento pago
 
 - nayeli dijo que le serviría separar en una carpeta las de INGRESOS de nomina
 
-- hacer huiini compatible con pantallas chicas (720p)
+- hacer huiini compatible con pantallas chicas (720p) Ya
 
-- agregar un mensaje de error si no encuentra ghostscript
+- agregar un mensaje de error si no encuentra ghostscript Ya
 
 
 
