@@ -605,14 +605,23 @@ class FacturaLocal(object):
             self.fechaTimbrado = TimbreFiscalDigitalTag.get ("FechaTimbrado")
 
 
-            PagosTag = self.ComplementoTag.find("{http://www.sat.gob.mx/Pagos}Pagos")
-            if PagosTag:
-                PagoTag = PagosTag.find("{http://www.sat.gob.mx/Pagos}Pago")
-                DoctoRelacionadoTag = PagoTag.find("{http://www.sat.gob.mx/Pagos}DoctoRelacionado")
-                self.IdDocumento = DoctoRelacionadoTag.get(self.IdDocumentoKey)
-                self.ImpPagado = float(DoctoRelacionadoTag.get("ImpPagado"))
+####################################### marraneo #################################################################
+            if self.version.startswith("4"):
 
-
+                PagosTag = self.ComplementoTag.find("{http://www.sat.gob.mx/Pagos20}Pagos")
+                if PagosTag:
+                    PagoTag = PagosTag.find("{http://www.sat.gob.mx/Pagos20}Pago")
+                    self.DoctoRelacionadoTag = PagoTag.find("{http://www.sat.gob.mx/Pagos20}DoctoRelacionado")
+                    self.IdDocumento = self.DoctoRelacionadoTag.get(self.IdDocumentoKey)
+                    self.ImpPagado = float(self.DoctoRelacionadoTag.get("ImpPagado"))
+            else:
+                PagosTag = self.ComplementoTag.find("{http://www.sat.gob.mx/Pagos}Pagos")
+                if PagosTag:
+                    PagoTag = PagosTag.find("{http://www.sat.gob.mx/Pagos}Pago")
+                    self.DoctoRelacionadoTag = PagoTag.find("{http://www.sat.gob.mx/Pagos}DoctoRelacionado")
+                    self.IdDocumento = self.DoctoRelacionadoTag.get(self.IdDocumentoKey)
+                    self.ImpPagado = float(self.DoctoRelacionadoTag.get("ImpPagado"))
+######################################## termina marraneo ############################################################
 
             self.retencionesLocales = {"IVA":{"importe":0,"tasa":0},"ISR":{"importe":0,"tasa":0},"IEPS":{"importe":0,"tasa":0},"ISH":{"importe":0,"tasa":0},"TUA":{"importe":0,"tasa":0}}
             ImpuestosLocalesTag = self.ComplementoTag.find("{http://www.sat.gob.mx/implocal}ImpuestosLocales")
