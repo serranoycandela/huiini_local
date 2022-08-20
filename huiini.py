@@ -447,13 +447,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 print(self.dataFrames[el_mes]) 
                 print(self.listaDeUUIDs)
                 result = self.checkIfValuesExists1(self.dataFrames[el_mes], self.listaDeUUIDs)
-                print(result)    
+                print(result)
                 message = "Se actualizará el mes de "+ el_mes + "\ncon las siguinetes facturas:"
                 for key, value in result.items():
                     if not value:
                         message += "\n"+key
-
-                QMessageBox.information(self, "Actualización del excel anual", message)
+                if message != "Se actualizará el mes de "+ el_mes + "\ncon las siguinetes facturas:":
+                    QMessageBox.information(self, "Actualización del excel anual", message)
                 self.annual_xlsx_path
                 self.mes = el_mes
                 self.rellena_mes_gui_from_excel()
