@@ -349,15 +349,16 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.tabWidget.currentChanged.connect(self.tabChanged)
         self.numeroDeFacturasValidas = {}
 
-    def checkIfValuesExists1(self, dfObj, listOfValues):
+    def checkIfValuesExists1(self, dfObj, lista_d):
         resultDict = {}
         # Iterate over the list of elements one by one
-        for elem in listOfValues:
+        for fac in lista_d:
+            
             # Check if the element exists in dataframe values
-            if elem in dfObj.values:
-                resultDict[elem] = True
+            if fac["uuid"] in dfObj.values:
+                resultDict[fac["path"]] = True
             else:
-                resultDict[elem] = False
+                resultDict[fac["path"]] = False
         # Returns a dictionary of values & thier existence flag        
         return resultDict
 
@@ -385,6 +386,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.cliente_path = paths.copy()[0]
         self.carpeta_this_year = join(self.cliente_path, str(datetime.now().year))
         self.folder_year = str(datetime.now().year)
+        self.cargaCategorias()
         self.despliega_cliente()
 
         
@@ -440,7 +442,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                                         cuantosDuplicados+=1
                                         self.listaDeDuplicados.append(laFactura.UUID)
                                     else:
-                                        self.listaDeUUIDs.append(laFactura.UUID)            
+                                        self.listaDeUUIDs.append({"uuid": laFactura.UUID, "path": join(self.esteFolder + os.sep,filename)})            
                         except:
                             print("falla")
 
@@ -454,8 +456,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                         message += "\n"+key
                 if message != "Se actualizará el mes de "+ el_mes + "\ncon las siguinetes facturas:":
                     QMessageBox.information(self, "Actualización del excel anual", message)
-                self.annual_xlsx_path
+                #self.annual_xlsx_path
                 self.mes = el_mes
+                self.agregaFacturasFaltantes(result)
                 self.rellena_mes_gui_from_excel()
         
                 
@@ -471,7 +474,109 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
             #self.procesaCarpetas(los_meses)      
              
+    def agregaFacturasFaltantes(self, result):
         
+        for key, value in result.items():
+            if not value:
+                print("agregaria ", key)
+                workbook = load_workbook(self.annual_xlsx_path)
+                ws_todos = workbook["Conceptos"]
+                ws_mes = workbook[self.mes]
+                self.status_column = 0
+                laFactura = Factura(key)
+
+                row_mes = ws_mes.max_row+1
+
+                dv = DataValidation(type="list", formula1='"Pendiente,Pagado"', allow_blank=True)
+                ws_mes.add_data_validation(dv)
+
+
+                ws_mes.cell(row_mes, 1, laFactura.conceptos[0]['clave_concepto'])
+                ws_mes.cell(row_mes, 2, laFactura.fechaTimbrado)
+                ws_mes.cell(row_mes, 3, laFactura.UUID)
+                ws_mes.cell(row_mes, 4, laFactura.EmisorNombre)
+                ws_mes.cell(row_mes, 5, laFactura.EmisorRFC)
+                ws_mes.cell(row_mes, 6, laFactura.conceptos[0]['descripcion'])
+                if laFactura.tipoDeComprobante == "E":
+                    ws_mes.cell(row_mes, 7, 0.0 - laFactura.subTotal)
+                    ws_mes.cell(row_mes, 8, 0.0 - laFactura.descuento)
+                    ws_mes.cell(row_mes, 9, 0.0 - laFactura.traslados["IVA"]["importe"])
+                    ws_mes.cell(row_mes, 10, 0.0)
+                    ws_mes.cell(row_mes, 11, 0.0)
+                    ws_mes.cell(row_mes, 12, 0.0)
+                    ws_mes.cell(row_mes, 13, 0.0 - laFactura.total)
+                else:
+                    ws_mes.cell(row_mes, 7, laFactura.subTotal)
+                    ws_mes.cell(row_mes, 8, laFactura.descuento)
+                    ws_mes.cell(row_mes, 9, laFactura.traslados["IVA"]["importe"])
+                    ws_mes.cell(row_mes, 10, laFactura.trasladosLocales["TUA"]["importe"])
+                    ws_mes.cell(row_mes, 11, laFactura.trasladosLocales["ISH"]["importe"])
+                    ws_mes.cell(row_mes, 12, laFactura.traslados["IEPS"]["importe"])
+                    ws_mes.cell(row_mes, 13, laFactura.total)
+                ws_mes.cell(row_mes, 14, laFactura.formaDePagoStr)
+                ws_mes.cell(row_mes, 15, laFactura.metodoDePago)
+                ws_mes.cell(row_mes, 16, laFactura.conceptos[0]['tipo'])
+                status = "Pendiente"
+                if laFactura.metodoDePago == "PUE":
+                    status = "Pagado"
+                # if laFactura.metodoDePago == "PPD": ############################# esto talvez hay que hacerlo mejor
+                #     if laFactura.UUID in self.complementosDePago:
+                #         if laFactura.total - self.complementosDePago[laFactura.UUID]["suma"] < 0.5:
+                #             status = "Pagado"
+                if laFactura.tipoDeComprobante == "P":
+                    status = "Pagado"
+
+                dv.add(ws_mes.cell(row_mes, 17))
+                ws_mes.cell(row_mes, 17, status)
+                ws_mes.cell(row_mes, 18, laFactura.tipoDeComprobante)
+                # if laFactura.UUID in self.complementosDePago:
+                #     ws_mes.cell(row_mes, 19, self.complementosDePago[laFactura.UUID]["suma"])
+
+                if laFactura.tipoDeComprobante == "P":
+                    print("segun "+ laFactura.UUID + "del mes " +self.mes+ ", aqui buscaria en todos los meses el uuid "+laFactura.IdDocumento+" y si encuentra su factura modificaria, la columna 13 del renglon de esa factura en el mes que esté, a Pagado")
+
+
+                los_conceptos = laFactura.conceptos.copy()
+                for concepto in los_conceptos:
+                    concepto["mes"] = self.mes
+                    concepto["UUID"] = laFactura.UUID
+                    if concepto["impuestos"]:
+                        concepto["impuestos"] = float(concepto['impuestos'])
+                    else:
+                        concepto["impuestos"] = 0
+                    if laFactura.tipoDeComprobante == "E":
+                        concepto["importeConcepto"] = 0.0 - float(concepto['importeConcepto'])
+                        concepto["descuento"] = 0.0 - float(concepto['descuento'])
+                        #concepto["subTotal"] = 0.0 - float(concepto['subTotal'])
+                        concepto["impuestos"] = 0.0 - float(concepto['impuestos'])
+                        #concepto["total"] = 0.0 - float(concepto['total'])
+
+                for i in range(1,ws_mes.max_column+1):
+                    if ws_mes.cell(1, i).value == "Status":
+                        self.status_column = i - 2
+
+                row = ws_todos.max_row
+                dv_categorias = DataValidation(type="list", formula1="=Categorias!A$1:A$"+str(len(self.lista_categorias_default)), allow_blank=True)
+                ws_todos.add_data_validation(dv_categorias)
+                for concepto in los_conceptos:
+                    row += 1
+                    clave = concepto['clave_concepto']
+                    ws_todos.cell(row, 1, concepto['mes'])
+                    ws_todos.cell(row, 2, clave)
+                    ws_todos.cell(row, 3, self.getDescription(clave))
+                    ws_todos.cell(row, 4, concepto['UUID'])
+                    ws_todos.cell(row, 5, concepto['cantidad'])
+                    ws_todos.cell(row, 6, concepto['descripcion'])
+                    ws_todos.cell(row, 7, concepto['importeConcepto'])
+                    ws_todos.cell(row, 8, concepto['descuento'])
+                    ws_todos.cell(row, 9, concepto['importeConcepto'] - concepto['descuento'])
+                    ws_todos.cell(row, 10, concepto['impuestos'])
+                    ws_todos.cell(row, 11, (concepto['importeConcepto'] - concepto['descuento']) + concepto['impuestos'])
+                    dv_categorias.add(ws_todos.cell(row, 12))
+                    ws_todos.cell(row, 12, concepto['tipo'])
+                    ws_todos.cell(row, 13, "=VLOOKUP(D"+str(row)+","+concepto['mes']+"!C:Q,"+str(self.status_column)+",FALSE)")
+                workbook.save(self.annual_xlsx_path)
+
         
 
     def tabChanged(self, index):
@@ -1053,12 +1158,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             r += 1
             ws_lista_cats.cell(r, 1, cat)
 
-        status_column = 0
+        self.status_column = 0
         primer_mes = workbook[self.meses[0]]
 
         for i in range(1,primer_mes.max_column+1):
             if primer_mes.cell(1, i).value == "Status":
-                status_column = i - 2
+                self.status_column = i - 2
         for mes in self.meses:
             ws_mes = workbook[mes]
             for row in range(2,len(ws_mes["A"])):
@@ -1128,7 +1233,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 ws_todos.cell(row, 11, (concepto['importeConcepto'] - concepto['descuento']) + concepto['impuestos'])
                 dv_categorias.add(ws_todos.cell(row, 12))
                 ws_todos.cell(row, 12, concepto['tipo'])
-                ws_todos.cell(row, 13, "=VLOOKUP(D"+str(row)+","+concepto['mes']+"!C:Q,"+str(status_column)+",FALSE)")
+                ws_todos.cell(row, 13, "=VLOOKUP(D"+str(row)+","+concepto['mes']+"!C:Q,"+str(self.status_column)+",FALSE)")
 
         df = pd.DataFrame(self.conceptos)
 
@@ -1585,9 +1690,15 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 self.tables[tabName].removeColumn(columna)
 
     def cargaCategorias(self):
-        folder_cliente = os.path.split(os.path.split(self.paths[0])[0])[0]
-        self.folder_year = os.path.split(self.paths[0])[0]
-        self.json_path = join(folder_cliente, "categorias_dicc_huiini.json")
+        
+        try:
+            self.cliente_path = os.path.split(os.path.split(self.paths[0])[0])[0]
+            self.folder_year = os.path.split(self.paths[0])[0]
+        except:
+            print("vengo de escoger cliente")
+
+        
+        self.json_path = join(self.cliente_path, "categorias_dicc_huiini.json")
         if os.path.exists(self.json_path):
             with open(self.json_path, "r", encoding="utf-8") as jsonfile:
                 self.dicc_de_categorias = json.load(jsonfile)
@@ -1602,7 +1713,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             if not categoria in self.lista_categorias_default:
                 self.lista_categorias_default.append(categoria)
 
-        self.cliente_path = folder_cliente
+       
 
     def procesaCarpetas(self,paths):
         self.paths = paths.copy()
