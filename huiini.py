@@ -602,9 +602,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             print("aquí haría algo")
             self.mes = ""
         else:
-            self.excel_path = join(self.folder_year, folder_mes[name],"EGRESOS","huiini","resumen.xlsx")
-            
             self.mes = name
+            cliente = os.path.split(self.cliente_path)[1]
+            self.excel_path = join(self.folder_year, folder_mes[name],"EGRESOS","huiini","resumen_" + cliente + "_" + self.mes + ".xlsx")
             n = -1
             lc = ["Excel"]
 
@@ -1369,7 +1369,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         appdatapath = os.path.expandvars('%APPDATA%\huiini')
         workbook = load_workbook(os.path.join(appdatapath,"template_diot.xlsx"))
         ws_rfc = workbook[workbook.get_sheet_names()[0]]
-        xlsx_path = os.path.join(currentDir,os.path.join("huiini","resumen.xlsx"))
+        cliente = os.path.split(self.cliente_path)[1]
+        xlsx_path = os.path.join(currentDir,os.path.join("huiini","resumen_" + cliente + "_" + self.mes + ".xlsx"))
         #workbook = xlsxwriter.Workbook(xlsx_path)
         #worksheet = workbook.add_worksheet("por_RFC")
         # workbook = Workbook()
@@ -1788,8 +1789,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                     self.respaldo_anual_path = self.annual_xlsx_path.split(".xlsx")[0]+"respaldo_"+hoy+".xlsx"
                     os.rename(self.annual_xlsx_path,self.respaldo_anual_path)
 
-           
-            self.excel_path = join(self.paths[0],"EGRESOS","huiini","resumen.xlsx")
+            cliente = os.path.split(self.cliente_path)[1]
+            self.excel_path = join(self.paths[0],"EGRESOS","huiini","resumen_" + cliente + "_" + self.mes + ".xlsx")
 
             self.listaDeFacturasIngresos = []
 

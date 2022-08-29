@@ -145,10 +145,10 @@ ya
 - Agregar header a la tabla de sumas en el gui Ya
 - Agregar botón de resumen anual Ya
 - que la palomita de las sumatorias te lleve al resumen diot del mes Ya 
-- que el resumen diot se llame resumen_"elcliente"_"elmes".xlxs
-- header de todas las hojas de excel con la info del cliente e iconos de huiini y sicad
-- Agregar a la suma del total por concepto todos los impuestos
-- Agragar formato y hojas de calculo de impuestos (IVA e ISR) en el excel.
+- que el resumen diot se llame resumen_"elcliente"_"elmes".xlxs Ya
+
+- header de todas las hojas de excel con la info del cliente e iconos de huiini y sicad   Ya casi
+- Agregar a la suma del total por concepto todos los impuestos ????
 - En las hojas de iva anual e importe anual, separar lo no duducible y el gasto personal, nomina eliminar 
 - Agregar columnas de traslados locales de ISH y TUA, ieps en el qTablewidget
 
@@ -165,7 +165,21 @@ ya
 - Depurar UI y Exceles formatos,
 - Mejorar formatos DIOT , que se llene la mayor cantidad de informacion posible
 
-????
+2.0
+- Agregar formato y hojas de calculo de impuestos (IVA e ISR) en el excel.
+	- crear hoja de tabla de ISR
+	- agregar el menu de tablas ISR
+			- Guardar tabla isr ( PF act. emp.)
+	-	agregar calculo IVA FISCAL
+	-  agregar calculo ISR
+	-  agregar Historico
+	-  agregar encriptamiento de CLAVES.txt (por cliente)
+		- guardar en el archivo claves.tx. el tipo de tabal de ISR 	(por cliente)(nombre del archivo determinar)
+	- herramienta independiente a huiini para encriptar y des ecriptar el archivo de claves ??????
+
+
+
+
 
 
 
