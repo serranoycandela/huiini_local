@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Huiini"
-#define MyAppVersion "1.8.4"
+#define MyAppVersion "1.8.7"
 #define MyAppPublisher "Huiini"
 #define MyAppURL "http://huiini.com.mx"
 #define MyAppExeName "huiini.exe"
@@ -22,7 +22,7 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={pf}\{#MyAppName}
 DisableProgramGroupPage=yes
 LicenseFile=LICENSE
-OutputBaseFilename=huiiniInstaller
+OutputBaseFilename=huiiniInstaller_{#MyAppVersion}
 SetupIconFile=myicon.ico
 Compression=lzma
 SolidCompression=yes

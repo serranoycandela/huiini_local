@@ -325,7 +325,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.actionImprimir.triggered.connect(self.imprime)
         self.excel_anual_button.clicked.connect(self.abre_excel_anual)
         #self.descarga_bt.clicked.connect(self.descarga_mesta)
-        self.actionImprimir.triggered.connect(self.imprime)
 
         self.actionSelccionar_Impresora.triggered.connect(self.cambiaImpresora)
         self.actionCancelar_Impresi_n.triggered.connect(self.cancelaImpresion)
@@ -539,6 +538,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
                 los_conceptos = laFactura.conceptos.copy()
                 for concepto in los_conceptos:
+                    concepto["subTotal"] = 0.0
                     concepto["mes"] = self.mes
                     concepto["UUID"] = laFactura.UUID
                     if concepto["impuestos"]:
@@ -546,7 +546,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                     else:
                         concepto["impuestos"] = 0
                     if laFactura.tipoDeComprobante == "E":
-                        concepto["importeConcepto"] = 0.0 - float(concepto['importeConcepto'])
+                        concepto["subTotal"] = float(concepto['importeConcepto']) - float(concepto['descuento'])
+                        #concepto["importeConcepto"] = 0.0 - float(concepto['importeConcepto'])
                         concepto["descuento"] = 0.0 - float(concepto['descuento'])
                         #concepto["subTotal"] = 0.0 - float(concepto['subTotal'])
                         concepto["impuestos"] = 0.0 - float(concepto['impuestos'])
@@ -792,9 +793,16 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                      top=Side(border_style='thin', color='FF000000'),
                      bottom=Side(border_style='thin', color='FF000000'))
 
-        for column in range(1,18):
+        for column in range(1,columna_totales+1):
             cell = ws.cell(8,column)
             cell.fill = PatternFill(start_color="8ccbff", end_color="8ccbff", fill_type = "solid")
+            cell.font = Font(bold=True)
+            cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+            cell.border = cell_border
+
+        for column in range(columna_totales+2,columna_totales+4):
+            cell = ws.cell(8,column)
+            #cell.fill = PatternFill(start_color="8ccbff", end_color="8ccbff", fill_type = "solid")
             cell.font = Font(bold=True)
             cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
             cell.border = cell_border
@@ -906,13 +914,17 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         print(df.head())
         self.agregaMembrete(ws_cats)
         ws_cats.cell(7,1).value = " "
+        
         por_categorias = df.groupby(['mes', 'tipo'], as_index=False).agg({variable:sum})
         por_categorias_wide = por_categorias.pivot_table(index="mes",columns=['tipo'],values=variable,fill_value= 0)
         por_categorias_wide.reset_index(inplace=True)
         por_categorias_wide['mes'] = pd.Categorical(por_categorias_wide['mes'], self.todos_los_meses)
         por_categorias_wide = por_categorias_wide.sort_values("mes")
         por_categorias_wide['mes'] = por_categorias_wide.mes.astype(str)
-        for r in dataframe_to_rows(por_categorias_wide, index=False, header=True):
+        por_categorias_wide_no_deducibles = por_categorias_wide.loc[:,por_categorias_wide.columns.isin(['Gasto personal', 'No deducible',])]
+        por_categorias_wide_deducibles = por_categorias_wide.drop(['Gasto personal',  'Nómina', 'Nomina', 'No deducible', 'Pago nomina', 'Pago nómina'], axis=1, errors='ignore')
+        #
+        for r in dataframe_to_rows(por_categorias_wide_deducibles, index=False, header=True):
             ws_cats.append(r)
         #print(por_categorias_wide)
 
@@ -924,7 +936,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
 
 
-        self.numeroDeColumnas = len(por_categorias_wide.columns)
+        self.numeroDeColumnas = len(por_categorias_wide_deducibles.columns)
         self.columna_totales = self.numeroDeColumnas + 1
         self.sumas_row = len(por_categorias_wide.index)+9
         ws_cats.cell(8,self.columna_totales, "Total")
@@ -936,6 +948,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 ws_cats.cell(j,i,"=SUMIFS(Conceptos!"+col_sum+":"+col_sum+",Conceptos!L:L,"+letra+"8,Conceptos!A:A,A"+str(j)+',Conceptos!M:M,"Pagado")')
 
 
+         
+        ws_cats.cell(8,self.columna_totales+2,'Gasto personal')
+        ws_cats.cell(8,self.columna_totales+3,'No deducible')
+        for i in range(self.columna_totales+2,self.columna_totales+4):
+            letra = get_column_letter(i)
+            for j in range(9,self.sumas_row):
+                ws_cats.cell(j,i,"=SUMIFS(Conceptos!"+col_sum+":"+col_sum+",Conceptos!L:L,"+letra+"8,Conceptos!A:A,A"+str(j)+',Conceptos!M:M,"Pagado")')
 
         for i in range(2,self.columna_totales):
             letra = get_column_letter(i)
@@ -946,7 +965,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             ws_cats.cell(i,self.columna_totales,"=SUM(B"+str(i)+ ":"+letra_final+ str(i)+")")
 
         letra_sumas = get_column_letter(self.columna_totales)
+        letraGastosP = get_column_letter(self.columna_totales+2)
+        letraNoDeducibles = get_column_letter(self.columna_totales+3)
         ws_cats.cell(self.sumas_row,self.columna_totales,"=SUM("+letra_sumas+"9:"+letra_sumas+str(self.sumas_row-1)  +")")
+        ws_cats.cell(self.sumas_row,self.columna_totales+2,"=SUM("+letraGastosP+"9:"+letraGastosP+str(self.sumas_row-1)  +")")
+        ws_cats.cell(self.sumas_row,self.columna_totales+3,"=SUM("+letraNoDeducibles+"9:"+letraNoDeducibles+str(self.sumas_row-1)  +")")
 
     def hazTabDeIngresos(self,paths):## hazWSIngresos?
         if len(self.listaDeFacturasIngresos) > 0:
@@ -1255,18 +1278,22 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         workbook.save(self.annual_xlsx_path)
 
     def agregaMembrete(self, ws):
-
+        for column in range(1,21):
+            for row in range(1,8):
+                cell = ws.cell(row,column)
+                cell.fill = PatternFill(start_color="8D99AD", end_color="97cffc", fill_type = "solid")
+                cell.font = Font(bold=True)
+                
         img = openpyxl.drawing.image.Image(join(scriptDirectory,'logo_s.png'))
-        img.anchor = 'A2'
+        img.anchor = 'B2'
         ws.add_image(img)
         ws.cell(2, 4, "Nombre: ")
         ws.cell(3, 4, "RFC: ")
         ws.cell(2, 5, self.nombre)
         ws.cell(3, 5, self.rfc)
-        ws.cell(4, 4, "Periodo: ")
-        ws.cell(5, 4, "Contador: ")
-        ws.cell(6, 4, "Fecha de Actualización: ") 
-        ws.cell(6, 5, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        ws.cell(4, 4, "Contador: ")
+        ws.cell(5, 4, "Fecha de Actualización: ") 
+        ws.cell(5, 5, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
         for row in ws["D2":"D6"]:
             for cell in row:
@@ -1274,8 +1301,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 cell.alignment = Alignment(horizontal="right")
 
         img = openpyxl.drawing.image.Image(join(scriptDirectory,'logo.png'))
-        img.anchor = 'O2'
+        img.anchor = 'M2'
         ws.add_image(img)
+
+        
 
 
     def agregaMes(self, mes):
@@ -1323,6 +1352,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             ws_mes.cell(8, 17,     "Status")
             ws_mes.cell(8, 18,     "TipoDeComprobante")
             ws_mes.cell(8, 19,     "complementosDePago")
+            ws_mes.cell(8, 20,     "Folio")
+            ws_mes.cell(8, 21,     "Serie")
+
             ws_mes.column_dimensions['A'].width = 10
             ws_mes.column_dimensions['B'].width = 20
             ws_mes.column_dimensions['C'].width = 40
@@ -1340,8 +1372,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             ws_mes.column_dimensions['O'].width = 7
             ws_mes.column_dimensions['P'].width = 20
             ws_mes.column_dimensions['Q'].width = 20
-            ws_mes.column_dimensions['R'].width = 10
-            ws_mes.column_dimensions['S'].width = 7
+            ws_mes.column_dimensions['R'].width = 17
+            ws_mes.column_dimensions['S'].width = 17
+            ws_mes.column_dimensions['T'].width = 20
+            ws_mes.column_dimensions['U'].width = 20
 
             dv = DataValidation(type="list", formula1='"Pendiente,Pagado"', allow_blank=True)
             ws_mes.add_data_validation(dv)
@@ -1389,6 +1423,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 ws_mes.cell(row, 18, factura.tipoDeComprobante)
                 if factura.UUID in self.complementosDePago:
                     ws_mes.cell(row, 19, self.complementosDePago[factura.UUID]["suma"])
+
+                ws_mes.cell(row, 20, factura.folio)
+                ws_mes.cell(row, 21, factura.serie)
 
                 if factura.tipoDeComprobante == "P":
                     print("segun "+ factura.UUID + "del mes " +mes+ ", aqui buscaria en todos los meses el uuid "+factura.IdDocumento+" y si encuentra su factura modificaria, la columna 13 del renglon de esa factura en el mes que esté, a Pagado")
@@ -2314,6 +2351,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             factura.setFolio(contador + 1)
             los_conceptos = factura.conceptos.copy()
             for concepto in los_conceptos:
+                concepto["subTotal"] = 0.0
                 concepto["mes"] = self.mes
                 concepto["UUID"] = factura.UUID
                 if concepto["impuestos"]:
