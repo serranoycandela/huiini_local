@@ -1368,10 +1368,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             workbook = load_workbook(self.annual_xlsx_path)
             if not mes in workbook.sheetnames:
                 self.yaEstaba[mes] = False
-                if "Conceptos" in workbook.sheetnames:
-                    antesDeConceptos = workbook.worksheets.index(workbook['Conceptos'])
-                else:
-                    antesDeConceptos = 1
                 ws_mes = workbook.create_sheet(mes, 0)
             else:
                 self.yaEstaba[mes] = True
