@@ -37,6 +37,8 @@ class Ui_MainWindow(object):
         self.actionsdnsodk.setObjectName(u"actionsdnsodk")
         self.actionSelccionar_Impresora = QAction(MainWindow)
         self.actionSelccionar_Impresora.setObjectName(u"actionSelccionar_Impresora")
+        self.actionGenerar_Carpetas_Aspel_Coi = QAction(MainWindow)
+        self.actionGenerar_Carpetas_Aspel_Coi.setObjectName(u"actionGenerar_Carpetas_Aspel_Coi")
         self.centralWidget = QWidget(MainWindow)
         self.centralWidget.setObjectName(u"centralWidget")
         self.tabWidget = QTabWidget(self.centralWidget)
@@ -143,6 +145,7 @@ class Ui_MainWindow(object):
         self.menuCliente.addSeparator()
         self.menuCliente.addAction(self.action_editar_Categor_as)
         self.menuCliente.addAction(self.actionActualizar_Exceles)
+        self.menuCliente.addAction(self.actionGenerar_Carpetas_Aspel_Coi)
         self.menuImprimir.addAction(self.actionImprimir)
         self.menuImprimir.addAction(self.actionCancelar_Impresi_n)
         self.menuImprimir.addSeparator()
@@ -157,7 +160,7 @@ class Ui_MainWindow(object):
     # setupUi
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Huiini 1.8.7", None))
+        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Huiini 1.9.1", None))
         self.actionEscoger_cliente.setText(QCoreApplication.translate("MainWindow", u"Escoger cliente", None))
         self.action_editar_Categor_as.setText(QCoreApplication.translate("MainWindow", u"Editar Categor\u00edas", None))
         self.actionActualizar_Exceles.setText(QCoreApplication.translate("MainWindow", u"Actualizar Exceles", None))
@@ -165,6 +168,7 @@ class Ui_MainWindow(object):
         self.actionImprimir.setText(QCoreApplication.translate("MainWindow", u"Imprimir", None))
         self.actionsdnsodk.setText(QCoreApplication.translate("MainWindow", u"sdnsodk", None))
         self.actionSelccionar_Impresora.setText(QCoreApplication.translate("MainWindow", u"Selccionar Impresora", None))
+        self.actionGenerar_Carpetas_Aspel_Coi.setText(QCoreApplication.translate("MainWindow", u"Generar Carpetas Aspel-Coi", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), QCoreApplication.translate("MainWindow", u"Tab 1", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), QCoreApplication.translate("MainWindow", u"Tab 2", None))
         self.carpetaChooser.setText(QCoreApplication.translate("MainWindow", u"Selecciona Carpeta", None))

@@ -157,14 +157,16 @@ ya
 
 1.9
 
+- Ordenar correctamente los meses en el excel anual Ya
+- Renombrar facturas con el prefijo de el rfc Ya
+
 - Llenado de una hoja nueva en el excel de gasto personal (declaracion anual)
-- Identificar canceladas (son xmls complementarios que hacen referencia a el uuid de un xml previo)
+- Identificar canceladas (son xmls complementarios que hacen referencia a el uuid de un xml previo)    Pospuesto
 - Modificar el pie de los exceles (poniendo que?)
 - Manual de funciones. video
 - Actualizar Jsons de catalogos, unidades de medida, para cada catalogo crear su propio scrip de python que se encargue de actualizar eñ Json (ej. consepto2json.py)
 - Depurar UI y Exceles formatos,
 - Mejorar formatos DIOT , que se llene la mayor cantidad de informacion posible
-- Renombrar facturas con el prefijo de el rfc
 - Agregar columnas de traslados locales de ISH y TUA, ieps en el qTablewidget
 
 2.0

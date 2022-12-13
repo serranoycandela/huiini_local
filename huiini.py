@@ -322,6 +322,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         self.carpetaChooser.clicked.connect(self.cualCarpeta)
         self.action_editar_Categor_as.triggered.connect(self.edita_categorias)
+        self.actionGenerar_Carpetas_Aspel_Coi.triggered.connect(self.carpetas_coi)
         self.actionImprimir.triggered.connect(self.imprime)
         self.excel_anual_button.clicked.connect(self.abre_excel_anual)
         #self.descarga_bt.clicked.connect(self.descarga_mesta)
@@ -348,6 +349,61 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         self.tabWidget.currentChanged.connect(self.tabChanged)
         self.numeroDeFacturasValidas = {}
+
+    def carpetas_coi(self):
+        print("carpetas coi")
+        
+        self.carpeta_this_year = join(self.cliente_path, str(datetime.now().year))
+        self.folder_year = str(datetime.now().year)
+        paths_meses = []
+        carpetas_meses = ["01 ENERO", "02 FEBRERO", "03 MARZO", "04 ABRIL", "05 MAYO", "06 JUNIO", "07 JULIO", "08 AGOSTO", "09 SEPTIEMBRE", "10 OCTUBRE", "11 NOVIEMBRE", "12 DICIEMBRE"]
+        for filename in os.listdir(self.carpeta_this_year):
+            if os.path.isdir(join(self.carpeta_this_year,filename)):
+                if filename in carpetas_meses:
+                    print(filename)
+                    paths_meses.append(join(self.carpeta_this_year,filename))
+
+        for folder_mes in paths_meses:
+            aspel_coi_path = join(folder_mes, "aspel_coi")
+            if not os.path.isdir(aspel_coi_path):
+                os.makedirs(aspel_coi_path)
+            self.esteFolder = join(folder_mes,"EGRESOS")
+            cuantosDuplicados = 0
+            self.listaDeDuplicados = []
+            self.listaDeFacturas = []
+            self.listaDeUUIDs = []
+            contador = 0
+            for root, dirs, files in os.walk(self.esteFolder, topdown=False):
+                for name in files:
+                    if name.endswith(".xml") and not "CANCELA" in root:
+                        try:
+                            print(os.path.join(root, name))
+                            laFactura = Factura(join(root, name))
+                            if laFactura.sello == "SinSello":
+                                print("Omitiendo xml sin sello "+laFactura.xml_path)
+                            else:
+                                if laFactura.version:
+                                    if laFactura.UUID in self.listaDeUUIDs:
+                                        cuantosDuplicados+=1
+                                        self.listaDeDuplicados.append(laFactura.UUID)
+                                    else:
+                                        self.listaDeUUIDs.append({"uuid": laFactura.UUID,
+                                                                "path": join(root, name),
+                                                                "EmisorRFC": laFactura.EmisorRFC,
+                                                                "ReceptorRFC": laFactura.ReceptorRFC})            
+                        except:
+                            print("falla")
+            
+            for f in self.listaDeUUIDs:
+                oldfilename = os.path.basename(f["path"])
+                try:
+                    shutil.copy(f["path"],aspel_coi_path) 
+                    new_dst_file_name = join(aspel_coi_path, f["EmisorRFC"]+"_"+oldfilename)
+                    os.rename(join(aspel_coi_path, oldfilename), new_dst_file_name)#rename
+                except:
+                    print("este no es o ya estaba")
+            
+
 
     def checkIfValuesExists1(self, dfObj, lista_d):
         resultDict = {}
@@ -416,7 +472,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
             los_meses = []
             for filename in os.listdir(self.carpeta_this_year):
-                if os.path.isdir(join(self.carpeta_this_year,filename)):
+                if os.path.isdir(join(self.carpeta_this_year,filename)):## aqui falta algo mas para asegurar que la carpeta sea un mes
                     print(filename)
                     los_meses.append(join(self.carpeta_this_year,filename))
 
@@ -1316,7 +1372,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                     antesDeConceptos = workbook.worksheets.index(workbook['Conceptos'])
                 else:
                     antesDeConceptos = 1
-                ws_mes = workbook.create_sheet(mes, antesDeConceptos)
+                ws_mes = workbook.create_sheet(mes, 0)
             else:
                 self.yaEstaba[mes] = True
         else:
