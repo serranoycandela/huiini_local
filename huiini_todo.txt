@@ -159,19 +159,25 @@ ya
 
 - Ordenar correctamente los meses en el excel anual Ya
 - Renombrar facturas con el prefijo de el rfc Ya
+- Llenado de una hoja nueva en el excel de gasto personal (declaracion anual) Ya
 
-- Llenado de una hoja nueva en el excel de gasto personal (declaracion anual)
-- Identificar canceladas (son xmls complementarios que hacen referencia a el uuid de un xml previo)    Pospuesto
-- Modificar el pie de los exceles (poniendo que?)
-- Manual de funciones. video
+- Actualizar logos en el excel 
+- Modificar el pie de los exceles (agregar sumas en el ultimo renglon) y con un colorcito?
+- Ecribir un log con los mensajes de las qboxmesages (anual y se se sobreescribe)
+- Manual de funciones. (actualizar claves de producto y servicios,
+						uso del log,
+						uso de las versiones guardadas en automatico,
+						carpetas y xml que se mueven y/o crean en automatico)
 - Actualizar Jsons de catalogos, unidades de medida, para cada catalogo crear su propio scrip de python que se encargue de actualizar eñ Json (ej. consepto2json.py)
-- Depurar UI y Exceles formatos,
-- Mejorar formatos DIOT , que se llene la mayor cantidad de informacion posible
-- Agregar columnas de traslados locales de ISH y TUA, ieps en el qTablewidget
+  (de los 3 catalogos uso, unidad, conceptos)
+- Depurar UI (quitar los tabs iniciales, agregar logo nuevo de sicad, implementar las sugerencias de colores de Kevin)
+- Agregar columnas de traslados locales de ISH y TUA, ieps en el qTablewidget 
 
 2.0
+- Mejorar formatos DIOT , que se llene la mayor cantidad de informacion posible (Nayeli)
+- Reactive interface 
 - que cuando se actualize un excel anual de los antiguos que tienen header no se rompa
-- Agregar formato y hojas de calculo de impuestos (IVA e ISR) en el excel.
+- Agregar formato y hojas de calculo de impuestos (IVA e ISR) en el excel. (Nayeli)
 	- crear hoja de tabla de ISR
 	- agregar el menu de tablas ISR
 			- Guardar tabla isr ( PF act. emp.)
@@ -181,7 +187,9 @@ ya
 	-  agregar encriptamiento de CLAVES.txt (por cliente)
 		- guardar en el archivo claves.tx. el tipo de tabal de ISR 	(por cliente)(nombre del archivo determinar)
 	- herramienta independiente a huiini para encriptar y des ecriptar el archivo de claves ??????
+- Identificar canceladas (son xmls complementarios que hacen referencia a el uuid de un xml previo)
 
+C:/Dropbox/SICAD 2022/METROPOLITANA/CONTABILIDAD/2022/09 SEPTIEMBRE\EGRESOS\7b709567-bbd5-4d96-ad46-27eb1ada83a6.xml
 
 
 

@@ -2443,7 +2443,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             self.tables[self.mes].setItem(contador,4,self.esteItem(factura.EmisorRFC,factura.EmisorNombre))
             mesage = ""
             for concepto in factura.conceptos:
-                mesage += self.concepto[concepto["clave_concepto"]] + u'\n'
+                try:
+                    clave = concepto["clave_concepto"].strip()
+                    mesage += self.concepto[clave] + u'\n'
+                except:
+                    QMessageBox.information(self, "Clave incorrecta", "Clave de concepto no válida en la factura" + factura.xml_path)
+                    
             self.tables[self.mes].setItem(contador,5, self.esteItem(factura.conceptos[0]['descripcion'],mesage))
             self.tables[self.mes].setItem(contador,6,self.esteCenteredItem(str(factura.subTotal),""))
             self.tables[self.mes].setItem(contador,7,self.esteCenteredItem(str(factura.descuento),""))
