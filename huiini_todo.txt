@@ -160,10 +160,10 @@ ya
 - Ordenar correctamente los meses en el excel anual Ya
 - Renombrar facturas con el prefijo de el rfc Ya
 - Llenado de una hoja nueva en el excel de gasto personal (declaracion anual) Ya
+- Ecribir un log con los mensajes de las qboxmesages (anual y se se sobreescribe) Ya
 
 - Actualizar logos en el excel 
 - Modificar el pie de los exceles (agregar sumas en el ultimo renglon) y con un colorcito?
-- Ecribir un log con los mensajes de las qboxmesages (anual y se se sobreescribe)
 - Manual de funciones. (actualizar claves de producto y servicios,
 						uso del log,
 						uso de las versiones guardadas en automatico,
