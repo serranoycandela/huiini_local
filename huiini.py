@@ -285,10 +285,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                         with open(os.path.join(appdatapath,"pdflatex_path.txt"), "w") as f:
                             f.write(path_to_file.replace("\\","\\\\"))
                     else:
-                        QMessageBox.information(self, "Advertencia", "ruta incorrecta, la creación de pdfs quedará desactivada")
+                        self.warning(self, "Advertencia", "ruta incorrecta, la creación de pdfs quedará desactivada")
                         self.tiene_pdflatex = False
                 if reply == QMessageBox.No:
-                    QMessageBox.information(self, "Advertencia", "la creación de pdfs quedará desactivada")
+                    self.warning(self, "Advertencia", "la creación de pdfs quedará desactivada")
                     self.tiene_pdflatex = False
 
         self.tiene_gswin64c = True
@@ -310,10 +310,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                             f.write(path_to_file.replace("\\","\\\\"))
                         self.gswin64c_path = path_to_file.replace("\\","\\\\")
                     else:
-                        QMessageBox.information(self, "Advertencia", "ruta incorrecta, la impresión quedará desactivada")
+                        self.warning(self, "Advertencia", "ruta incorrecta, la impresión quedará desactivada")
                         self.tiene_gswin64c = False
                 if reply == QMessageBox.No:
-                    QMessageBox.information(self, "Advertencia", "la impresión quedará desactivada")
+                    self.warning(self, "Advertencia", "la impresión quedará desactivada")
                     self.tiene_gswin64c = False
 
         self.actionEscoger_cliente.triggered.connect(self.escoger_cliente)
@@ -349,6 +349,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         self.tabWidget.currentChanged.connect(self.tabChanged)
         self.numeroDeFacturasValidas = {}
+
+    def warning(self, parent, title, message):
+        QMessageBox.information(parent, title, message)
+        self.pluma.write(title)
+        self.pluma.write("\n")
+        self.pluma.write(message)
+        self.pluma.write("\n")
 
     def carpetas_coi(self):
         print("carpetas coi")
@@ -511,7 +518,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                     if not value:
                         message += "\n"+key
                 if message != "Se actualizará el mes de "+ el_mes + "\ncon las siguinetes facturas:":
-                    QMessageBox.information(self, "Actualización del excel anual", message)
+                    self.warning(self, "Actualización del excel anual", message)
                 #self.annual_xlsx_path
                 self.mes = el_mes
                 self.agregaFacturasFaltantes(result)
@@ -781,7 +788,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                     for clave1 in lista:
                         if clave1.startswith(clave) or clave.startswith(clave1):
                             pasa = False
-                            QMessageBox.information(self, "Advertencia", "El inicio de clave " + clave + " ya está considerado en la categoría " + categoria)
+                            self.warning(self, "Advertencia", "El inicio de clave " + clave + " ya está considerado en la categoría " + categoria)
                 if pasa:
                     if clave == "" or nombre == "":
                         print("no mames")
@@ -812,7 +819,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             print("este guey me pico:"+self.annual_xlsx_path)
         except:
             print ("el sistema no tiene una aplicacion por default para abrir exceles")
-            QMessageBox.information(self, "Information", "El sistema no tiene una aplicación por default para abrir exceles" )
+            self.warning(self, "Information", "El sistema no tiene una aplicación por default para abrir exceles" )
     def edita_categorias(self):
         self.cats_dialog = categorias_widget()
         self.cats_dialog.remove_button.clicked.connect(self.quitaCategoria)
@@ -1657,7 +1664,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             except:
                 print("el sistema no tiene una aplicacion por default para abrir xmls")
                 print(xmlpath)
-                QMessageBox.information(self, "Information", "El sistema no tiene una aplicación por default para abrir xmls" )
+                self.warning(self, "Information", "El sistema no tiene una aplicación por default para abrir xmls" )
 
         if column == 0:
             pdf = join(join(folder_mes,"huiini"),self.tables[tabName].item(row, 2).text()+".pdf")
@@ -1666,7 +1673,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 os.startfile(pdf)
             except:
                 print ("el sistema no tiene una aplicacion por default para abrir pdfs")
-                QMessageBox.information(self, "Information", "El sistema no tiene una aplicación por default para abrir pdfs" )
+                self.warning(self, "Information", "El sistema no tiene una aplicación por default para abrir pdfs" )
 
 
     def meDoblePicaronResumen(self, row,column):
@@ -1677,7 +1684,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             
         except:
             print ("el sistema no tiene una aplicacion por default para abrir exceles")
-            QMessageBox.information(self, "Information", "El sistema no tiene una aplicación por default para abrir exceles" )
+            self.warning(self, "Information", "El sistema no tiene una aplicación por default para abrir exceles" )
 
 
 
@@ -1833,7 +1840,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             if not categoria in self.lista_categorias_default:
                 self.lista_categorias_default.append(categoria)
 
-       
+    def setup_log(self):
+        self.pluma = open(join(self.year_folder, "log.txt"), "w")
+           
+
+    def close_log(self):
+        self.pluma.close()       
 
     def procesaCarpetas(self,paths):
         self.paths = paths.copy()
@@ -1851,6 +1863,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.meses = []
         print(paths[0])
         self.year_folder = os.path.split(paths[0])[0]
+        self.setup_log()
         same_year = True
         no_son_meses = False
 
@@ -1876,9 +1889,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         if not same_year or no_son_meses:
             if no_son_meses:
-                QMessageBox.information(self, "Información", "no son meses")
+                self.warning(self, "Información", "no son meses")
             else:
-                QMessageBox.information(self, "Información", "no son el mismo año")
+                self.warning(self, "Información", "no son el mismo año")
         else:
             print(self.year_folder)
             year = os.path.split(os.path.split(paths[0])[0])[1]
@@ -1973,6 +1986,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             print("aquí haría algo")
         else:
             self.mes = name
+
+        self.close_log()
 
     
 
@@ -2107,7 +2122,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                                     contador += 1
                                     self.listaDeFacturas.append(laFactura)
                     except:
-                        QMessageBox.information(self, "Information", "La factura : " + join(self.esteFolder + os.sep,archivo) + " está corrupta")
+                        self.warning(self, "Information", "La factura : " + join(self.esteFolder + os.sep,archivo) + " está corrupta")
 
             self.facturas[self.mes] = sorted(self.listaDeFacturas, key=lambda listaDeFacturas: listaDeFacturas.fechaTimbrado)
             if cuantosDuplicados > 0:
@@ -2117,7 +2132,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                     chunks.append(str(esteDuplicado)+"\n")
                 mensaje2 = "".join(chunks)
                 mensaje = mensaje + mensaje2
-                QMessageBox.information(self, "Information", mensaje)
+                self.warning(self, "Information", mensaje)
 
             # for t in range(0,5):
             #     time_old.sleep(0.05*len(self.facturas[self.mes]))
@@ -2359,7 +2374,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                             contador += 1
                             self.listaDeFacturas.append(laFactura)
             except:
-                QMessageBox.information(self, "Information", "El xml " + xml_path + " no está bien formado")
+                self.warning(self, "Information", "El xml " + xml_path + " no está bien formado")
                 print("El xml " + xml_path + " no está bien formado")
 
         if contador > 13:
@@ -2381,7 +2396,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 chunks.append(str(esteDuplicado)+"\n")
             mensaje2 = "".join(chunks)
             mensaje = mensaje + mensaje2
-            QMessageBox.information(self, "Information", mensaje)
+            self.warning(self, "Information", mensaje)
 
         contador = 0
           
@@ -2447,7 +2462,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                     clave = concepto["clave_concepto"].strip()
                     mesage += self.concepto[clave] + u'\n'
                 except:
-                    QMessageBox.information(self, "Clave incorrecta", "Clave de concepto no válida en la factura" + factura.xml_path)
+                    self.warning(self, "Clave incorrecta", "Clave de concepto no válida en la factura" + factura.xml_path)
                     
             self.tables[self.mes].setItem(contador,5, self.esteItem(factura.conceptos[0]['descripcion'],mesage))
             self.tables[self.mes].setItem(contador,6,self.esteCenteredItem(str(factura.subTotal),""))
@@ -2515,7 +2530,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             if not factura.mensaje == "":
                 mensajeAlerta += factura.UUID + factura.mensaje + r'\n'
         if not mensajeAlerta == "":
-            QMessageBox.information(self, "Information", mensajeAlerta)
+            self.warning(self, "Information", mensajeAlerta)
 
 
 
