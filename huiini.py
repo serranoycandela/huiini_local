@@ -27,9 +27,13 @@ import pandas as pd
 
 from openpyxl import load_workbook,  Workbook
 from openpyxl.utils import get_column_letter
-from openpyxl.styles import Border, Side, PatternFill, Font, Alignment, numbers
+from openpyxl.styles import Border, Side, PatternFill, Font, Alignment, numbers, colors
 from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.utils import get_column_letter
+
+from openpyxl.styles.differential import DifferentialStyle
+from openpyxl.formatting.rule import Rule
+
 
 import openpyxl
 from openpyxl.styles.alignment import Alignment
@@ -267,6 +271,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         with open(join(scriptDirectory,"conceptos.json"), "r") as jsonfile:
             self.concepto = json.load(jsonfile)
         self.labelLogo.setPixmap(logoPix)
+
+        logoSicadPix = QtGui.QPixmap(join(scriptDirectory,"logo_sicad.png"))
+        self.labelLogo_sicad.setPixmap(logoSicadPix)
+
         appdatapath = os.path.expandvars('%APPDATA%\huiini')
         self.tiene_pdflatex = True
         try:
@@ -348,6 +356,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.progressBar.hide()
 
         self.tabWidget.currentChanged.connect(self.tabChanged)
+        self.tabWidget.hide()
         self.numeroDeFacturasValidas = {}
 
     def warning(self, parent, title, message):
@@ -553,6 +562,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 dv = DataValidation(type="list", formula1='"Pendiente,Pagado"', allow_blank=True)
                 ws_mes.add_data_validation(dv)
 
+                
 
                 ws_mes.cell(row_mes, 1, laFactura.conceptos[0]['clave_concepto'])
                 ws_mes.cell(row_mes, 2, laFactura.fechaTimbrado)
@@ -788,7 +798,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                     for clave1 in lista:
                         if clave1.startswith(clave) or clave.startswith(clave1):
                             pasa = False
-                            self.warning(self, "Advertencia", "El inicio de clave " + clave + " ya está considerado en la categoría " + categoria)
+                            QMessageBox.information(self, "Advertencia", "El inicio de clave " + clave + " ya está considerado en la categoría " + categoria)
                 if pasa:
                     if clave == "" or nombre == "":
                         print("no mames")
@@ -819,7 +829,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             print("este guey me pico:"+self.annual_xlsx_path)
         except:
             print ("el sistema no tiene una aplicacion por default para abrir exceles")
-            self.warning(self, "Information", "El sistema no tiene una aplicación por default para abrir exceles" )
+            QMessageBox.information(self, "Information", "El sistema no tiene una aplicación por default para abrir exceles" )
     def edita_categorias(self):
         self.cats_dialog = categorias_widget()
         self.cats_dialog.remove_button.clicked.connect(self.quitaCategoria)
@@ -855,6 +865,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                      right=Side(border_style=None, color='FF000000'),
                      top=Side(border_style='thin', color='FF000000'),
                      bottom=Side(border_style='thin', color='FF000000'))
+        
 
         for column in range(1,columna_totales+1):
             cell = ws.cell(8,column)
@@ -1062,6 +1073,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 ws_ingresos.cell(8, 16,     "complementosDePago")
                 ws_ingresos.cell(8, 17,     "Tipo")
                 row = 8
+                c = ws_ingresos['A9']
+                ws_ingresos.freeze_panes = c
             else:
                 max_row_for_a = max((c.row for c in ws_ingresos['C'] if c.value is not None))
                 row = max_row_for_a
@@ -1306,7 +1319,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         #dv_categorias = DataValidation(type="list", formula1='"{}"'.format(self.texto_para_validacion), allow_blank=True)
         dv_categorias = DataValidation(type="list", formula1="=Categorias!A$1:A$"+str(len(self.lista_categorias_default)), allow_blank=True)
-
+        c = ws_mes['A9']
+        ws_todos.freeze_panes = c
         ws_todos.add_data_validation(dv_categorias)
         for concepto in self.conceptos:
             if not self.yaEstaba[concepto['mes']]:
@@ -1347,7 +1361,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 cell.fill = PatternFill(start_color="8D99AD", end_color="97cffc", fill_type = "solid")
                 cell.font = Font(bold=True)
                 
-        img = openpyxl.drawing.image.Image(join(scriptDirectory,'logo_s.png'))
+        img = openpyxl.drawing.image.Image(join(scriptDirectory,'logo_sicad.png'))
         img.anchor = 'B2'
         ws.add_image(img)
         ws.cell(2, 4, "Nombre: ")
@@ -1414,6 +1428,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             ws_mes.cell(8, 20,     "Folio")
             ws_mes.cell(8, 21,     "Serie")
 
+            c = ws_mes['A9']
+            ws_mes.freeze_panes = c
+
+        
+
             ws_mes.column_dimensions['A'].width = 10
             ws_mes.column_dimensions['B'].width = 20
             ws_mes.column_dimensions['C'].width = 40
@@ -1438,6 +1457,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
             dv = DataValidation(type="list", formula1='"Pendiente,Pagado"', allow_blank=True)
             ws_mes.add_data_validation(dv)
+
+            bg = PatternFill(bgColor = "faf3c5")
+            style = DifferentialStyle(fill=bg) 
+            rule = Rule(type="expression", dxf=style)
+            rule.formula = ['$Q9="Pendiente"']
 
             row = 8
             for factura in self.facturas[self.mes]:
@@ -1489,6 +1513,21 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 if factura.tipoDeComprobante == "P":
                     print("segun "+ factura.UUID + "del mes " +mes+ ", aqui buscaria en todos los meses el uuid "+factura.IdDocumento+" y si encuentra su factura modificaria, la columna 13 del renglon de esa factura en el mes que esté, a Pagado")
 
+            #aqui haria el renglón de hasta abajo de sunmas?
+            if row > 9:
+                ws_mes.conditional_formatting.add("A9:U"+str(row), rule)
+                ws_mes.cell(row + 1, 6, "Suma de Pagadas")
+                for columna_suma in range(7,14):
+                    letra = get_column_letter(columna_suma)
+                    ws_mes.cell(row + 1, columna_suma, "=SUMIFS(" + letra + "9:" + letra + str(row) +",Q9:Q" + str(row) + ',"Pagado"' + ")")
+                cell_border_sumas = Border(left=Side(border_style=None, color='FF000000'),
+                                           right=Side(border_style=None, color='FF000000'),
+                                           top=Side(border_style='thin', color='FF000000'),
+                                           bottom=Side(border_style='thin', color='FF000000'))
+                for cell in ws_mes[str(row + 1)+":"+str(row + 1)]:
+                    cell.border = cell_border_sumas
+                    cell.font = Font(bold=True)
+            
             workbook.save(self.annual_xlsx_path)
 
     def hazResumenDiot(self,currentDir):
@@ -1664,7 +1703,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             except:
                 print("el sistema no tiene una aplicacion por default para abrir xmls")
                 print(xmlpath)
-                self.warning(self, "Information", "El sistema no tiene una aplicación por default para abrir xmls" )
+                QMessageBox.information(self, "Information", "El sistema no tiene una aplicación por default para abrir xmls" )
 
         if column == 0:
             pdf = join(join(folder_mes,"huiini"),self.tables[tabName].item(row, 2).text()+".pdf")
@@ -1673,7 +1712,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 os.startfile(pdf)
             except:
                 print ("el sistema no tiene una aplicacion por default para abrir pdfs")
-                self.warning(self, "Information", "El sistema no tiene una aplicación por default para abrir pdfs" )
+                QMessageBox.information(self, "Information", "El sistema no tiene una aplicación por default para abrir pdfs" )
 
 
     def meDoblePicaronResumen(self, row,column):
@@ -1684,7 +1723,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             
         except:
             print ("el sistema no tiene una aplicacion por default para abrir exceles")
-            self.warning(self, "Information", "El sistema no tiene una aplicación por default para abrir exceles" )
+            QMessageBox.information(self, "Information", "El sistema no tiene una aplicación por default para abrir exceles" )
 
 
 
@@ -1889,9 +1928,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         if not same_year or no_son_meses:
             if no_son_meses:
-                self.warning(self, "Información", "no son meses")
+                QMessageBox.information(self, "Información", "no son meses")
             else:
-                self.warning(self, "Información", "no son el mismo año")
+                QMessageBox.information(self, "Información", "no son el mismo año")
         else:
             print(self.year_folder)
             year = os.path.split(os.path.split(paths[0])[0])[1]
@@ -1933,13 +1972,14 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 self.procesaEgresos(path)
                 self.pon_categorias_custom_por_factura(self.paths)
                 self.pon_categorias_custom_en_gui(self.paths)
-                self.quitaColumnaVacias(12,5,self.mes)
+                self.quitaColumnaVacias(14,5,self.mes)
                 self.agregaMes(self.mes)
                 self.procesaIngresos(path)
                 self.aislaNomina(path)
                 self.aislaReconocibles(path)
                 self.progressBar.setValue(progreso)
-                # if p == 1:
+                if p == 1:
+                    self.tabWidget.show()
                 #     self.tabWidget.removeTab(0)
                 #     self.tabWidget.removeTab(0)
 
@@ -2339,7 +2379,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         if not os.path.exists(join(self.esteFolder, "huiini")):
             os.makedirs(join(self.esteFolder, "huiini"))
         self.tables[self.mes].clear()
-        lc = ["Pdf","Fecha","UUID","Receptor","Emisor","Concepto","Subtotal","Descuento","Traslado\nIVA","Traslado\nIEPS","Retención\nIVA","Retención\nISR","Total","Forma\nPago","Método\nPago","Tipo","Carpeta Coi"]
+        lc = ["Pdf","Fecha","UUID","Receptor","Emisor","Concepto","Subtotal","Descuento","Traslado\nIVA","Traslado\nIEPS","Traslado\nISH","Traslado\nTUA","Retención\nIVA","Retención\nISR","Total","Forma\nPago","Método\nPago","Tipo","Carpeta Coi"]
         self.ponEncabezado(lc,self.mes)
         self.tables[self.mes].setRowCount(13)
         self.tables[self.mes].repaint()
@@ -2390,7 +2430,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
 
         if cuantosDuplicados > 0:
-            mensaje = "En egresos hay "+str(cuantosDuplicados)+" duplicados\n"
+            mensaje = "En egresos de " + self.mes + " hay "+str(cuantosDuplicados)+" duplicados\n"
             chunks = []
             for esteDuplicado in self.listaDeDuplicados:
                 chunks.append(str(esteDuplicado)+"\n")
@@ -2469,14 +2509,18 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             self.tables[self.mes].setItem(contador,7,self.esteCenteredItem(str(factura.descuento),""))
             self.tables[self.mes].setItem(contador,8,self.esteCenteredItem(str(factura.traslados["IVA"]["importe"]),""))
             self.tables[self.mes].setItem(contador,9,self.esteCenteredItem(str(factura.traslados["IEPS"]["importe"]),""))
-            self.tables[self.mes].setItem(contador,10,self.esteCenteredItem(str(factura.retenciones["IVA"]),""))
-            self.tables[self.mes].setItem(contador,11,self.esteCenteredItem(str(factura.retenciones["ISR"]),""))
-            self.tables[self.mes].setItem(contador,12,self.esteCenteredItem(str(factura.total),""))
-            self.tables[self.mes].setItem(contador,13,self.esteItem(factura.formaDePagoStr,""))
-            self.tables[self.mes].setItem(contador,14, self.esteItem(factura.metodoDePago,factura.metodoDePago))
+
+            self.tables[self.mes].setItem(contador,10,self.esteCenteredItem(str(factura.traslados["ISH"]["importe"]),""))
+            self.tables[self.mes].setItem(contador,11,self.esteCenteredItem(str(factura.traslados["TUA"]["importe"]),""))
+
+            self.tables[self.mes].setItem(contador,12,self.esteCenteredItem(str(factura.retenciones["IVA"]),""))
+            self.tables[self.mes].setItem(contador,13,self.esteCenteredItem(str(factura.retenciones["ISR"]),""))
+            self.tables[self.mes].setItem(contador,14,self.esteCenteredItem(str(factura.total),""))
+            self.tables[self.mes].setItem(contador,15,self.esteItem(factura.formaDePagoStr,""))
+            self.tables[self.mes].setItem(contador,16, self.esteItem(factura.metodoDePago,factura.metodoDePago))
             tooltipTipo = "\n".join(x['tipo'] for x in factura.conceptos)
-            self.tables[self.mes].setItem(contador,15, self.esteItem(factura.conceptos[0]['tipo'],tooltipTipo))
-            self.tables[self.mes].setCellWidget(contador,16,listacombos[contador])
+            self.tables[self.mes].setItem(contador,17, self.esteItem(factura.conceptos[0]['tipo'],tooltipTipo))
+            self.tables[self.mes].setCellWidget(contador,18,listacombos[contador])
            
             pdf_dir = os.path.join(self.esteFolder,"huiini")
             pdf_name = os.path.split(factura.tex_path)[1].replace("tex","pdf")
@@ -2506,6 +2550,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 print("crealo con " + str(factura.subTotal))
 
             contador += 1
+        
 
         if self.hacerPDFs:
             self.hazPDFs()
@@ -2532,7 +2577,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         if not mensajeAlerta == "":
             self.warning(self, "Information", mensajeAlerta)
 
-
+        
 
 
         #self.folder.setText("Carpeta Procesada: " + u'\n' + self.esteFolder)

@@ -161,17 +161,23 @@ ya
 - Renombrar facturas con el prefijo de el rfc Ya
 - Llenado de una hoja nueva en el excel de gasto personal (declaracion anual) Ya
 - Ecribir un log con los mensajes de las qboxmesages (anual y se se sobreescribe) Ya
+- Agregar columnas de traslados locales de ISH y TUA, ieps en el qTablewidget Ya
+- Depurar UI (quitar los tabs iniciales, agregar logo nuevo de sicad) Ya
+- Actualizar logos en el excel Ya
+- Modificar el pie de los exceles (agregar sumas en el ultimo renglon) Ya
+- freeze panels para los meses los conceptos y los ingresos Ya
 
-- Actualizar logos en el excel 
-- Modificar el pie de los exceles (agregar sumas en el ultimo renglon) y con un colorcito?
+
 - Manual de funciones. (actualizar claves de producto y servicios,
 						uso del log,
 						uso de las versiones guardadas en automatico,
 						carpetas y xml que se mueven y/o crean en automatico)
 - Actualizar Jsons de catalogos, unidades de medida, para cada catalogo crear su propio scrip de python que se encargue de actualizar eñ Json (ej. consepto2json.py)
   (de los 3 catalogos uso, unidad, conceptos)
-- Depurar UI (quitar los tabs iniciales, agregar logo nuevo de sicad, implementar las sugerencias de colores de Kevin)
-- Agregar columnas de traslados locales de ISH y TUA, ieps en el qTablewidget 
+
+
+- implementar las sugerencias de colores de Kevin
+ 
 
 2.0
 - Mejorar formatos DIOT , que se llene la mayor cantidad de informacion posible (Nayeli)

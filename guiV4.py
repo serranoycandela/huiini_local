@@ -105,9 +105,16 @@ class Ui_MainWindow(object):
         self.horizontalLayout.setContentsMargins(11, 11, 11, 11)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
+        self.labelLogo_sicad = QLabel(self.layoutWidget1)
+        self.labelLogo_sicad.setObjectName(u"labelLogo_sicad")
+        self.labelLogo_sicad.setMinimumSize(QSize(79, 79))
+        self.labelLogo_sicad.setMaximumSize(QSize(70, 16777215))
+
+        self.horizontalLayout.addWidget(self.labelLogo_sicad)
+
         self.header_cliente = QLabel(self.layoutWidget1)
         self.header_cliente.setObjectName(u"header_cliente")
-        self.header_cliente.setMinimumSize(QSize(950, 100))
+        self.header_cliente.setMinimumSize(QSize(850, 100))
         font = QFont()
         font.setPointSize(16)
         self.header_cliente.setFont(font)
@@ -160,7 +167,7 @@ class Ui_MainWindow(object):
     # setupUi
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Huiini 1.9.2", None))
+        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Huiini 1.9.3", None))
         self.actionEscoger_cliente.setText(QCoreApplication.translate("MainWindow", u"Escoger cliente", None))
         self.action_editar_Categor_as.setText(QCoreApplication.translate("MainWindow", u"Editar Categor\u00edas", None))
         self.actionActualizar_Exceles.setText(QCoreApplication.translate("MainWindow", u"Actualizar Exceles", None))
@@ -174,6 +181,7 @@ class Ui_MainWindow(object):
         self.carpetaChooser.setText(QCoreApplication.translate("MainWindow", u"Selecciona Carpeta", None))
         self.excel_anual_button.setText(QCoreApplication.translate("MainWindow", u"Excel Anual", None))
         self.excel_mensual_button.setText(QCoreApplication.translate("MainWindow", u"Excel mensual", None))
+        self.labelLogo_sicad.setText("")
         self.header_cliente.setText("")
         self.labelLogo.setText("")
         self.menuCliente.setTitle(QCoreApplication.translate("MainWindow", u"Cliente", None))

@@ -14,7 +14,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Huiini 1.9.2</string>
+   <string>Huiini 1.9.3</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <widget class="QTabWidget" name="tabWidget">
@@ -155,10 +155,29 @@
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
+      <widget class="QLabel" name="labelLogo_sicad">
+       <property name="minimumSize">
+        <size>
+         <width>79</width>
+         <height>79</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>70</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QLabel" name="header_cliente">
        <property name="minimumSize">
         <size>
-         <width>950</width>
+         <width>850</width>
          <height>100</height>
         </size>
        </property>
