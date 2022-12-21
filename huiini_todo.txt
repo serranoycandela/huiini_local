@@ -166,14 +166,15 @@ ya
 - Actualizar logos en el excel Ya
 - Modificar el pie de los exceles (agregar sumas en el ultimo renglon) Ya
 - freeze panels para los meses los conceptos y los ingresos Ya
+- Actualizar logos en el excel (2) Ya
+- arreglar las tablas de meses en el gui Ya
+- arreglar la tabla de ingresos en el gui Ya
+- Actualizar Jsons de catalogos, unidades de medida, para cada catalogo crear su propio scrip de python que se encargue de actualizar 
+	el Json (ej. consepto2json.py) (de los 3 catalogos uso, unidad, conceptos) Ya
+- encabezado en el log Ya
 
 
-- Manual de funciones. (actualizar claves de producto y servicios,
-						uso del log,
-						uso de las versiones guardadas en automatico,
-						carpetas y xml que se mueven y/o crean en automatico)
-- Actualizar Jsons de catalogos, unidades de medida, para cada catalogo crear su propio scrip de python que se encargue de actualizar eñ Json (ej. consepto2json.py)
-  (de los 3 catalogos uso, unidad, conceptos)
+
 
 
 - implementar las sugerencias de colores de Kevin
@@ -194,6 +195,10 @@ ya
 		- guardar en el archivo claves.tx. el tipo de tabal de ISR 	(por cliente)(nombre del archivo determinar)
 	- herramienta independiente a huiini para encriptar y des ecriptar el archivo de claves ??????
 - Identificar canceladas (son xmls complementarios que hacen referencia a el uuid de un xml previo)
+- Manual de funciones. (actualizar claves de producto y servicios,
+						uso del log,
+						uso de las versiones guardadas en automatico,
+						carpetas y xml que se mueven y/o crean en automatico)
 
 C:/Dropbox/SICAD 2022/METROPOLITANA/CONTABILIDAD/2022/09 SEPTIEMBRE\EGRESOS\7b709567-bbd5-4d96-ad46-27eb1ada83a6.xml
 

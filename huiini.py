@@ -47,6 +47,7 @@ except:
 import locale
 
 import filecmp
+import xlrd
 
 
 # import subprocess
@@ -60,11 +61,16 @@ import filecmp
 ## C:\Users\Mio\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.9_qbz5n2kfra8p0\LocalCache\local-packages\Python39\Scripts\pyinstaller.exe huiini.py
 ## C:\Users\Mio\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.9_qbz5n2kfra8p0\LocalCache\local-packages\Python39\Scripts\pyside2-uic.exe mainwindowV4.ui -o guiV4.py
 
-
-try:
+if getattr(sys, 'frozen', False):
+    # we are running in a bundle
+    scriptDirectory = os.path.dirname(sys.executable)
+    appDataDirectory = os.path.expandvars('%APPDATA%\huiini')
+else:
+    # we are running in a normal Python environment
     scriptDirectory = os.path.dirname(os.path.abspath(__file__))
-except NameError:  # We are the main py2exe script, not a module
-    scriptDirectory = os.path.dirname(os.path.abspath(sys.argv[0]))
+    appDataDirectory = join(scriptDirectory,"huiini_aux_files")
+
+
 
 
 
@@ -202,11 +208,11 @@ class getFilesDlg(QDialog):
         layout.addWidget(self.btnBox)
         self.setLayout(layout)
         self.treeView.setRootIndex(self.fsModel.index(""))
-        appdatapath = os.path.expandvars('%APPDATA%\huiini')
+        
         
         self.huiini_home_folder_path = ""
-        if os.path.exists(os.path.join(appdatapath,"huiini_home_folder_path.txt")):
-            with open(os.path.join(appdatapath,"huiini_home_folder_path.txt")) as f:
+        if os.path.exists(os.path.join(appDataDirectory,"huiini_home_folder_path.txt")):
+            with open(os.path.join(appDataDirectory,"huiini_home_folder_path.txt")) as f:
                 self.huiini_home_folder_path = f.readline()
         print(self.huiini_home_folder_path)
 
@@ -267,22 +273,23 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.todos_los_meses = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"]
 
         print(scriptDirectory)
-        logoPix = QtGui.QPixmap(join(scriptDirectory,"logo.png"))
-        with open(join(scriptDirectory,"conceptos.json"), "r") as jsonfile:
-            self.concepto = json.load(jsonfile)
+        logoPix = QtGui.QPixmap(join(scriptDirectory,"logo_excel.png"))
+        
         self.labelLogo.setPixmap(logoPix)
 
-        logoSicadPix = QtGui.QPixmap(join(scriptDirectory,"logo_sicad.png"))
+        logoSicadPix = QtGui.QPixmap(join(scriptDirectory,"logo_s.png"))
         self.labelLogo_sicad.setPixmap(logoSicadPix)
 
-        appdatapath = os.path.expandvars('%APPDATA%\huiini')
+        
+        with open(join(appDataDirectory,"conceptos.json"), "r") as jsonfile:
+            self.concepto = json.load(jsonfile)
         self.tiene_pdflatex = True
         try:
-            with open(os.path.join(appdatapath,"pdflatex_path.txt")) as f:
+            with open(os.path.join(appDataDirectory,"pdflatex_path.txt")) as f:
                 self.pdflatex_path = f.readline()
         except:
             if shutil.which('pdflatex'):
-                with open(os.path.join(appdatapath,"pdflatex_path.txt"), "w") as f:
+                with open(os.path.join(appDataDirectory,"pdflatex_path.txt"), "w") as f:
                     f.write(shutil.which('pdflatex').replace("\\","\\\\"))
             else:
                 reply = QMessageBox.question(self, 'No se detectó Miktex',"¿está Miktex instalado?\n contesta que si para buscar la ruta de pdflatex manualmete\n o no para cancelar", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
@@ -290,7 +297,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 if reply == QMessageBox.Yes:
                     path_to_file, _ = QFileDialog.getOpenFileName(self, "ruta de pdflatex", "~")
                     if "pdflatex.exe" in path_to_file.lower():
-                        with open(os.path.join(appdatapath,"pdflatex_path.txt"), "w") as f:
+                        with open(os.path.join(appDataDirectory,"pdflatex_path.txt"), "w") as f:
                             f.write(path_to_file.replace("\\","\\\\"))
                     else:
                         self.warning(self, "Advertencia", "ruta incorrecta, la creación de pdfs quedará desactivada")
@@ -301,11 +308,11 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         self.tiene_gswin64c = True
         try:
-            with open(os.path.join(appdatapath,"gswin64c_path.txt")) as f:
+            with open(os.path.join(appDataDirectory,"gswin64c_path.txt")) as f:
                 self.gswin64c_path = f.readline()
         except:
             if shutil.which('gswin64c'):
-                with open(os.path.join(appdatapath,"gswin64c_path.txt"), "w") as f:
+                with open(os.path.join(appDataDirectory,"gswin64c_path.txt"), "w") as f:
                     f.write(shutil.which('gswin64c').replace("\\","\\\\"))
                 self.gswin64c_path = shutil.which('gswin64c').replace("\\","\\\\")
             else:
@@ -314,7 +321,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 if reply == QMessageBox.Yes:
                     path_to_file, _ = QFileDialog.getOpenFileName(self, "ruta de gswin64c", "~")
                     if "gswin64c.exe" in path_to_file.lower():
-                        with open(os.path.join(appdatapath,"gswin64c_path.txt"), "w") as f:
+                        with open(os.path.join(appDataDirectory,"gswin64c_path.txt"), "w") as f:
                             f.write(path_to_file.replace("\\","\\\\"))
                         self.gswin64c_path = path_to_file.replace("\\","\\\\")
                     else:
@@ -337,6 +344,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         self.actionSelccionar_Impresora.triggered.connect(self.cambiaImpresora)
         self.actionCancelar_Impresi_n.triggered.connect(self.cancelaImpresion)
+        self.actionActualizar_cat_logos_CFDI.triggered.connect(self.actualizaCatalogos)
 
         if self.tiene_gswin64c == False:
             print("desabilitando la impresión....")
@@ -358,6 +366,59 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.tabWidget.currentChanged.connect(self.tabChanged)
         self.tabWidget.hide()
         self.numeroDeFacturasValidas = {}
+
+    def actualizaCatalogos(self):
+        dialog = QFileDialog(self)
+        dialog.setFileMode(QFileDialog.FileMode.ExistingFiles)
+        dialog.setNameFilter("Excel files (*.xlsx, *.xls)")
+        dialog.setViewMode(QFileDialog.ViewMode.List)
+        if dialog.exec():
+            filenames = dialog.selectedFiles()
+            
+        filename = filenames[0]
+
+        print(filename)
+
+        
+        book = xlrd.open_workbook(filename)
+        
+        sh = book.sheet_by_name("c_ClaveProdServ")
+        print("{0} {1} {2}".format(sh.name, sh.nrows, sh.ncols))
+        cat_conceptos = {}
+        for row_idx in range(5, sh.nrows):
+            key = str(sh.cell(row_idx, 0).value).split(".")[0]
+            desc = str(sh.cell(row_idx, 1).value)
+            cat_conceptos[key] = desc
+            
+        with open (join(appDataDirectory,"conceptos.json"), "w") as outfile:
+            json.dump (cat_conceptos,outfile)
+
+        self.concepto = cat_conceptos
+
+        sh_unidad = book.sheet_by_name("c_ClaveUnidad")
+        print("{0} {1} {2}".format(sh_unidad.name, sh_unidad.nrows, sh_unidad.ncols))
+        cat_unidad = {}
+        for row_idx in range(6, sh_unidad.nrows):
+            key = str(sh_unidad.cell(row_idx, 0).value).split(".")[0]
+            desc = str(sh_unidad.cell(row_idx, 1).value)
+            cat_unidad[key] = desc
+            
+        with open (join(appDataDirectory,"cat_unidad.json"), "w") as outfile:
+            json.dump (cat_unidad,outfile)
+
+        sh_uso = book.sheet_by_name("c_UsoCFDI")
+        print("{0} {1} {2}".format(sh_uso.name, sh_uso.nrows, sh_uso.ncols))
+        cat_uso = {}
+        for row_idx in range(6, sh_uso.nrows):
+            key = str(sh_uso.cell(row_idx, 0).value).split(".")[0]
+            desc = str(sh_uso.cell(row_idx, 1).value)
+            cat_uso[key] = desc
+            
+        with open (join(appDataDirectory,"cat_uso.json"), "w") as outfile:
+            json.dump (cat_uso,outfile)
+
+        QMessageBox.information(self, "Información", "Actualización de catálogos exitosa")
+        
 
     def warning(self, parent, title, message):
         QMessageBox.information(parent, title, message)
@@ -695,7 +756,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             #self.sumale()
         
     def setupTabMeses(self):
-        self.tables[self.mes].setColumnCount(17)
+        self.tables[self.mes].setColumnCount(19)
         self.tables[self.mes].setColumnWidth(0,30)#pdf
         self.tables[self.mes].setColumnWidth(1,95)#fecha
         self.tables[self.mes].setColumnWidth(2,70)#uuid
@@ -706,19 +767,22 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.tables[self.mes].setColumnWidth(7,80)#Descuento
         self.tables[self.mes].setColumnWidth(8,80)#traslados-iva
         self.tables[self.mes].setColumnWidth(9,80)#traslados-ieps
-        self.tables[self.mes].setColumnWidth(10,75)#retIVA
-        self.tables[self.mes].setColumnWidth(11,75)#retISR
-        self.tables[self.mes].setColumnWidth(12,80)#total
-        self.tables[self.mes].setColumnWidth(13,74)#formaDePago
-        self.tables[self.mes].setColumnWidth(14,77)#metodoDePago
-        self.tables[self.mes].setColumnWidth(14,77)#carpetasCoi
+        self.tables[self.mes].setColumnWidth(10,80)#traslados-ish
+        self.tables[self.mes].setColumnWidth(11,80)#traslados-tua
+        self.tables[self.mes].setColumnWidth(12,75)#retIVA
+        self.tables[self.mes].setColumnWidth(13,75)#retISR
+        self.tables[self.mes].setColumnWidth(14,80)#total
+        self.tables[self.mes].setColumnWidth(15,74)#formaDePago
+        self.tables[self.mes].setColumnWidth(16,77)#metodoDePago
+        self.tables[self.mes].setColumnWidth(17,77)#tipo
+        self.tables[self.mes].setColumnWidth(18,77)#carpetasCoi
 
         self.tables[self.mes].verticalHeader().setFixedWidth(35)
         header = self.tables[self.mes].verticalHeader()
         header.setContextMenuPolicy(Qt.CustomContextMenu)
         header.customContextMenuRequested.connect(self.handleHeaderMenu)
 
-        lc = ["Pdf","Fecha","UUID","Receptor","Emisor","Concepto","Subtotal","Descuento","Traslado\nIVA","Traslado\nIEPS","Retención\nIVA","Retención\nISR","Total","Forma\nPago","Método\nPago","Tipo","Carpetas Coi"]
+        lc = ["Pdf","Fecha","UUID","Receptor","Emisor","Concepto","Subtotal","Descuento","Traslado\nIVA","Traslado\nIEPS","Traslado\nISH", "Traslado\nTUA", "Retención\nIVA","Retención\nISR","Total","Forma\nPago","Método\nPago","Tipo","Carpetas Coi"]
         self.ponEncabezado(lc,self.mes)
 
         self.tables[self.mes].cellDoubleClicked.connect(self.meDoblePicaronXML)
@@ -953,22 +1017,22 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 ws.cell(i,j).number_format = numbers.FORMAT_NUMBER_COMMA_SEPARATED1
 
         for column in range(20,27):
-            cell = ws.cell(3,column)
+            cell = ws.cell(10,column)
             cell.fill = PatternFill(start_color="8ccbff", end_color="8ccbff", fill_type = "solid")
             cell.font = Font(bold=True)
             cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
             cell.border = cell_border
-            cell = ws.cell(20,column)
+            cell = ws.cell(27,column)
             cell.fill = PatternFill(start_color="8ccbff", end_color="8ccbff", fill_type = "solid")
             cell.font = Font(bold=True)
             cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
             cell.border = cell_border
 
         for column in range(20,27):
-            cell = ws.cell(16,column)
+            cell = ws.cell(23,column)
             cell.border = cell_border_sumas
             cell.font = Font(bold=True)
-            cell = ws.cell(33,column)
+            cell = ws.cell(40,column)
             cell.border = cell_border_sumas
             cell.font = Font(bold=True)
 
@@ -1143,29 +1207,29 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             ws_ingresos.cell(row+1, 12, "=SUM(L2:L"+str(row)+")")
             ws_ingresos.cell(row+1, 13, "=SUM(M2:M"+str(row)+")")
 
-            ws_ingresos.cell(2, 23, "Facturado")#bajo protesta
-            ws_ingresos.cell(3, 20, "Mes")
-            ws_ingresos.cell(3, 21, "SUBTOTAL")
-            ws_ingresos.cell(3, 22, "I.V.A.")
-            ws_ingresos.cell(3, 23, "IMPORTE")
-            ws_ingresos.cell(3, 24, "RET ISR")
-            ws_ingresos.cell(3, 25, "RET IVA")
-            ws_ingresos.cell(3, 26, "T O T A L")
+            ws_ingresos.cell(9, 23, "Facturado")#bajo protesta
+            ws_ingresos.cell(10, 20, "Mes")
+            ws_ingresos.cell(10, 21, "SUBTOTAL")
+            ws_ingresos.cell(10, 22, "I.V.A.")
+            ws_ingresos.cell(10, 23, "IMPORTE")
+            ws_ingresos.cell(10, 24, "RET ISR")
+            ws_ingresos.cell(10, 25, "RET IVA")
+            ws_ingresos.cell(10, 26, "T O T A L")
 
-            ws_ingresos.cell(4, 20, "ENERO")
-            ws_ingresos.cell(5, 20, "FEBRERO")
-            ws_ingresos.cell(6, 20, "MARZO")
-            ws_ingresos.cell(7, 20, "ABRIL")
-            ws_ingresos.cell(8, 20, "MAYO")
-            ws_ingresos.cell(9, 20, "JUNIO")
-            ws_ingresos.cell(10, 20, "JULIO")
-            ws_ingresos.cell(11, 20, "AGOSTO")
-            ws_ingresos.cell(12, 20, "SEPTIEMBRE")
-            ws_ingresos.cell(13, 20, "OCTUBRE")
-            ws_ingresos.cell(14, 20, "NOVIEMBRE")
-            ws_ingresos.cell(15, 20, "DICIEMBRE")
+            ws_ingresos.cell(11, 20, "ENERO")
+            ws_ingresos.cell(12, 20, "FEBRERO")
+            ws_ingresos.cell(13, 20, "MARZO")
+            ws_ingresos.cell(14, 20, "ABRIL")
+            ws_ingresos.cell(15, 20, "MAYO")
+            ws_ingresos.cell(16, 20, "JUNIO")
+            ws_ingresos.cell(17, 20, "JULIO")
+            ws_ingresos.cell(18, 20, "AGOSTO")
+            ws_ingresos.cell(19, 20, "SEPTIEMBRE")
+            ws_ingresos.cell(20, 20, "OCTUBRE")
+            ws_ingresos.cell(21, 20, "NOVIEMBRE")
+            ws_ingresos.cell(22, 20, "DICIEMBRE")
 
-            for renglonMes in range(4,16):
+            for renglonMes in range(11,22):
                 ws_ingresos.cell(renglonMes, 21, '=SUMIFS(H:H,B:B,T'+str(renglonMes)+',O:O,"Pagado",Q:Q,"Facturado")')
                 ws_ingresos.cell(renglonMes, 22, '=SUMIFS(I:I,B:B,T'+str(renglonMes)+',O:O,"Pagado",Q:Q,"Facturado")')
                 ws_ingresos.cell(renglonMes, 23, '=SUMIFS(J:J,B:B,T'+str(renglonMes)+',O:O,"Pagado",Q:Q,"Facturado")')
@@ -1173,37 +1237,37 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 ws_ingresos.cell(renglonMes, 25, '=SUMIFS(L:L,B:B,T'+str(renglonMes)+',O:O,"Pagado",Q:Q,"Facturado")')
                 ws_ingresos.cell(renglonMes, 26, '=SUMIFS(M:M,B:B,T'+str(renglonMes)+',O:O,"Pagado",Q:Q,"Facturado")')
 
-            ws_ingresos.cell(16, 21, "=SUM(U4:U15)")
-            ws_ingresos.cell(16, 22, "=SUM(V4:V15)")
-            ws_ingresos.cell(16, 23, "=SUM(W4:W15)")
-            ws_ingresos.cell(16, 24, "=SUM(X4:X15)")
-            ws_ingresos.cell(16, 25, "=SUM(Y4:Y15)")
-            ws_ingresos.cell(16, 26, "=SUM(Z4:Z15)")
+            ws_ingresos.cell(23, 21, "=SUM(U11:U22)")
+            ws_ingresos.cell(23, 22, "=SUM(V11:V22)")
+            ws_ingresos.cell(23, 23, "=SUM(W11:W22)")
+            ws_ingresos.cell(23, 24, "=SUM(X11:X22)")
+            ws_ingresos.cell(23, 25, "=SUM(Y11:Y22)")
+            ws_ingresos.cell(23, 26, "=SUM(Z11:Z22)")
 
 
-            ws_ingresos.cell(19, 23, "Nómina")
-            ws_ingresos.cell(20, 20, "Mes")
-            ws_ingresos.cell(20, 21, "SUBTOTAL")
-            ws_ingresos.cell(20, 22, "I.V.A.")
-            ws_ingresos.cell(20, 23, "IMPORTE")
-            ws_ingresos.cell(20, 24, "RET ISR")
-            ws_ingresos.cell(20, 25, "RET IVA")
-            ws_ingresos.cell(20, 26, "T O T A L")
+            ws_ingresos.cell(26, 23, "Nómina")
+            ws_ingresos.cell(27, 20, "Mes")
+            ws_ingresos.cell(27, 21, "SUBTOTAL")
+            ws_ingresos.cell(27, 22, "I.V.A.")
+            ws_ingresos.cell(27, 23, "IMPORTE")
+            ws_ingresos.cell(27, 24, "RET ISR")
+            ws_ingresos.cell(27, 25, "RET IVA")
+            ws_ingresos.cell(27, 26, "T O T A L")
 
-            ws_ingresos.cell(21, 20, "ENERO")
-            ws_ingresos.cell(22, 20, "FEBRERO")
-            ws_ingresos.cell(23, 20, "MARZO")
-            ws_ingresos.cell(24, 20, "ABRIL")
-            ws_ingresos.cell(25, 20, "MAYO")
-            ws_ingresos.cell(26, 20, "JUNIO")
-            ws_ingresos.cell(27, 20, "JULIO")
-            ws_ingresos.cell(28, 20, "AGOSTO")
-            ws_ingresos.cell(29, 20, "SEPTIEMBRE")
-            ws_ingresos.cell(30, 20, "OCTUBRE")
-            ws_ingresos.cell(31, 20, "NOVIEMBRE")
-            ws_ingresos.cell(32, 20, "DICIEMBRE")
+            ws_ingresos.cell(28, 20, "ENERO")
+            ws_ingresos.cell(29, 20, "FEBRERO")
+            ws_ingresos.cell(30, 20, "MARZO")
+            ws_ingresos.cell(31, 20, "ABRIL")
+            ws_ingresos.cell(32, 20, "MAYO")
+            ws_ingresos.cell(33, 20, "JUNIO")
+            ws_ingresos.cell(34, 20, "JULIO")
+            ws_ingresos.cell(35, 20, "AGOSTO")
+            ws_ingresos.cell(36, 20, "SEPTIEMBRE")
+            ws_ingresos.cell(37, 20, "OCTUBRE")
+            ws_ingresos.cell(38, 20, "NOVIEMBRE")
+            ws_ingresos.cell(39, 20, "DICIEMBRE")
 
-            for renglonMes in range(21,33):
+            for renglonMes in range(28,40):
                 ws_ingresos.cell(renglonMes, 21, '=SUMIFS(H:H,B:B,T'+str(renglonMes)+',O:O,"Pagado",Q:Q,"Nómina")')
                 ws_ingresos.cell(renglonMes, 22, '=SUMIFS(I:I,B:B,T'+str(renglonMes)+',O:O,"Pagado",Q:Q,"Nómina")')
                 ws_ingresos.cell(renglonMes, 23, '=SUMIFS(J:J,B:B,T'+str(renglonMes)+',O:O,"Pagado",Q:Q,"Nómina")')
@@ -1211,12 +1275,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 ws_ingresos.cell(renglonMes, 25, '=SUMIFS(L:L,B:B,T'+str(renglonMes)+',O:O,"Pagado",Q:Q,"Nómina")')
                 ws_ingresos.cell(renglonMes, 26, '=SUMIFS(M:M,B:B,T'+str(renglonMes)+',O:O,"Pagado",Q:Q,"Nómina")')
 
-            ws_ingresos.cell(33, 21, "=SUM(U21:U32)")
-            ws_ingresos.cell(33, 22, "=SUM(V21:V32)")
-            ws_ingresos.cell(33, 23, "=SUM(W21:W32)")
-            ws_ingresos.cell(33, 24, "=SUM(X21:X32)")
-            ws_ingresos.cell(33, 25, "=SUM(Y21:Y32)")
-            ws_ingresos.cell(33, 26, "=SUM(Z21:Z32)")
+            ws_ingresos.cell(40, 21, "=SUM(U28:U39)")
+            ws_ingresos.cell(40, 22, "=SUM(V28:V39)")
+            ws_ingresos.cell(40, 23, "=SUM(W28:W39)")
+            ws_ingresos.cell(40, 24, "=SUM(X28:X39)")
+            ws_ingresos.cell(40, 25, "=SUM(Y28:Y39)")
+            ws_ingresos.cell(40, 26, "=SUM(Z28:Z39)")
 
             self.style_ws_ingresos(ws_ingresos,17,row+1)
 
@@ -1355,13 +1419,13 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         workbook.save(self.annual_xlsx_path)
 
     def agregaMembrete(self, ws):
-        for column in range(1,21):
+        for column in range(1,28):
             for row in range(1,8):
                 cell = ws.cell(row,column)
                 cell.fill = PatternFill(start_color="8D99AD", end_color="97cffc", fill_type = "solid")
                 cell.font = Font(bold=True)
                 
-        img = openpyxl.drawing.image.Image(join(scriptDirectory,'logo_sicad.png'))
+        img = openpyxl.drawing.image.Image(join(scriptDirectory,'logo_s.png'))
         img.anchor = 'B2'
         ws.add_image(img)
         ws.cell(2, 4, "Nombre: ")
@@ -1377,7 +1441,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 print(cell.value)
                 cell.alignment = Alignment(horizontal="right")
 
-        img = openpyxl.drawing.image.Image(join(scriptDirectory,'logo.png'))
+        img = openpyxl.drawing.image.Image(join(scriptDirectory,'logo_excel.png'))
         img.anchor = 'M2'
         ws.add_image(img)
 
@@ -1531,8 +1595,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             workbook.save(self.annual_xlsx_path)
 
     def hazResumenDiot(self,currentDir):
-        appdatapath = os.path.expandvars('%APPDATA%\huiini')
-        workbook = load_workbook(os.path.join(appdatapath,"template_diot.xlsx"))
+        workbook = load_workbook(os.path.join(appDataDirectory,"template_diot.xlsx"))
         ws_rfc = workbook[workbook.get_sheet_names()[0]]
         cliente = os.path.split(self.cliente_path)[1]
         xlsx_path = os.path.join(currentDir,os.path.join("huiini","resumen_" + cliente + "_" + self.mes + ".xlsx"))
@@ -1881,7 +1944,15 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
     def setup_log(self):
         self.pluma = open(join(self.year_folder, "log.txt"), "w")
-           
+        hoy = str(datetime.now()).split(".")[0].replace(" ","T").replace("-","_").replace(":","_")
+        self.pluma.write("Log generado"+ hoy)
+        self.pluma.write("\n")
+        self.pluma.write("Carpetas procesadas:")
+        self.pluma.write("\n")
+        for path in self.paths:
+            self.pluma.write(path)
+            self.pluma.write("\n")
+
 
     def close_log(self):
         self.pluma.close()       
@@ -1908,8 +1979,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         huiini_home_folder = os.path.split(os.path.split(self.year_folder)[0])[0]
         print(huiini_home_folder)
-        appdatapath = os.path.expandvars('%APPDATA%\huiini')
-        with open(os.path.join(appdatapath,"huiini_home_folder_path.txt"), "w") as f:
+        with open(os.path.join(appDataDirectory,"huiini_home_folder_path.txt"), "w") as f:
             f.write(huiini_home_folder)
         meses = []
         for path in paths:
@@ -2044,7 +2114,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         ws = workbook[tabName]
         c_max = ws.max_column - 9
         r_max = 0
-        for r in range(2, ws.max_row+1):
+        for r in range(9, ws.max_row+1):
             if ws.cell(r,1).value == None:
                 r_max = r
                 break
@@ -2052,7 +2122,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         self.tables[tabName] = QTableWidget(r_max,c_max)
         self.tabWidget.addTab(self.tables[tabName], tabName)
-        self.tables[tabName].setColumnCount(c_max)
+        self.tables[tabName].setColumnCount(c_max-1)
 
         self.tables[tabName].verticalHeader().setFixedWidth(35)
         header = self.tables[tabName].verticalHeader()
@@ -2060,18 +2130,18 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         header.customContextMenuRequested.connect(self.handleHeaderMenu)
 
         lc = []
-        for cell in ws[1]:
+        for cell in ws[8]:
             lc.append(cell.value)
 
         self.ponEncabezado(lc,tabName)
 
         # self.tables[self.mes].cellDoubleClicked.connect(self.meDoblePicaronXML)
         # self.tables[self.mes].horizontalHeader().sectionClicked.connect(self.reordena)
-        for r in range(2, r_max+1):
-            for c in range(1, c_max+1):
+        for r in range(9, r_max):
+            for c in range(1, c_max):
                 #print(str(r),str(c))
                 valor = ws.cell(r,c).value
-                self.tables[tabName].setItem(r-2,c-1,self.esteItem(str(valor),str(valor)))
+                self.tables[tabName].setItem(r-9,c-1,self.esteItem(str(valor),str(valor)))
 
     def pon_categorias_custom_por_factura(self,paths):
 
@@ -2129,7 +2199,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             for factura in self.facturas[self.mes]:
                 
                 tooltipTipo = "\n".join(x['tipo'] for x in factura.conceptos)
-                self.tables[self.mes].setItem(r,15,self.esteItem(factura.conceptos[0]['tipo'],tooltipTipo))
+                self.tables[self.mes].setItem(r,17,self.esteItem(factura.conceptos[0]['tipo'],tooltipTipo))
                 r+=1
 
     def procesaIngresos(self, path):

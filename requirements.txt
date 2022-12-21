@@ -6,3 +6,4 @@ win32printing
 pyinstaller
 pandas
 pyside2
+xlrd

@@ -18,7 +18,7 @@ class Ui_MainWindow(object):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.setEnabled(True)
-        MainWindow.resize(1111, 679)
+        MainWindow.resize(1107, 679)
         self.actionEscoger_cliente = QAction(MainWindow)
         self.actionEscoger_cliente.setObjectName(u"actionEscoger_cliente")
         self.action_editar_Categor_as = QAction(MainWindow)
@@ -39,6 +39,8 @@ class Ui_MainWindow(object):
         self.actionSelccionar_Impresora.setObjectName(u"actionSelccionar_Impresora")
         self.actionGenerar_Carpetas_Aspel_Coi = QAction(MainWindow)
         self.actionGenerar_Carpetas_Aspel_Coi.setObjectName(u"actionGenerar_Carpetas_Aspel_Coi")
+        self.actionActualizar_cat_logos_CFDI = QAction(MainWindow)
+        self.actionActualizar_cat_logos_CFDI.setObjectName(u"actionActualizar_cat_logos_CFDI")
         self.centralWidget = QWidget(MainWindow)
         self.centralWidget.setObjectName(u"centralWidget")
         self.tabWidget = QTabWidget(self.centralWidget)
@@ -99,7 +101,7 @@ class Ui_MainWindow(object):
 
         self.layoutWidget1 = QWidget(self.centralWidget)
         self.layoutWidget1.setObjectName(u"layoutWidget1")
-        self.layoutWidget1.setGeometry(QRect(9, 9, 1287, 102))
+        self.layoutWidget1.setGeometry(QRect(9, 9, 1081, 102))
         self.horizontalLayout = QHBoxLayout(self.layoutWidget1)
         self.horizontalLayout.setSpacing(6)
         self.horizontalLayout.setContentsMargins(11, 11, 11, 11)
@@ -107,14 +109,15 @@ class Ui_MainWindow(object):
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
         self.labelLogo_sicad = QLabel(self.layoutWidget1)
         self.labelLogo_sicad.setObjectName(u"labelLogo_sicad")
-        self.labelLogo_sicad.setMinimumSize(QSize(79, 79))
-        self.labelLogo_sicad.setMaximumSize(QSize(70, 16777215))
+        self.labelLogo_sicad.setMinimumSize(QSize(250, 79))
+        self.labelLogo_sicad.setMaximumSize(QSize(250, 16777215))
 
         self.horizontalLayout.addWidget(self.labelLogo_sicad)
 
         self.header_cliente = QLabel(self.layoutWidget1)
         self.header_cliente.setObjectName(u"header_cliente")
-        self.header_cliente.setMinimumSize(QSize(850, 100))
+        self.header_cliente.setMinimumSize(QSize(600, 100))
+        self.header_cliente.setMaximumSize(QSize(600, 16777215))
         font = QFont()
         font.setPointSize(16)
         self.header_cliente.setFont(font)
@@ -123,20 +126,23 @@ class Ui_MainWindow(object):
 
         self.labelLogo = QLabel(self.layoutWidget1)
         self.labelLogo.setObjectName(u"labelLogo")
-        self.labelLogo.setMinimumSize(QSize(79, 79))
+        self.labelLogo.setMinimumSize(QSize(164, 79))
+        self.labelLogo.setMaximumSize(QSize(164, 16777215))
 
         self.horizontalLayout.addWidget(self.labelLogo)
 
         MainWindow.setCentralWidget(self.centralWidget)
         self.menuBar = QMenuBar(MainWindow)
         self.menuBar.setObjectName(u"menuBar")
-        self.menuBar.setGeometry(QRect(0, 0, 1111, 21))
+        self.menuBar.setGeometry(QRect(0, 0, 1107, 21))
         self.menuCliente = QMenu(self.menuBar)
         self.menuCliente.setObjectName(u"menuCliente")
         self.menuImprimir = QMenu(self.menuBar)
         self.menuImprimir.setObjectName(u"menuImprimir")
         self.menuProcesar = QMenu(self.menuBar)
         self.menuProcesar.setObjectName(u"menuProcesar")
+        self.menuConfiguraci_n = QMenu(self.menuBar)
+        self.menuConfiguraci_n.setObjectName(u"menuConfiguraci_n")
         MainWindow.setMenuBar(self.menuBar)
         self.mainToolBar = QToolBar(MainWindow)
         self.mainToolBar.setObjectName(u"mainToolBar")
@@ -148,6 +154,7 @@ class Ui_MainWindow(object):
         self.menuBar.addAction(self.menuCliente.menuAction())
         self.menuBar.addAction(self.menuImprimir.menuAction())
         self.menuBar.addAction(self.menuProcesar.menuAction())
+        self.menuBar.addAction(self.menuConfiguraci_n.menuAction())
         self.menuCliente.addAction(self.actionEscoger_cliente)
         self.menuCliente.addSeparator()
         self.menuCliente.addAction(self.action_editar_Categor_as)
@@ -157,6 +164,7 @@ class Ui_MainWindow(object):
         self.menuImprimir.addAction(self.actionCancelar_Impresi_n)
         self.menuImprimir.addSeparator()
         self.menuImprimir.addAction(self.actionSelccionar_Impresora)
+        self.menuConfiguraci_n.addAction(self.actionActualizar_cat_logos_CFDI)
 
         self.retranslateUi(MainWindow)
 
@@ -167,7 +175,7 @@ class Ui_MainWindow(object):
     # setupUi
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Huiini 1.9.3", None))
+        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Huiini 1.9.4", None))
         self.actionEscoger_cliente.setText(QCoreApplication.translate("MainWindow", u"Escoger cliente", None))
         self.action_editar_Categor_as.setText(QCoreApplication.translate("MainWindow", u"Editar Categor\u00edas", None))
         self.actionActualizar_Exceles.setText(QCoreApplication.translate("MainWindow", u"Actualizar Exceles", None))
@@ -176,6 +184,7 @@ class Ui_MainWindow(object):
         self.actionsdnsodk.setText(QCoreApplication.translate("MainWindow", u"sdnsodk", None))
         self.actionSelccionar_Impresora.setText(QCoreApplication.translate("MainWindow", u"Selccionar Impresora", None))
         self.actionGenerar_Carpetas_Aspel_Coi.setText(QCoreApplication.translate("MainWindow", u"Generar Carpetas Aspel-Coi", None))
+        self.actionActualizar_cat_logos_CFDI.setText(QCoreApplication.translate("MainWindow", u"Actualizar cat\u00e1logos CFDI", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), QCoreApplication.translate("MainWindow", u"Tab 1", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), QCoreApplication.translate("MainWindow", u"Tab 2", None))
         self.carpetaChooser.setText(QCoreApplication.translate("MainWindow", u"Selecciona Carpeta", None))
@@ -187,5 +196,6 @@ class Ui_MainWindow(object):
         self.menuCliente.setTitle(QCoreApplication.translate("MainWindow", u"Cliente", None))
         self.menuImprimir.setTitle(QCoreApplication.translate("MainWindow", u"Imprimir", None))
         self.menuProcesar.setTitle(QCoreApplication.translate("MainWindow", u"Procesar", None))
+        self.menuConfiguraci_n.setTitle(QCoreApplication.translate("MainWindow", u"Configuraci\u00f3n", None))
     # retranslateUi
 
