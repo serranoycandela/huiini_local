@@ -566,7 +566,10 @@ class FacturaLocal(object):
                             impuesto = self.latexStr(trasladoTag.get(self.trasImpuestoKey))
                             tasa = self.latexStr(trasladoTag.get(self.trasTasaKey))
                             importe = self.latexStr(trasladoTag.get(self.trasImporteKey))
-
+                            try:
+                                enfloat = float(importe)
+                            except:
+                                importe = 0
                             #self.traslados[self.arreglaSusPendejadas(impuesto)] = {"importe":importe,"tasa":tasa}
                             #self.traslados[self.arreglaSusPendejadas(impuesto)].importe += float(importe)
 
@@ -575,12 +578,16 @@ class FacturaLocal(object):
                             print("importe " + str(self.traslados[self.arreglaSusPendejadas(impuesto)]["importe"]))
 
                             try:
+                                print(self.arreglaSusPendejadas(impuesto))
                                 if self.traslados[self.arreglaSusPendejadas(impuesto)]["importe"] == 0:
                                     self.traslados[self.arreglaSusPendejadas(impuesto)]["tasa"] = "NA"
                                 else:
                                     self.traslados[self.arreglaSusPendejadas(impuesto)]["tasa"] = tasa
 
-                                self.traslados[self.arreglaSusPendejadas(impuesto)]["importe"] += float(importe)
+                                try: 
+                                    self.traslados[self.arreglaSusPendejadas(impuesto)]["importe"] += float(importe)
+                                except:
+                                    print("este traslado no trae importe")
                             except:
                                 print("no pude sumar en " + self.UUID)
                                 self.mensaje += " no pudo sumar un traslado"
@@ -595,6 +602,7 @@ class FacturaLocal(object):
         else:
             self.trasladosLocales = {"IVA":{"importe":0,"tasa":0},"ISR":{"importe":0,"tasa":0},"IEPS":{"importe":0,"tasa":0},"ISH":{"importe":0,"tasa":0},"TUA":{"importe":0,"tasa":0}}
             TimbreFiscalDigitalTag = self.ComplementoTag.find("{http://www.sat.gob.mx/TimbreFiscalDigital}TimbreFiscalDigital")
+            print(TimbreFiscalDigitalTag)
             self.UUID = TimbreFiscalDigitalTag.get ("UUID")
             self.tex_path = os.path.dirname(self.xml_path)+ "/"+self.UUID+".tex"
             self.selloCFD = TimbreFiscalDigitalTag.get (self.selloCFDKey)[:50] + "..."

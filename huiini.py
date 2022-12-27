@@ -417,6 +417,21 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         with open (join(appDataDirectory,"cat_uso.json"), "w") as outfile:
             json.dump (cat_uso,outfile)
 
+        sh_regimen = book.sheet_by_name("c_RegimenFiscal")
+        print("{0} {1} {2}".format(sh_regimen.name, sh_regimen.nrows, sh_regimen.ncols))
+        cat_regimen = {}
+        for row_idx in range(6, sh_regimen.nrows):
+            key = str(sh_regimen.cell(row_idx, 0).value).split(".")[0]
+            desc = str(sh_regimen.cell(row_idx, 1).value)
+            cat_regimen[key] = desc
+            
+        with open (join(appDataDirectory,"cat_regimen.json"), "w") as outfile:
+            json.dump (cat_regimen,outfile)
+
+
+
+
+
         QMessageBox.information(self, "Información", "Actualización de catálogos exitosa")
         
 
@@ -469,7 +484,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                                                                 "EmisorRFC": laFactura.EmisorRFC,
                                                                 "ReceptorRFC": laFactura.ReceptorRFC})            
                         except:
-                            print("falla")
+                            print("falla sello")
             
             for f in self.listaDeUUIDs:
                 oldfilename = os.path.basename(f["path"])
@@ -1576,7 +1591,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
                 if factura.tipoDeComprobante == "P":
                     print("segun "+ factura.UUID + "del mes " +mes+ ", aqui buscaria en todos los meses el uuid "+factura.IdDocumento+" y si encuentra su factura modificaria, la columna 13 del renglon de esa factura en el mes que esté, a Pagado")
-
+            
+            FullRange = "A8:" + get_column_letter(ws_mes.max_column) + str(ws_mes.max_row)
+            ws_mes.auto_filter.ref = FullRange
             #aqui haria el renglón de hasta abajo de sunmas?
             if row > 9:
                 ws_mes.conditional_formatting.add("A9:U"+str(row), rule)
@@ -1737,7 +1754,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 try:
                     suma += float(self.tables[self.mes].item(renglon, columna).text().replace(",",""))
                 except:
-                    print("no puedo")
+                    print("no puedo sumar")
 
     def ponEncabezado(self,lista_columnas,tabName):
         n = -1

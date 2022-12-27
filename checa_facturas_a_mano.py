@@ -1,7 +1,7 @@
 
 import os
 import FacturasLocal as F
-path = "C:\\Dropbox\\SICAD 2022\\INTEGRADORA\\CONTABILIDAD\\2022\\07 JULIO\\INGRESOS"
+path = "C:\\Dropbox\\SICAD 2022\\SISA HERMES CONSTRUCCION\\Contabilidad\\2022\\11 NOVIEMBRE\\EGRESOS"
 
 # for file in os.listdir(path):
 #     if file.endswith("xml"):
@@ -11,6 +11,6 @@ path = "C:\\Dropbox\\SICAD 2022\\INTEGRADORA\\CONTABILIDAD\\2022\\07 JULIO\\INGR
 
 #             print(esta_fac.IdDocumento)
 
-file = "38db9394-efef-4138-918a-756d732512c1.xml"
+file = "5d0bfce6-6615-4965-b4e9-cb84c80a44e5.xml"
 esta_fac = F.FacturaLocal(os.path.join(path,file))
-print(esta_fac.IdDocumento)
+print(esta_fac.UUID)

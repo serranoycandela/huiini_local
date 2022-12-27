@@ -173,13 +173,8 @@ ya
 	el Json (ej. consepto2json.py) (de los 3 catalogos uso, unidad, conceptos) Ya
 - encabezado en el log Ya
 
-
-
-
-
 - implementar las sugerencias de colores de Kevin
  
-
 2.0
 - Mejorar formatos DIOT , que se llene la mayor cantidad de informacion posible (Nayeli)
 - Reactive interface 
@@ -199,6 +194,31 @@ ya
 						uso del log,
 						uso de las versiones guardadas en automatico,
 						carpetas y xml que se mueven y/o crean en automatico)
+
+- generar el catalogo de regimenes fiscales dentro de la actualización del excel del sat Ya
+
+- Una nueva worksheet en el excel anual, que contenga las sumas por mes y por regimen de ingresos
+(eventualmente también separar egresos por mes y por regimen, pero esto solo se puede en la version 4.0)
+
+
+- en el diot todo va redondeado sin centavos
+
+- en el diot hace falta las retenciones de iva
+
+- automatizar la preparacion de lo de carga batch (talvez crear el txt directamente?)
+
+- en el excel anual agregar retenciones
+
+- en noviembre de sisa hay facturas que no se forman correctamente
+
+- agregarle a todos los try, except que escriban en el log
+
+- Para cuando bajas del sat todas las facturas en un año (osea que no están separadas en meses) se podría correr alguna parte de huiini?
+  en particular creo que se quiere un nuevo worksheet con todas las facturas del año
+
+
+
+
 
 C:/Dropbox/SICAD 2022/METROPOLITANA/CONTABILIDAD/2022/09 SEPTIEMBRE\EGRESOS\7b709567-bbd5-4d96-ad46-27eb1ada83a6.xml
 
