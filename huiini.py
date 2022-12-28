@@ -283,6 +283,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         
         with open(join(appDataDirectory,"conceptos.json"), "r") as jsonfile:
             self.concepto = json.load(jsonfile)
+
+        with open(join(appDataDirectory,"cat_regimen.json"), "r") as jsonfile:
+            self.regimen = json.load(jsonfile)
+
         self.tiene_pdflatex = True
         try:
             with open(os.path.join(appDataDirectory,"pdflatex_path.txt")) as f:
@@ -994,7 +998,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                      top=Side(border_style='thin', color='FF000000'),
                      bottom=Side(border_style='thin', color='FF000000'))
 
-        for column in range(1,18):
+        for column in range(1,19):
             cell = ws.cell(8,column)
             cell.fill = PatternFill(start_color="8ccbff", end_color="8ccbff", fill_type = "solid")
             cell.font = Font(bold=True)
@@ -1021,7 +1025,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
 
 
-        for column in range(1,18):
+        for column in range(1,19):
             cell = ws.cell(sumas_row,column)
             cell.border = cell_border_sumas
             cell.font = Font(bold=True)
@@ -1065,7 +1069,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         # for col in df.columns:
         #     print(col)
         print(df.head())
-        self.agregaMembrete(ws_cats)
+        self.agregaMembrete(ws_cats, 4)
         ws_cats.cell(7,1).value = " "
         
         por_categorias = df.groupby(['mes', 'tipo'], as_index=False).agg({variable:sum})
@@ -1124,6 +1128,120 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         ws_cats.cell(self.sumas_row,self.columna_totales+2,"=SUM("+letraGastosP+"9:"+letraGastosP+str(self.sumas_row-1)  +")")
         ws_cats.cell(self.sumas_row,self.columna_totales+3,"=SUM("+letraNoDeducibles+"9:"+letraNoDeducibles+str(self.sumas_row-1)  +")")
 
+
+    def cuadroRegimen(self, ws_regimenes, row_inicial, column_inicial, regimen_key):
+        cell_border = Border(left=Side(border_style='medium', color='FF000000'),
+                     right=Side(border_style='medium', color='FF000000'),
+                     top=Side(border_style='medium', color='FF000000'),
+                     bottom=Side(border_style='medium', color='FF000000'))
+
+        cell_border_sumas = Border(left=Side(border_style=None, color='FF000000'),
+                     right=Side(border_style=None, color='FF000000'),
+                     top=Side(border_style='thin', color='FF000000'),
+                     bottom=Side(border_style='thin', color='FF000000'))
+
+        letra_meses = get_column_letter(column_inicial)
+        letra_total = get_column_letter(column_inicial+6)
+        ws_regimenes.merge_cells(letra_meses+str(row_inicial)+":"+letra_total+str(row_inicial))
+        cell = ws_regimenes.cell(row=row_inicial, column=column_inicial)
+        cell.value = self.regimen[regimen_key] + " (Régimen Fiscal: " + regimen_key + ")"
+        # alignment = copy(cell.alignment)
+        # alignment.wrapText=True
+        # cell.alignment = alignment
+        cell.fill = PatternFill(start_color="8ccbff", end_color="8ccbff", fill_type = "solid")
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)   
+        cell.border = cell_border        
+        ws_regimenes.row_dimensions[row_inicial].height = 30
+        ws_regimenes.cell(row_inicial+1, column_inicial, "Mes")
+        ws_regimenes.cell(row_inicial+1, column_inicial+1, "SUBTOTAL")
+        ws_regimenes.cell(row_inicial+1, column_inicial+2, "I.V.A.")
+        ws_regimenes.cell(row_inicial+1, column_inicial+3, "IMPORTE")
+        ws_regimenes.cell(row_inicial+1, column_inicial+4, "RET ISR")
+        ws_regimenes.cell(row_inicial+1, column_inicial+5, "RET IVA")
+        ws_regimenes.cell(row_inicial+1, column_inicial+6, "T O T A L")
+
+        ws_regimenes.cell(row_inicial+2, column_inicial, "ENERO")
+        ws_regimenes.cell(row_inicial+3, column_inicial, "FEBRERO")
+        ws_regimenes.cell(row_inicial+4, column_inicial, "MARZO")
+        ws_regimenes.cell(row_inicial+5, column_inicial, "ABRIL")
+        ws_regimenes.cell(row_inicial+6, column_inicial, "MAYO")
+        ws_regimenes.cell(row_inicial+7, column_inicial, "JUNIO")
+        ws_regimenes.cell(row_inicial+8, column_inicial, "JULIO")
+        ws_regimenes.cell(row_inicial+9, column_inicial, "AGOSTO")
+        ws_regimenes.cell(row_inicial+10, column_inicial, "SEPTIEMBRE")
+        ws_regimenes.cell(row_inicial+11, column_inicial, "OCTUBRE")
+        ws_regimenes.cell(row_inicial+12, column_inicial, "NOVIEMBRE")
+        ws_regimenes.cell(row_inicial+13, column_inicial, "DICIEMBRE")
+        letra_meses = get_column_letter(column_inicial)
+        for renglonMes in range(row_inicial+2,row_inicial+14):
+            ws_regimenes.cell(renglonMes, column_inicial+1, '=SUMIFS(Ingresos!H:H,Ingresos!B:B,'+letra_meses+str(renglonMes)+',Ingresos!O:O,"Pagado",Ingresos!R:R,"'+regimen_key+'")')
+            ws_regimenes.cell(renglonMes, column_inicial+2, '=SUMIFS(Ingresos!I:I,Ingresos!B:B,'+letra_meses+str(renglonMes)+',Ingresos!O:O,"Pagado",Ingresos!R:R,"'+regimen_key+'")')
+            ws_regimenes.cell(renglonMes, column_inicial+3, '=SUMIFS(Ingresos!J:J,Ingresos!B:B,'+letra_meses+str(renglonMes)+',Ingresos!O:O,"Pagado",Ingresos!R:R,"'+regimen_key+'")')
+            ws_regimenes.cell(renglonMes, column_inicial+4, '=SUMIFS(Ingresos!K:K,Ingresos!B:B,'+letra_meses+str(renglonMes)+',Ingresos!O:O,"Pagado",Ingresos!R:R,"'+regimen_key+'")')
+            ws_regimenes.cell(renglonMes, column_inicial+5, '=SUMIFS(Ingresos!L:L,Ingresos!B:B,'+letra_meses+str(renglonMes)+',Ingresos!O:O,"Pagado",Ingresos!R:R,"'+regimen_key+'")')
+            ws_regimenes.cell(renglonMes, column_inicial+6, '=SUMIFS(Ingresos!M:M,Ingresos!B:B,'+letra_meses+str(renglonMes)+',Ingresos!O:O,"Pagado",Ingresos!R:R,"'+regimen_key+'")')
+
+
+        #letra_sumas = get_column_letter(self.columna_totales)
+        letra_subtotal = get_column_letter(column_inicial+1)
+        letra_iva = get_column_letter(column_inicial+2)
+        letra_importe = get_column_letter(column_inicial+3)
+        letra_retisr = get_column_letter(column_inicial+4)
+        letra_retiva = get_column_letter(column_inicial+5)
+        letra_total = get_column_letter(column_inicial+6)
+
+        ws_regimenes.cell(row_inicial+14, column_inicial+1, "=SUM("+letra_subtotal+str(row_inicial+2)+":"+letra_subtotal+str(row_inicial+13)+")")
+        ws_regimenes.cell(row_inicial+14, column_inicial+2, "=SUM("+letra_iva+str(row_inicial+2)+":"+letra_iva+str(row_inicial+13)+")")
+        ws_regimenes.cell(row_inicial+14, column_inicial+3, "=SUM("+letra_importe+str(row_inicial+2)+":"+letra_importe+str(row_inicial+13)+")")
+        ws_regimenes.cell(row_inicial+14, column_inicial+4, "=SUM("+letra_retisr+str(row_inicial+2)+":"+letra_retisr+str(row_inicial+13)+")")
+        ws_regimenes.cell(row_inicial+14, column_inicial+5, "=SUM("+letra_retiva+str(row_inicial+2)+":"+letra_retiva+str(row_inicial+13)+")")
+        ws_regimenes.cell(row_inicial+14, column_inicial+6, "=SUM("+letra_total+str(row_inicial+2)+":"+letra_total+str(row_inicial+13)+")")
+
+
+        for column in range(column_inicial,column_inicial+7):
+            cell = ws_regimenes.cell(row_inicial+1,column)
+            cell.fill = PatternFill(start_color="8ccbff", end_color="8ccbff", fill_type = "solid")
+            cell.font = Font(bold=True)
+            cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+            cell.border = cell_border
+            
+
+        for column in range(column_inicial,column_inicial+7):
+            cell = ws_regimenes.cell(row_inicial+14,column)
+            cell.border = cell_border_sumas
+            cell.font = Font(bold=True)
+            
+
+
+
+
+    def hazWsRegimenes(self):
+        workbook = load_workbook(self.annual_xlsx_path)
+        if not "Regimenes" in workbook.sheetnames:
+            ws_regimenes = workbook.create_sheet("Regimenes")
+        else:
+            ws_regimenes = workbook["Regimenes"]
+
+        self.agregaMembrete(ws_regimenes, 7)
+        ws_regimenes.column_dimensions['A'].width = 14
+        ws_regimenes.column_dimensions['B'].width = 10
+        ws_ingresos = workbook["Ingresos"]
+        regimenes = []
+        for row_index in range(9,ws_ingresos.max_row):
+            row = [cell.value for cell in ws_ingresos[row_index]]
+            regimen = row[17]
+            if regimen not in regimenes and regimen != None:
+                regimenes.append(regimen)
+        print(regimenes)
+        renglon_inicial = 9
+        for regimen in regimenes:
+            self.cuadroRegimen(ws_regimenes, renglon_inicial, 1, regimen)
+            renglon_inicial+=17
+
+        workbook.save(self.annual_xlsx_path)
+
+
     def hazTabDeIngresos(self,paths):## hazWSIngresos?
         if len(self.listaDeFacturasIngresos) > 0:
             workbook = load_workbook(self.annual_xlsx_path)
@@ -1133,7 +1251,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 ws_ingresos = workbook["Ingresos"]
 
             if ws_ingresos.max_row == 1:
-                self.agregaMembrete(ws_ingresos)
+                self.agregaMembrete(ws_ingresos, 4)
                 ws_ingresos.cell(8, 1, "MesEmision")
                 ws_ingresos.cell(8, 2,     "MesPago")
                 ws_ingresos.cell(8, 3,     "uuid")
@@ -1151,6 +1269,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 ws_ingresos.cell(8, 15,     "Status")
                 ws_ingresos.cell(8, 16,     "complementosDePago")
                 ws_ingresos.cell(8, 17,     "Tipo")
+                ws_ingresos.cell(8, 18,     "Regimen")
                 row = 8
                 c = ws_ingresos['A9']
                 ws_ingresos.freeze_panes = c
@@ -1214,6 +1333,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                     else:
                         ws_ingresos.cell(row, 17, "Facturado")
 
+                    ws_ingresos.cell(row, 18, factura.EmisorRegimen)
 
             ws_ingresos.cell(row+1, 8, "=SUM(H2:H"+str(row)+")")
             ws_ingresos.cell(row+1, 9, "=SUM(I2:I"+str(row)+")")
@@ -1311,9 +1431,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
     def hazAgregados(self, paths):
         print(self.complementosDePago)
-
-
-
         workbook = load_workbook(self.annual_xlsx_path)
         if not "Conceptos" in workbook.sheetnames:
             ws_todos = workbook.create_sheet("Conceptos")
@@ -1360,7 +1477,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         print("ws_todos.max_row................................................................",str(ws_todos.max_row))
         if ws_todos.max_row == 1:
-            self.agregaMembrete(ws_todos)
+            self.agregaMembrete(ws_todos, 4)
             ws_todos.cell(8, 1, "mes")
             ws_todos.cell(8, 2, 'clave_concepto')
             ws_todos.cell(8, 3, 'concepto_sat')
@@ -1433,7 +1550,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         workbook.save(self.annual_xlsx_path)
 
-    def agregaMembrete(self, ws):
+    def agregaMembrete(self, ws, columna):
         for column in range(1,28):
             for row in range(1,8):
                 cell = ws.cell(row,column)
@@ -1443,15 +1560,16 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         img = openpyxl.drawing.image.Image(join(scriptDirectory,'logo_s.png'))
         img.anchor = 'B2'
         ws.add_image(img)
-        ws.cell(2, 4, "Nombre: ")
-        ws.cell(3, 4, "RFC: ")
-        ws.cell(2, 5, self.nombre)
-        ws.cell(3, 5, self.rfc)
-        ws.cell(4, 4, "Contador: ")
-        ws.cell(5, 4, "Fecha de Actualización: ") 
-        ws.cell(5, 5, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        ws.cell(2, columna, "Nombre: ")
+        ws.cell(3, columna, "RFC: ")
+        ws.cell(2, columna+1, self.nombre)
+        ws.cell(3, columna+1, self.rfc)
+        ws.cell(4, columna, "Contador: ")
+        ws.cell(5, columna, "Fecha de Actualización: ") 
+        ws.cell(5, columna+1, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
-        for row in ws["D2":"D6"]:
+        letra = get_column_letter(columna)
+        for row in ws[letra + "2":letra + "6"]:
             for cell in row:
                 print(cell.value)
                 cell.alignment = Alignment(horizontal="right")
@@ -1482,7 +1600,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         #TUA	IEPS	ISH
 
         if not self.yaEstaba[mes]:
-            self.agregaMembrete(ws_mes)
+            self.agregaMembrete(ws_mes, 4)
 
 
             ws_mes.cell(8, 1, "clave_ps")
@@ -2072,7 +2190,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
 
             self.hazTabDeIngresos(self.paths)
-
+            self.hazWsRegimenes()
             p += 1
             progreso = int(100*(p/(len(paths)+2)))
             self.progressBar.setValue(progreso)

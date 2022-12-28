@@ -176,6 +176,14 @@ ya
 - implementar las sugerencias de colores de Kevin
  
 2.0
+
+- generar el catalogo de regimenes fiscales dentro de la actualización del excel del sat Ya
+- Una nueva worksheet en el excel anual, que contenga las sumas por mes y por regimen de ingresos
+(eventualmente también separar egresos por mes y por regimen, pero esto solo se puede en la version 4.0) Ya
+- en noviembre de sisa hay facturas que no se forman correctamente Ya
+- Agregar filtros a las worksheets de meses Ya
+
+
 - Mejorar formatos DIOT , que se llene la mayor cantidad de informacion posible (Nayeli)
 - Reactive interface 
 - que cuando se actualize un excel anual de los antiguos que tienen header no se rompa
@@ -195,10 +203,7 @@ ya
 						uso de las versiones guardadas en automatico,
 						carpetas y xml que se mueven y/o crean en automatico)
 
-- generar el catalogo de regimenes fiscales dentro de la actualización del excel del sat Ya
 
-- Una nueva worksheet en el excel anual, que contenga las sumas por mes y por regimen de ingresos
-(eventualmente también separar egresos por mes y por regimen, pero esto solo se puede en la version 4.0)
 
 
 - en el diot todo va redondeado sin centavos
@@ -208,8 +213,6 @@ ya
 - automatizar la preparacion de lo de carga batch (talvez crear el txt directamente?)
 
 - en el excel anual agregar retenciones
-
-- en noviembre de sisa hay facturas que no se forman correctamente
 
 - agregarle a todos los try, except que escriban en el log
 
