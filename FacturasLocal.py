@@ -382,7 +382,7 @@ class FacturaLocal(object):
             return "IEPS" ############################################################### ojo
         elif impuesto == "004":### estos ultimos dos ni existen sugun mcfly
             return "TUA"
-        elif impuesto == "005":
+        elif impuesto == "005" or "hospedaje" in impuesto.lower() or "I.S.H" in impuesto or "IH" in impuesto:
             return "ISH"
         else:
             return impuesto
@@ -572,7 +572,7 @@ class FacturaLocal(object):
                                 importe = 0
                             #self.traslados[self.arreglaSusPendejadas(impuesto)] = {"importe":importe,"tasa":tasa}
                             #self.traslados[self.arreglaSusPendejadas(impuesto)].importe += float(importe)
-
+                            print(self.xml_path)
                             print("impuesto "+impuesto)
                             print("impuesto "+ self.arreglaSusPendejadas(impuesto))
                             print("importe " + str(self.traslados[self.arreglaSusPendejadas(impuesto)]["importe"]))
@@ -589,10 +589,10 @@ class FacturaLocal(object):
                                 except:
                                     print("este traslado no trae importe")
                             except:
-                                print("no pude sumar en " + self.UUID)
+                                print("no pude sumar en " + self.xml_path)
                                 self.mensaje += " no pudo sumar un traslado"
                         except:
-                            print("no pude sumar en " + self.UUID)
+                            print("no pude sumar en " + self.xml_path)
                             self.mensaje += " no pudo sumar un traslado"
 
         self.importe = self.subTotal + self.traslados["IVA"]["importe"]

@@ -184,6 +184,16 @@ ya
 - Agregar filtros a las worksheets de meses Ya
 
 
+- en el excel anual agregar retenciones
+- agregarle a todos los try, except que escriban en el log
+- en el diot todo va redondeado sin centavos
+- en el diot hace falta las retenciones de iva
+
+
+
+
+
+
 - Mejorar formatos DIOT , que se llene la mayor cantidad de informacion posible (Nayeli)
 - Reactive interface 
 - que cuando se actualize un excel anual de los antiguos que tienen header no se rompa
@@ -206,19 +216,16 @@ ya
 
 
 
-- en el diot todo va redondeado sin centavos
 
-- en el diot hace falta las retenciones de iva
 
 - automatizar la preparacion de lo de carga batch (talvez crear el txt directamente?)
-
-- en el excel anual agregar retenciones
-
-- agregarle a todos los try, except que escriban en el log
 
 - Para cuando bajas del sat todas las facturas en un año (osea que no están separadas en meses) se podría correr alguna parte de huiini?
   en particular creo que se quiere un nuevo worksheet con todas las facturas del año
 
+- separar egresos por mes y por regimen para agregar esto en el sheet de Regimenes 
+
+- obtener la cuota fija y la tasa dependiendo de las restas correspondientes (tablas isr)
 
 
 
@@ -310,5 +317,65 @@ para los resumenes diot, sie es PUE se suma, si es PPD y hay un complemento pago
 
 - Encontrar un mejor lugar para los archivos de huiini porque el folder de Documents tiene la falla de que es distinto en cada compu
 ejemplo en la p1 es por default en C:/Users/fidel/Onedrive/documentos mejor aprender a usar la carpeta de Appdata?
+
+
+
+
+
+
+- Componer la edición de categorias
+
+- Que pueda leer facturas aunque no vengan en meses
+
+- Que cree la estructura de carpetas con año mes y así, y mueva las facturas a su lugar
+
+- Que en los casos de notas de credito, descuentos, y bonificaciones se les cambie a negativo el signo en el sheet de conceptos
+  *ejemplos de las tres*
+
+- xmls de v4 que no se pueden leer
+*ejemplos*
+
+- no identifica el impuesto ieps??
+	*ejemplos de facturas con ieps*
+
+- pensar en la reestructura aprovechando el goggle drive y algo como django para guardar todo en base de datos
+
+
+- en caso de factura corrupta, botón para abrir ese xml
+
+- boton de cancelar procesa carpetas
+
+- agreggar simoblo de pesos en el excel anual
+
+- centrar en el decimal en el excel anual (se puede?)
+
+- al escoger meses si no hay archivo de claves ayudar a crear(encriptado?)
+
+
+
+
+
+
+- Manual
+
+- Video
+
+
+
+ debo mil 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

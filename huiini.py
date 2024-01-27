@@ -574,7 +574,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
             for folder_mes in los_meses:
                 self.esteFolder = join(folder_mes,"EGRESOS")
-                el_mes = re.sub(r'\s*\d+\s*', '', os.path.basename(folder_mes)) 
+                #el_mes = re.sub(r'\s*\d+\s*', '', os.path.basename(folder_mes)) 
+                el_mes = self.extrae_mes(folder_mes) 
+                print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",el_mes)
                 cuantosDuplicados = 0
                 self.listaDeDuplicados = []
                 self.listaDeFacturas = []
@@ -1175,12 +1177,24 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         ws_regimenes.cell(row_inicial+13, column_inicial, "DICIEMBRE")
         letra_meses = get_column_letter(column_inicial)
         for renglonMes in range(row_inicial+2,row_inicial+14):
-            ws_regimenes.cell(renglonMes, column_inicial+1, '=SUMIFS(Ingresos!H:H,Ingresos!B:B,'+letra_meses+str(renglonMes)+',Ingresos!O:O,"Pagado",Ingresos!R:R,"'+regimen_key+'")')
-            ws_regimenes.cell(renglonMes, column_inicial+2, '=SUMIFS(Ingresos!I:I,Ingresos!B:B,'+letra_meses+str(renglonMes)+',Ingresos!O:O,"Pagado",Ingresos!R:R,"'+regimen_key+'")')
-            ws_regimenes.cell(renglonMes, column_inicial+3, '=SUMIFS(Ingresos!J:J,Ingresos!B:B,'+letra_meses+str(renglonMes)+',Ingresos!O:O,"Pagado",Ingresos!R:R,"'+regimen_key+'")')
-            ws_regimenes.cell(renglonMes, column_inicial+4, '=SUMIFS(Ingresos!K:K,Ingresos!B:B,'+letra_meses+str(renglonMes)+',Ingresos!O:O,"Pagado",Ingresos!R:R,"'+regimen_key+'")')
-            ws_regimenes.cell(renglonMes, column_inicial+5, '=SUMIFS(Ingresos!L:L,Ingresos!B:B,'+letra_meses+str(renglonMes)+',Ingresos!O:O,"Pagado",Ingresos!R:R,"'+regimen_key+'")')
-            ws_regimenes.cell(renglonMes, column_inicial+6, '=SUMIFS(Ingresos!M:M,Ingresos!B:B,'+letra_meses+str(renglonMes)+',Ingresos!O:O,"Pagado",Ingresos!R:R,"'+regimen_key+'")')
+            celda = ws_regimenes.cell(renglonMes, column_inicial+1)
+            celda.number_format = '"$"#,##0.00_);[Red]("$"#,##0.00)'
+            celda.value = '=SUMIFS(Ingresos!H:H,Ingresos!B:B,'+letra_meses+str(renglonMes)+',Ingresos!O:O,"Pagado",Ingresos!R:R,"'+regimen_key+'")'
+            celda = ws_regimenes.cell(renglonMes, column_inicial+2)
+            celda.number_format = '"$"#,##0.00_);[Red]("$"#,##0.00)'
+            celda.value = '=SUMIFS(Ingresos!I:I,Ingresos!B:B,'+letra_meses+str(renglonMes)+',Ingresos!O:O,"Pagado",Ingresos!R:R,"'+regimen_key+'")'
+            celda = ws_regimenes.cell(renglonMes, column_inicial+3)
+            celda.number_format = '"$"#,##0.00_);[Red]("$"#,##0.00)'
+            celda.value = '=SUMIFS(Ingresos!J:J,Ingresos!B:B,'+letra_meses+str(renglonMes)+',Ingresos!O:O,"Pagado",Ingresos!R:R,"'+regimen_key+'")'
+            celda = ws_regimenes.cell(renglonMes, column_inicial+4)
+            celda.number_format = '"$"#,##0.00_);[Red]("$"#,##0.00)'
+            celda.value = '=SUMIFS(Ingresos!K:K,Ingresos!B:B,'+letra_meses+str(renglonMes)+',Ingresos!O:O,"Pagado",Ingresos!R:R,"'+regimen_key+'")'
+            celda = ws_regimenes.cell(renglonMes, column_inicial+5)
+            celda.number_format = '"$"#,##0.00_);[Red]("$"#,##0.00)'
+            celda.value = '=SUMIFS(Ingresos!L:L,Ingresos!B:B,'+letra_meses+str(renglonMes)+',Ingresos!O:O,"Pagado",Ingresos!R:R,"'+regimen_key+'")'
+            celda = ws_regimenes.cell(renglonMes, column_inicial+6)
+            celda.number_format = '"$"#,##0.00_);[Red]("$"#,##0.00)'
+            celda.value = '=SUMIFS(Ingresos!M:M,Ingresos!B:B,'+letra_meses+str(renglonMes)+',Ingresos!O:O,"Pagado",Ingresos!R:R,"'+regimen_key+'")'
 
 
         #letra_sumas = get_column_letter(self.columna_totales)
@@ -1285,6 +1299,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             for factura in self.listaDeFacturasIngresos:
                 numeroDeMes = int(factura.fechaTimbrado.split("-")[1])
                 este_mes = self.todos_los_meses[numeroDeMes-1]
+                print(self.yaEstaba)
                 if not self.yaEstaba[este_mes]:
                     row += 1
                     
@@ -2078,15 +2093,18 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 self.lista_categorias_default.append(categoria)
 
     def setup_log(self):
-        self.pluma = open(join(self.year_folder, "log.txt"), "w")
-        hoy = str(datetime.now()).split(".")[0].replace(" ","T").replace("-","_").replace(":","_")
-        self.pluma.write("Log generado"+ hoy)
-        self.pluma.write("\n")
-        self.pluma.write("Carpetas procesadas:")
-        self.pluma.write("\n")
-        for path in self.paths:
-            self.pluma.write(path)
+        try:
+            self.pluma = open(join(self.year_folder, "log.txt"), "w")
+            hoy = str(datetime.now()).split(".")[0].replace(" ","T").replace("-","_").replace(":","_")
+            self.pluma.write("Log generado"+ hoy)
             self.pluma.write("\n")
+            self.pluma.write("Carpetas procesadas:")
+            self.pluma.write("\n")
+            for path in self.paths:
+                self.pluma.write(path)
+                self.pluma.write("\n")
+        except:
+            print("no pude escribir en el log")
 
 
     def close_log(self):
@@ -2121,6 +2139,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             mes = os.path.split(path)[1]
             mes = ''.join([i for i in mes if not i.isdigit()])
             mes = mes.strip()
+            mes = mes.upper()
             meses.append(mes)
             if not mes in self.todos_los_meses:
                 no_son_meses = True
@@ -2223,7 +2242,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                     print("se respaldó el archivo existente y el nuevo no es igual")
             curr_index = self.tabWidget.currentIndex() 
             name = self.tabWidget.tabText(curr_index)
-            self.mes = name       
+            self.mes = name     
             self.sumale()
 
 
@@ -2337,14 +2356,22 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 self.tables[self.mes].setItem(r,17,self.esteItem(factura.conceptos[0]['tipo'],tooltipTipo))
                 r+=1
 
+    def extrae_mes(self, folder_path):
+        mes = os.path.split(folder_path)[1]
+        mes = ''.join([i for i in mes if not i.isdigit()])
+        mes = mes.strip()
+        mes = mes.upper()
+        return mes
+
     def procesaIngresos(self, path):
         self.esteFolder = join(path,"INGRESOS")
         if os.path.isdir(self.esteFolder):
             if not os.path.exists(join(self.esteFolder, "huiini")):
                 os.makedirs(join(self.esteFolder, "huiini"))
-            self.mes = os.path.split(path)[1]
-            self.mes = ''.join([i for i in self.mes if not i.isdigit()])
-            self.mes = self.mes.strip()
+            # self.mes = os.path.split(path)[1]
+            # self.mes = ''.join([i for i in self.mes if not i.isdigit()])
+            # self.mes = self.mes.strip()
+            self.mes = self.extrae_mes(path)    
             cuantosDuplicados = 0
             self.listaDeDuplicados = []
             self.listaDeFacturas = []
@@ -2572,9 +2599,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 lista_carpetas_coi = json.load(jsonfile)
         else:
             lista_carpetas_coi = ["--","UBER","Nomina","COMPLEMENTO_PAGO","INGRESOS_NEGATIVOS"]
-        self.mes = os.path.split(path)[1]
-        self.mes = ''.join([i for i in self.mes if not i.isdigit()])
-        self.mes = self.mes.strip()
+        # self.mes = os.path.split(path)[1]
+        # self.mes = ''.join([i for i in self.mes if not i.isdigit()])
+        # self.mes = self.mes.strip()
+        self.mes = self.extrae_mes(path)
         self.meses.append(self.mes) # aqui si self.mes no se puede formar correctamantre deberia dar un error y ventanita que lo explique
         #self.conceptos[self.mes] = []
         self.tables[self.mes] = QTableWidget(10,20)
@@ -2604,6 +2632,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         contador = 0
         for xml_path in listaDePathsXMLS:
             try:
+                print(xml_path)
                 laFactura = Factura(xml_path)
                 if laFactura.sello == "SinSello":
                     print("Omitiendo xml sin sello "+laFactura.xml_path)
@@ -2836,3 +2865,8 @@ form.show()
 
 
 app.exec_()
+
+
+
+
+# 29fd64f4-f6d5-4b9a-b768-819a2ac38589 no pudo sumar un traslado local
