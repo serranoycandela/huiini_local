@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Huiini"
-#define MyAppVersion "2.0.0"
+#define MyAppVersion "2.0.2"
 #define MyAppPublisher "Huiini"
 #define MyAppURL "http://huiini.com.mx"
 #define MyAppExeName "huiini.exe"
@@ -42,6 +42,7 @@ Source: "*.jinja"; DestDir: "{app}"; Flags: ignoreversion
 Source: "huiini_aux_files\template_diot.xlsx"; DestDir: "{userappdata}\huiini"; Flags: ignoreversion
 Source: "huiini_aux_files\conceptos.json"; DestDir: "{userappdata}\huiini"; Flags: ignoreversion
 Source: "huiini_aux_files\cat_regimen.json"; DestDir: "{userappdata}\huiini"; Flags: ignoreversion
+Source: "huiini_aux_files\kk.kk"; DestDir: "{userappdata}\huiini"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

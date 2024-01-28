@@ -7,6 +7,7 @@ from PySide2.QtWidgets import QTableView, QTableWidget, QLineEdit, QTableWidgetI
 from PySide2.QtWidgets import QPushButton, QListWidget, QListWidgetItem, QComboBox, QMenu, QAction
 import sys
 import guiV4
+import cryptoDialog
 from os import listdir, environ
 from os.path import isfile, join, basename
 import shutil
@@ -48,6 +49,7 @@ import locale
 
 import filecmp
 import xlrd
+from cryptography.fernet import Fernet
 
 
 # import subprocess
@@ -264,6 +266,30 @@ class ImgWidgetTache(QtWidgets.QLabel):
         self.setPixmap(pic_tache)
 
 
+class CryptoDialog(QtWidgets.QDialog, cryptoDialog.Ui_Dialog):
+   
+    def __init__(self, parent=None):
+        super(CryptoDialog, self).__init__(parent)
+        self.setupUi(self)
+        self.saveButton.clicked.connect(self.guarda)
+        self.cancelButton.clicked.connect(self.cierra)
+        self.cliente_path = parent.cliente_path
+        self.f = Fernet(parent.key)
+        with open(join(parent.cliente_path,"Doc_Fiscal","claves"), 'rb') as fp:
+            encrypted = fp.read()
+            decrypted = self.f.decrypt(encrypted).decode()
+            self.textEdit.setPlainText(decrypted) 
+           
+
+    def cierra(self):
+        self.close()    
+    def guarda(self):
+        original = self.textEdit.toPlainText().encode()
+        encrypted = self.f.encrypt(original)
+        with open(join(self.cliente_path,"Doc_Fiscal","claves"), 'wb') as encrypted_file:
+            encrypted_file.write(encrypted)
+        self.cierra()
+
 
 class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
@@ -283,6 +309,9 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         
         with open(join(appDataDirectory,"conceptos.json"), "r") as jsonfile:
             self.concepto = json.load(jsonfile)
+
+        with open(join(appDataDirectory,"kk.kk"), "rb") as keyfile:
+            self.key = keyfile.read()
 
         with open(join(appDataDirectory,"cat_regimen.json"), "r") as jsonfile:
             self.regimen = json.load(jsonfile)
@@ -342,6 +371,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.carpetaChooser.clicked.connect(self.cualCarpeta)
         self.action_editar_Categor_as.triggered.connect(self.edita_categorias)
         self.actionGenerar_Carpetas_Aspel_Coi.triggered.connect(self.carpetas_coi)
+        self.actionClaves.triggered.connect(self.open_crypto)
         self.actionImprimir.triggered.connect(self.imprime)
         self.excel_anual_button.clicked.connect(self.abre_excel_anual)
         #self.descarga_bt.clicked.connect(self.descarga_mesta)
@@ -370,6 +400,10 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.tabWidget.currentChanged.connect(self.tabChanged)
         self.tabWidget.hide()
         self.numeroDeFacturasValidas = {}
+
+    def open_crypto(self):
+        widget = CryptoDialog(self)
+        widget.exec()
 
     def actualizaCatalogos(self):
         dialog = QFileDialog(self)
@@ -521,16 +555,40 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         file_dialog.exec()
 
     def despliega_cliente(self):
+        f = Fernet(self.key)
+        if os.path.exists(join(self.cliente_path,"Doc_Fiscal","claves.txt")):
+            #si existe el claves.txt (no encriptado) leerlo, crear el archivo encriptado y borrar el original
+            with open(join(self.cliente_path,"Doc_Fiscal","claves.txt"), "rb") as fp:
+                original = fp.read()
+                encrypted = f.encrypt(original)
+                with open(join(self.cliente_path,"Doc_Fiscal","claves"), 'wb') as encrypted_file:
+                    encrypted_file.write(encrypted)
+
+            os.remove(join(self.cliente_path,"Doc_Fiscal","claves.txt"))
+        else:
+            if not os.path.exists(join(self.cliente_path,"Doc_Fiscal","claves")):
+                #si no hay ni claves.txt ni claves, preguntar nombre y rfc y crearlo encriptado
+                os.makedirs(join(self.cliente_path,"Doc_Fiscal"), exist_ok=True)
+                nombre, ok1 = QInputDialog.getText(self, 'Información del cliente faltante, ingresa el nombre', 'Nombre:')
+                rfc, ok2 = QInputDialog.getText(self, 'Información del cliente faltante, ingresa el RFC', 'RFC:')
+                with open(join(self.cliente_path,"Doc_Fiscal","claves"), 'wb') as encrypted_file:
+                    info = "Nombre: "+nombre+"\n"+"RFC: "+rfc+"\n"
+                    message = info.encode()
+                    encrypted = f.encrypt(message)
+                    encrypted_file.write(encrypted)
         
-        with open(join(self.cliente_path,"Doc_Fiscal","claves.txt")) as fp:
+        #leer el encryptado, desencriptarlo y sacar nombre y rfc        
+        with open(join(self.cliente_path,"Doc_Fiscal","claves"), 'rb') as fp:
+            encrypted = fp.read()
+            decrypted = f.decrypt(encrypted).decode()
+            lines = decrypted.split("\n")
             self.nombre = ""
             self.rfc = ""
-            Lines = fp.readlines()
-            for line in Lines:
+            for line in lines:
                 if "Nombre: " in line:
                     self.nombre = line.split("Nombre: ")[1]
                 if "RFC: " in line:
-                    self.rfc = line.split("RFC: ")[1]
+                    self.rfc = line.split("RFC: ")[1]       
         
         self.header_cliente.setText("Nombre: "+self.nombre+"\nRFC: "+self.rfc)
        
@@ -2229,6 +2287,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
 
             self.action_editar_Categor_as.setEnabled(True)
+            self.actionClaves.setEnabled(True)
             if self.tiene_gswin64c == True:
                 self.actionImprimir.setEnabled(True)
             self.excel_anual_button.setEnabled(True)

@@ -14,7 +14,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Huiini 2.0.0</string>
+   <string>Huiini 2.0.2</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <widget class="QTabWidget" name="tabWidget">
@@ -237,6 +237,7 @@
     <addaction name="action_editar_Categor_as"/>
     <addaction name="actionActualizar_Exceles"/>
     <addaction name="actionGenerar_Carpetas_Aspel_Coi"/>
+    <addaction name="actionClaves"/>
    </widget>
    <widget class="QMenu" name="menuImprimir">
     <property name="title">
@@ -327,6 +328,14 @@
   <action name="actionActualizar_cat_logos_CFDI">
    <property name="text">
     <string>Actualizar catálogos CFDI</string>
+   </property>
+  </action>
+  <action name="actionClaves">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Claves</string>
    </property>
   </action>
  </widget>

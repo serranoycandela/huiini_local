@@ -325,7 +325,7 @@ ejemplo en la p1 es por default en C:/Users/fidel/Onedrive/documentos mejor apre
 
 - Componer la edición de categorias
 
-- Que pueda leer facturas aunque no vengan en meses
+- Que pueda leer facturas aunque no vengan en meses Ya
 
 - Que cree la estructura de carpetas con año mes y así, y mueva las facturas a su lugar
 

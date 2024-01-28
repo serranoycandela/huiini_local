@@ -129,3 +129,5 @@ dmypy.json
 .pyre/
 credentials.json
 *.exe
+filekey.key
+huiini_aux_files/kk.kk

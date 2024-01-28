@@ -41,6 +41,9 @@ class Ui_MainWindow(object):
         self.actionGenerar_Carpetas_Aspel_Coi.setObjectName(u"actionGenerar_Carpetas_Aspel_Coi")
         self.actionActualizar_cat_logos_CFDI = QAction(MainWindow)
         self.actionActualizar_cat_logos_CFDI.setObjectName(u"actionActualizar_cat_logos_CFDI")
+        self.actionClaves = QAction(MainWindow)
+        self.actionClaves.setObjectName(u"actionClaves")
+        self.actionClaves.setEnabled(False)
         self.centralWidget = QWidget(MainWindow)
         self.centralWidget.setObjectName(u"centralWidget")
         self.tabWidget = QTabWidget(self.centralWidget)
@@ -160,6 +163,7 @@ class Ui_MainWindow(object):
         self.menuCliente.addAction(self.action_editar_Categor_as)
         self.menuCliente.addAction(self.actionActualizar_Exceles)
         self.menuCliente.addAction(self.actionGenerar_Carpetas_Aspel_Coi)
+        self.menuCliente.addAction(self.actionClaves)
         self.menuImprimir.addAction(self.actionImprimir)
         self.menuImprimir.addAction(self.actionCancelar_Impresi_n)
         self.menuImprimir.addSeparator()
@@ -175,7 +179,7 @@ class Ui_MainWindow(object):
     # setupUi
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Huiini 2.0.0", None))
+        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Huiini 2.0.2", None))
         self.actionEscoger_cliente.setText(QCoreApplication.translate("MainWindow", u"Escoger cliente", None))
         self.action_editar_Categor_as.setText(QCoreApplication.translate("MainWindow", u"Editar Categor\u00edas", None))
         self.actionActualizar_Exceles.setText(QCoreApplication.translate("MainWindow", u"Actualizar Exceles", None))
@@ -185,6 +189,7 @@ class Ui_MainWindow(object):
         self.actionSelccionar_Impresora.setText(QCoreApplication.translate("MainWindow", u"Selccionar Impresora", None))
         self.actionGenerar_Carpetas_Aspel_Coi.setText(QCoreApplication.translate("MainWindow", u"Generar Carpetas Aspel-Coi", None))
         self.actionActualizar_cat_logos_CFDI.setText(QCoreApplication.translate("MainWindow", u"Actualizar cat\u00e1logos CFDI", None))
+        self.actionClaves.setText(QCoreApplication.translate("MainWindow", u"Claves", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), QCoreApplication.translate("MainWindow", u"Tab 1", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), QCoreApplication.translate("MainWindow", u"Tab 2", None))
         self.carpetaChooser.setText(QCoreApplication.translate("MainWindow", u"Selecciona Carpeta", None))
