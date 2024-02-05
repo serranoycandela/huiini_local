@@ -50,6 +50,13 @@ import locale
 import filecmp
 import xlrd
 from cryptography.fernet import Fernet
+from matplotlib.backends.backend_qtagg import FigureCanvas
+from matplotlib.figure import Figure
+
+import numpy as np
+
+# Fixing random state for reproducibility
+np.random.seed(19680801)
 
 
 # import subprocess
@@ -299,6 +306,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.todos_los_meses = ["ENERO","FEBRERO","MARZO","ABRIL","MAYO","JUNIO","JULIO","AGOSTO","SEPTIEMBRE","OCTUBRE","NOVIEMBRE","DICIEMBRE"]
 
         print(scriptDirectory)
+
+        
         logoPix = QtGui.QPixmap(join(scriptDirectory,"logo_excel.png"))
         
         self.labelLogo.setPixmap(logoPix)
@@ -365,8 +374,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                     self.tiene_gswin64c = False
 
         self.actionEscoger_cliente.triggered.connect(self.escoger_cliente)
-
-
+        self.dynamic_canvas = FigureCanvas(Figure(figsize=(10, 40), tight_layout=True))
+        self.dockWidget.setWidget(self.dynamic_canvas)
 
         self.carpetaChooser.clicked.connect(self.cualCarpeta)
         self.action_editar_Categor_as.triggered.connect(self.edita_categorias)
@@ -2312,7 +2321,26 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         self.close_log()
 
-    
+        import pandas as pd
+        
+        df = pd.read_excel(open(self.annual_xlsx_path, 'rb'), sheet_name='Conceptos', skiprows=7)  
+        
+        portipo = df.groupby('tipo', group_keys=True)[['total']].sum()
+
+        tipos = list(portipo.index)
+        sumas = portipo['total'].tolist()
+
+        self._dynamic_ax = self.dynamic_canvas.figure.subplots()
+        
+        
+        #self.dynamic_canvas.tight_layout()
+        y_pos = np.arange(len(tipos))
+
+        self._dynamic_ax.barh(y_pos, sumas, align='center')
+        self._dynamic_ax.set_yticks(y_pos, labels=tipos)
+        self._dynamic_ax.invert_yaxis()  # labels read top-to-bottom
+        self._dynamic_ax.set_xlabel('acumulado')
+        self._dynamic_ax.set_title('Categorias')
 
 
 
@@ -2592,12 +2620,16 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             conceptos = {}
             ws_conceptos = workbook["Conceptos"]
             rows = ws_conceptos.rows
+
             for row in rows:
                 print(row[3].value)
                 if row[3].value in conceptos:
                     conceptos[row[3].value] +=  u'\n' + row[2].value
                 else:
                     conceptos[row[3].value] = row[2].value
+
+
+
 
             self.tables[self.mes] = QTableWidget(10,20)
             self.setupTabMeses()
@@ -2875,7 +2907,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         #self.folder.setText("Carpeta Procesada: " + u'\n' + self.esteFolder)
         #self.folder.show()
-
+        
         
 
 class WheelEventFilter(QtCore.QObject):
