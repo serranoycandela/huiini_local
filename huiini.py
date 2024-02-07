@@ -3,7 +3,7 @@ from PySide2.QtCore import *
 from PySide2.QtCore import Qt, QDir
 from PySide2.QtGui import *
 from PySide2 import QtGui, QtCore, QtWidgets
-from PySide2.QtWidgets import QTableView, QTableWidget, QLineEdit, QTableWidgetItem, QFileDialog, QProgressDialog, QMessageBox, QListView, QAbstractItemView, QTreeView, QDialog, QVBoxLayout, QDialogButtonBox, QFileSystemModel, QInputDialog
+from PySide2.QtWidgets import QTreeWidgetItem, QTreeWidget, QTableView, QTableWidget, QLineEdit, QTableWidgetItem, QFileDialog, QProgressDialog, QMessageBox, QListView, QAbstractItemView, QTreeView, QDialog, QVBoxLayout, QDialogButtonBox, QFileSystemModel, QInputDialog
 from PySide2.QtWidgets import QPushButton, QListWidget, QListWidgetItem, QComboBox, QMenu, QAction
 import sys
 import guiV4
@@ -54,6 +54,8 @@ from matplotlib.backends.backend_qtagg import FigureCanvas
 from matplotlib.figure import Figure
 
 import numpy as np
+
+from PyQtJsonModel import QJsonModel
 
 # Fixing random state for reproducibility
 np.random.seed(19680801)
@@ -138,12 +140,16 @@ class PandasModel(QAbstractTableModel):
                 return str(self._dataframe.index[section])
 
         return None
+    
+
+
 
 
 class categorias_widget(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, path_categorias=None):
         super(categorias_widget, self).__init__(parent)
         import ctypes
+        self.parent = parent
         user32 = ctypes.windll.user32
         user32.SetProcessDPIAware()
         screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
@@ -151,15 +157,160 @@ class categorias_widget(QDialog):
         h = min(round(screensize[1]*0.8),850)
         self.setMinimumSize(520, h)
         layout = QVBoxLayout()
-        self.add_button = QPushButton("Nueva")
+        self.add_button = QPushButton("Nueva Categoría")
         layout.addWidget(self.add_button)
-        self.edit_button = QPushButton("Editar")
+        self.edit_button = QPushButton("Nueva Clave")
+        self.edit_button.setEnabled(False)
         layout.addWidget(self.edit_button)
         self.remove_button = QPushButton("Eliminar")
+        self.remove_button.setEnabled(False)
         layout.addWidget(self.remove_button)
-        self.myListWidget = QListWidget()
-        layout.addWidget(self.myListWidget)
+        self.tree = QTreeWidget()
+        self.tree.setColumnCount(2)
+        self.tree.setHeaderLabels(["Categorías", "Descripción"])
+        self.tree.setSelectionMode(QAbstractItemView.SingleSelection)
+        layout.addWidget(self.tree)
+        
+        self.cancel_button = QPushButton("Cancelar")
+        layout.addWidget(self.cancel_button)
+        self.save_button = QPushButton("Guardar")
+        self.save_button.setEnabled(False)
+        layout.addWidget(self.save_button)
+
         self.setLayout(layout)
+
+        items = []
+        for categoria, lista in parent.dicc_de_categorias.items():
+            item = QTreeWidgetItem([categoria])
+            item.setFlags(item.flags()|QtCore.Qt.ItemIsEditable)
+            
+            for clave in lista:
+                clave = clave.ljust(8, '0') 
+                try:
+                    desc = parent.concepto[clave]
+                except:
+                    desc = ""
+                child = QTreeWidgetItem([clave, desc])
+                child.setFlags(child.flags()|QtCore.Qt.ItemIsEditable)
+                item.addChild(child)
+            items.append(item)
+
+
+
+        self.tree.insertTopLevelItems(0, items)
+
+        self.save_button.clicked.connect(self.guarda_cats)
+        self.add_button.clicked.connect(self.add_cat)
+        self.edit_button.clicked.connect(self.add_clave)
+        self.remove_button.clicked.connect(self.remove_item)
+        
+        # model = QJsonModel(json_data=path_categorias)
+        
+
+        # self.view.setModel(model)
+        
+        #for column in range(model.columnCount()):
+        #    self.view.resizeColumnToContents(column)
+
+        
+        self.tree.model().dataChanged.connect(self.valida_edicion)
+        self.tree.selectionModel().selectionChanged.connect(self.branch_selected)
+
+    def remove_item(self):
+        if self.selected_index.parent().row() == -1:
+            self.tree.takeTopLevelItem(self.selected_cat)
+        else:
+            self.tree.topLevelItem(self.selected_index.parent().row()).takeChild(self.selected_index.row())
+        self.tree.clearSelection()
+        self.remove_button.setEnabled(False)
+        self.save_button.setEnabled(True)
+
+    def add_clave(self):
+        print("agregando clave")
+        new_child = QTreeWidgetItem()
+        new_child.setText(0, "...")
+        new_child.setText(1, "<- Ingresa clave")
+        new_child.setFlags(new_child.flags()|QtCore.Qt.ItemIsEditable)
+        self.tree.topLevelItem(self.selected_cat).setExpanded(True)
+        self.tree.topLevelItem(self.selected_cat).addChild(new_child)
+        self.tree.clearSelection()
+        new_child.setSelected(True)
+        self.save_button.setEnabled(False)
+
+
+    def add_cat(self):
+        topLevel = QTreeWidgetItem()
+        topLevel.setText(0, "...")
+        topLevel.setText(1, "<- Ingresa nombre")
+        topLevel.setFlags(topLevel.flags()|QtCore.Qt.ItemIsEditable)
+        self.tree.addTopLevelItem(topLevel)
+        self.tree.clearSelection()
+        topLevel.setSelected(True)
+        self.save_button.setEnabled(False)
+
+    def guarda_cats(self):
+        print("guarda_cats")
+        cats_object = {}
+        for j in range(self.tree.topLevelItemCount()):
+            cat = self.tree.topLevelItem(j)
+            print(cat.text(0))
+            cats_object[cat.text(0)] = []
+            for i in range(cat.childCount()):
+                print(cat.child(i).text(0))
+                cats_object[cat.text(0)].append(cat.child(i).text(0))
+
+        print(cats_object)
+        with open(self.parent.json_path, "w", encoding="utf-8") as jsonfile:
+                json.dump(cats_object, jsonfile, indent=4, sort_keys=True)
+            
+        self.parent.cargaCategorias()
+
+
+    def valida_edicion(self, topLeft, bottomRight, role):
+        self.save_button.setEnabled(True)
+        print("topLeft:", topLeft.row(), topLeft.column())
+        print("bottomRight:", bottomRight.row(), bottomRight.column())
+        print("parent:", topLeft.parent().row(), topLeft.parent().column())
+        #print("bottomRight:", bottomRight.parent.row(), bottomRight.parent.column())
+
+        if topLeft.parent().row() > -1:
+            el_parent = self.tree.topLevelItem(topLeft.parent().row())
+            el_item = el_parent.child(topLeft.row())
+            clave = el_item.text(0).ljust(8, '0')
+            
+            try:
+                desc = self.parent.concepto[clave]
+                self.save_button.setEnabled(True)
+            except:
+                desc = "Clave no válida"
+                self.save_button.setEnabled(False)
+            el_item.setText(1,desc)
+        else:
+            self.tree.topLevelItem(topLeft.row()).setText(1, "")
+            self.save_button.setEnabled(True)
+            
+        
+
+        
+
+    # def selectionChanged(self, selected, deselected):
+    #     print('selected: {}'.format(','.join(str(i.row()) for i in selected.indexes())))
+    #     # Displaying Row index 
+    #     print('full selection: {}'.format(','.join(str(i.row()) for i in self.selectionModel.selectedIndexes())))
+    #     # Displaying data
+    #     print('full selection text: {}'.format(','.join(str(i.data()) for i in self.selectionModel.selectedIndexes())))
+
+    def branch_selected(self, selected, deselected):
+        if len(selected.indexes()) > 0:
+            self.selected_index = selected.indexes()[0]
+            self.remove_button.setEnabled(True)
+            if selected.indexes()[0].parent().row() == -1:
+                self.selected_cat = selected.indexes()[0].row()
+                self.edit_button.setEnabled(True)
+            else:
+                self.edit_button.setEnabled(False)
+
+    
 
 class impresoras_widget(QDialog):
     def __init__(self, parent=None):
@@ -207,6 +358,8 @@ class getFilesDlg(QDialog):
         self.treeView = QTreeView()
         self.treeView.setSelectionMode(QTreeView.ExtendedSelection)
 
+
+
         self.treeView.setModel(self.fsModel)
         self.treeView.setColumnWidth(0, 361)
         self.treeView.setColumnHidden(1, True)
@@ -239,6 +392,7 @@ class getFilesDlg(QDialog):
         #self.fsModel.setRootPath(environ['HOMEPATH'])
         # self.treeView.setRootIndex(self.fsModel.index("\\"))
         #self.treeView.expand(self.treeView.rootIndex())
+
 
 
     def getPaths(self):
@@ -602,204 +756,207 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.header_cliente.setText("Nombre: "+self.nombre+"\nRFC: "+self.rfc)
        
     def procesa_cliente(self,paths):
+        print("si lo haría")
         self.cliente_path = paths.copy()[0]
         self.carpeta_this_year = join(self.cliente_path, str(datetime.now().year))
         self.folder_year = str(datetime.now().year)
         self.cargaCategorias()
         self.despliega_cliente()
+        self.action_editar_Categor_as.setEnabled(True)
+        self.actionClaves.setEnabled(True)
 
         
         
         
-        #############################################################
-        # leer el excel anual de este año y hacer dataframes
-        #############################################################
-        import re
+    #     #############################################################
+    #     # leer el excel anual de este año y hacer dataframes
+    #     #############################################################
+    #     import re
         
         
-        cliente_str = os.path.basename(os.path.normpath(self.cliente_path))
-        if os.path.exists(join(self.carpeta_this_year, cliente_str+"_"+str(datetime.now().year)+".xlsx")):
-            self.dataFrames = {}
-            self.annual_xlsx_path = join(self.carpeta_this_year, cliente_str+"_"+str(datetime.now().year)+".xlsx")
-            workbook = load_workbook(self.annual_xlsx_path)
-            for sheetname in workbook.sheetnames:
-                print(sheetname)
-                if sheetname in self.todos_los_meses:
-                    print("facturas de "+sheetname+" en "+cliente_str+"_"+str(datetime.now().year)+".xlsx")
-                    ws = workbook[sheetname]
-                    data = ws.values
-                    # Get the first line in file as a header line
-                    columns = next(data)[0:]
-                    # Create a DataFrame based on the second and subsequent lines of data
-                    self.dataFrames[sheetname] = pd.DataFrame(data, columns=columns)
+    #     cliente_str = os.path.basename(os.path.normpath(self.cliente_path))
+    #     if os.path.exists(join(self.carpeta_this_year, cliente_str+"_"+str(datetime.now().year)+".xlsx")):
+    #         self.dataFrames = {}
+    #         self.annual_xlsx_path = join(self.carpeta_this_year, cliente_str+"_"+str(datetime.now().year)+".xlsx")
+    #         workbook = load_workbook(self.annual_xlsx_path)
+    #         for sheetname in workbook.sheetnames:
+    #             print(sheetname)
+    #             if sheetname in self.todos_los_meses:
+    #                 print("facturas de "+sheetname+" en "+cliente_str+"_"+str(datetime.now().year)+".xlsx")
+    #                 ws = workbook[sheetname]
+    #                 data = ws.values
+    #                 # Get the first line in file as a header line
+    #                 columns = next(data)[0:]
+    #                 # Create a DataFrame based on the second and subsequent lines of data
+    #                 self.dataFrames[sheetname] = pd.DataFrame(data, columns=columns)
 
-            los_meses = []
-            for filename in os.listdir(self.carpeta_this_year):
-                if os.path.isdir(join(self.carpeta_this_year,filename)):## aqui falta algo mas para asegurar que la carpeta sea un mes
-                    print(filename)
-                    los_meses.append(join(self.carpeta_this_year,filename))
+    #         los_meses = []
+    #         for filename in os.listdir(self.carpeta_this_year):
+    #             if os.path.isdir(join(self.carpeta_this_year,filename)):## aqui falta algo mas para asegurar que la carpeta sea un mes
+    #                 print(filename)
+    #                 los_meses.append(join(self.carpeta_this_year,filename))
 
-            for folder_mes in los_meses:
-                self.esteFolder = join(folder_mes,"EGRESOS")
-                #el_mes = re.sub(r'\s*\d+\s*', '', os.path.basename(folder_mes)) 
-                el_mes = self.extrae_mes(folder_mes) 
-                print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",el_mes)
-                cuantosDuplicados = 0
-                self.listaDeDuplicados = []
-                self.listaDeFacturas = []
-                self.listaDeUUIDs = []
-                contador = 0
-                for filename in os.listdir(self.esteFolder):
-                    if filename.endswith(".xml"):
-                        try:
-                            print(join(self.esteFolder, filename))
-                            laFactura = Factura(join(self.esteFolder + os.sep,filename))
-                            if laFactura.sello == "SinSello":
-                                print("Omitiendo xml sin sello "+laFactura.xml_path)
-                            else:
-                                if laFactura.version:
-                                    if laFactura.UUID in self.listaDeUUIDs:
+    #         for folder_mes in los_meses:
+    #             self.esteFolder = join(folder_mes,"EGRESOS")
+    #             #el_mes = re.sub(r'\s*\d+\s*', '', os.path.basename(folder_mes)) 
+    #             el_mes = self.extrae_mes(folder_mes) 
+    #             print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",el_mes)
+    #             cuantosDuplicados = 0
+    #             self.listaDeDuplicados = []
+    #             self.listaDeFacturas = []
+    #             self.listaDeUUIDs = []
+    #             contador = 0
+    #             for filename in os.listdir(self.esteFolder):
+    #                 if filename.endswith(".xml"):
+    #                     try:
+    #                         print(join(self.esteFolder, filename))
+    #                         laFactura = Factura(join(self.esteFolder + os.sep,filename))
+    #                         if laFactura.sello == "SinSello":
+    #                             print("Omitiendo xml sin sello "+laFactura.xml_path)
+    #                         else:
+    #                             if laFactura.version:
+    #                                 if laFactura.UUID in self.listaDeUUIDs:
 
-                                        cuantosDuplicados+=1
-                                        self.listaDeDuplicados.append(laFactura.UUID)
-                                    else:
-                                        self.listaDeUUIDs.append({"uuid": laFactura.UUID, "path": join(self.esteFolder + os.sep,filename)})            
-                        except:
-                            print("falla")
+    #                                     cuantosDuplicados+=1
+    #                                     self.listaDeDuplicados.append(laFactura.UUID)
+    #                                 else:
+    #                                     self.listaDeUUIDs.append({"uuid": laFactura.UUID, "path": join(self.esteFolder + os.sep,filename)})            
+    #                     except:
+    #                         print("falla")
 
-                print(self.dataFrames[el_mes]) 
-                print(self.listaDeUUIDs)
-                result = self.checkIfValuesExists1(self.dataFrames[el_mes], self.listaDeUUIDs)
-                print(result)
-                message = "Se actualizará el mes de "+ el_mes + "\ncon las siguinetes facturas:"
-                for key, value in result.items():
-                    if not value:
-                        message += "\n"+key
-                if message != "Se actualizará el mes de "+ el_mes + "\ncon las siguinetes facturas:":
-                    self.warning(self, "Actualización del excel anual", message)
-                #self.annual_xlsx_path
-                self.mes = el_mes
-                self.agregaFacturasFaltantes(result)
-                self.rellena_mes_gui_from_excel()
+    #             print(self.dataFrames[el_mes]) 
+    #             print(self.listaDeUUIDs)
+    #             result = self.checkIfValuesExists1(self.dataFrames[el_mes], self.listaDeUUIDs)
+    #             print(result)
+    #             message = "Se actualizará el mes de "+ el_mes + "\ncon las siguinetes facturas:"
+    #             for key, value in result.items():
+    #                 if not value:
+    #                     message += "\n"+key
+    #             if message != "Se actualizará el mes de "+ el_mes + "\ncon las siguinetes facturas:":
+    #                 self.warning(self, "Actualización del excel anual", message)
+    #             #self.annual_xlsx_path
+    #             self.mes = el_mes
+    #             self.agregaFacturasFaltantes(result)
+    #             self.rellena_mes_gui_from_excel()
         
                 
-                #self.agregaTabMes(sheetname)
+    #             #self.agregaTabMes(sheetname)
            
-        else:
-            print(self.carpeta_this_year)
-            los_meses = []
-            for filename in os.listdir(self.carpeta_this_year):
-                if os.path.isdir(join(self.carpeta_this_year,filename)):
-                    print(filename)
-                    los_meses.append(join(self.carpeta_this_year,filename))
+    #     else:
+    #         print(self.carpeta_this_year)
+    #         los_meses = []
+    #         for filename in os.listdir(self.carpeta_this_year):
+    #             if os.path.isdir(join(self.carpeta_this_year,filename)):
+    #                 print(filename)
+    #                 los_meses.append(join(self.carpeta_this_year,filename))
 
-            #self.procesaCarpetas(los_meses)      
+    #         #self.procesaCarpetas(los_meses)      
              
-    def agregaFacturasFaltantes(self, result):
+    # def agregaFacturasFaltantes(self, result):
         
-        for key, value in result.items():
-            if not value:
-                print("agregaria ", key)
-                workbook = load_workbook(self.annual_xlsx_path)
-                ws_todos = workbook["Conceptos"]
-                ws_mes = workbook[self.mes]
-                self.status_column = 0
-                laFactura = Factura(key)
+    #     for key, value in result.items():
+    #         if not value:
+    #             print("agregaria ", key)
+    #             workbook = load_workbook(self.annual_xlsx_path)
+    #             ws_todos = workbook["Conceptos"]
+    #             ws_mes = workbook[self.mes]
+    #             self.status_column = 0
+    #             laFactura = Factura(key)
 
-                row_mes = ws_mes.max_row+1
+    #             row_mes = ws_mes.max_row+1
 
-                dv = DataValidation(type="list", formula1='"Pendiente,Pagado"', allow_blank=True)
-                ws_mes.add_data_validation(dv)
+    #             dv = DataValidation(type="list", formula1='"Pendiente,Pagado"', allow_blank=True)
+    #             ws_mes.add_data_validation(dv)
 
                 
 
-                ws_mes.cell(row_mes, 1, laFactura.conceptos[0]['clave_concepto'])
-                ws_mes.cell(row_mes, 2, laFactura.fechaTimbrado)
-                ws_mes.cell(row_mes, 3, laFactura.UUID)
-                ws_mes.cell(row_mes, 4, laFactura.EmisorNombre)
-                ws_mes.cell(row_mes, 5, laFactura.EmisorRFC)
-                ws_mes.cell(row_mes, 6, laFactura.conceptos[0]['descripcion'])
-                if laFactura.tipoDeComprobante == "E":
-                    ws_mes.cell(row_mes, 7, 0.0 - laFactura.subTotal)
-                    ws_mes.cell(row_mes, 8, 0.0 - laFactura.descuento)
-                    ws_mes.cell(row_mes, 9, 0.0 - laFactura.traslados["IVA"]["importe"])
-                    ws_mes.cell(row_mes, 10, 0.0)
-                    ws_mes.cell(row_mes, 11, 0.0)
-                    ws_mes.cell(row_mes, 12, 0.0)
-                    ws_mes.cell(row_mes, 13, 0.0 - laFactura.total)
-                else:
-                    ws_mes.cell(row_mes, 7, laFactura.subTotal)
-                    ws_mes.cell(row_mes, 8, laFactura.descuento)
-                    ws_mes.cell(row_mes, 9, laFactura.traslados["IVA"]["importe"])
-                    ws_mes.cell(row_mes, 10, laFactura.trasladosLocales["TUA"]["importe"])
-                    ws_mes.cell(row_mes, 11, laFactura.trasladosLocales["ISH"]["importe"])
-                    ws_mes.cell(row_mes, 12, laFactura.traslados["IEPS"]["importe"])
-                    ws_mes.cell(row_mes, 13, laFactura.total)
-                ws_mes.cell(row_mes, 14, laFactura.formaDePagoStr)
-                ws_mes.cell(row_mes, 15, laFactura.metodoDePago)
-                ws_mes.cell(row_mes, 16, laFactura.conceptos[0]['tipo'])
-                status = "Pendiente"
-                if laFactura.metodoDePago == "PUE":
-                    status = "Pagado"
-                # if laFactura.metodoDePago == "PPD": ############################# esto talvez hay que hacerlo mejor
-                #     if laFactura.UUID in self.complementosDePago:
-                #         if laFactura.total - self.complementosDePago[laFactura.UUID]["suma"] < 0.5:
-                #             status = "Pagado"
-                if laFactura.tipoDeComprobante == "P":
-                    status = "Pagado"
+    #             ws_mes.cell(row_mes, 1, laFactura.conceptos[0]['clave_concepto'])
+    #             ws_mes.cell(row_mes, 2, laFactura.fechaTimbrado)
+    #             ws_mes.cell(row_mes, 3, laFactura.UUID)
+    #             ws_mes.cell(row_mes, 4, laFactura.EmisorNombre)
+    #             ws_mes.cell(row_mes, 5, laFactura.EmisorRFC)
+    #             ws_mes.cell(row_mes, 6, laFactura.conceptos[0]['descripcion'])
+    #             if laFactura.tipoDeComprobante == "E":
+    #                 ws_mes.cell(row_mes, 7, 0.0 - laFactura.subTotal)
+    #                 ws_mes.cell(row_mes, 8, 0.0 - laFactura.descuento)
+    #                 ws_mes.cell(row_mes, 9, 0.0 - laFactura.traslados["IVA"]["importe"])
+    #                 ws_mes.cell(row_mes, 10, 0.0)
+    #                 ws_mes.cell(row_mes, 11, 0.0)
+    #                 ws_mes.cell(row_mes, 12, 0.0)
+    #                 ws_mes.cell(row_mes, 13, 0.0 - laFactura.total)
+    #             else:
+    #                 ws_mes.cell(row_mes, 7, laFactura.subTotal)
+    #                 ws_mes.cell(row_mes, 8, laFactura.descuento)
+    #                 ws_mes.cell(row_mes, 9, laFactura.traslados["IVA"]["importe"])
+    #                 ws_mes.cell(row_mes, 10, laFactura.trasladosLocales["TUA"]["importe"])
+    #                 ws_mes.cell(row_mes, 11, laFactura.trasladosLocales["ISH"]["importe"])
+    #                 ws_mes.cell(row_mes, 12, laFactura.traslados["IEPS"]["importe"])
+    #                 ws_mes.cell(row_mes, 13, laFactura.total)
+    #             ws_mes.cell(row_mes, 14, laFactura.formaDePagoStr)
+    #             ws_mes.cell(row_mes, 15, laFactura.metodoDePago)
+    #             ws_mes.cell(row_mes, 16, laFactura.conceptos[0]['tipo'])
+    #             status = "Pendiente"
+    #             if laFactura.metodoDePago == "PUE":
+    #                 status = "Pagado"
+    #             # if laFactura.metodoDePago == "PPD": ############################# esto talvez hay que hacerlo mejor
+    #             #     if laFactura.UUID in self.complementosDePago:
+    #             #         if laFactura.total - self.complementosDePago[laFactura.UUID]["suma"] < 0.5:
+    #             #             status = "Pagado"
+    #             if laFactura.tipoDeComprobante == "P":
+    #                 status = "Pagado"
 
-                dv.add(ws_mes.cell(row_mes, 17))
-                ws_mes.cell(row_mes, 17, status)
-                ws_mes.cell(row_mes, 18, laFactura.tipoDeComprobante)
-                # if laFactura.UUID in self.complementosDePago:
-                #     ws_mes.cell(row_mes, 19, self.complementosDePago[laFactura.UUID]["suma"])
+    #             dv.add(ws_mes.cell(row_mes, 17))
+    #             ws_mes.cell(row_mes, 17, status)
+    #             ws_mes.cell(row_mes, 18, laFactura.tipoDeComprobante)
+    #             # if laFactura.UUID in self.complementosDePago:
+    #             #     ws_mes.cell(row_mes, 19, self.complementosDePago[laFactura.UUID]["suma"])
 
-                if laFactura.tipoDeComprobante == "P":
-                    print("segun "+ laFactura.UUID + "del mes " +self.mes+ ", aqui buscaria en todos los meses el uuid "+laFactura.IdDocumento+" y si encuentra su factura modificaria, la columna 13 del renglon de esa factura en el mes que esté, a Pagado")
+    #             if laFactura.tipoDeComprobante == "P":
+    #                 print("segun "+ laFactura.UUID + "del mes " +self.mes+ ", aqui buscaria en todos los meses el uuid "+laFactura.IdDocumento+" y si encuentra su factura modificaria, la columna 13 del renglon de esa factura en el mes que esté, a Pagado")
 
 
-                los_conceptos = laFactura.conceptos.copy()
-                for concepto in los_conceptos:
-                    concepto["subTotal"] = 0.0
-                    concepto["mes"] = self.mes
-                    concepto["UUID"] = laFactura.UUID
-                    if concepto["impuestos"]:
-                        concepto["impuestos"] = float(concepto['impuestos'])
-                    else:
-                        concepto["impuestos"] = 0
-                    if laFactura.tipoDeComprobante == "E":
-                        concepto["subTotal"] = float(concepto['importeConcepto']) - float(concepto['descuento'])
-                        #concepto["importeConcepto"] = 0.0 - float(concepto['importeConcepto'])
-                        concepto["descuento"] = 0.0 - float(concepto['descuento'])
-                        #concepto["subTotal"] = 0.0 - float(concepto['subTotal'])
-                        concepto["impuestos"] = 0.0 - float(concepto['impuestos'])
-                        #concepto["total"] = 0.0 - float(concepto['total'])
+    #             los_conceptos = laFactura.conceptos.copy()
+    #             for concepto in los_conceptos:
+    #                 concepto["subTotal"] = 0.0
+    #                 concepto["mes"] = self.mes
+    #                 concepto["UUID"] = laFactura.UUID
+    #                 if concepto["impuestos"]:
+    #                     concepto["impuestos"] = float(concepto['impuestos'])
+    #                 else:
+    #                     concepto["impuestos"] = 0
+    #                 if laFactura.tipoDeComprobante == "E":
+    #                     concepto["subTotal"] = float(concepto['importeConcepto']) - float(concepto['descuento'])
+    #                     #concepto["importeConcepto"] = 0.0 - float(concepto['importeConcepto'])
+    #                     concepto["descuento"] = 0.0 - float(concepto['descuento'])
+    #                     #concepto["subTotal"] = 0.0 - float(concepto['subTotal'])
+    #                     concepto["impuestos"] = 0.0 - float(concepto['impuestos'])
+    #                     #concepto["total"] = 0.0 - float(concepto['total'])
 
-                for i in range(1,ws_mes.max_column+1):
-                    if ws_mes.cell(8, i).value == "Status":
-                        self.status_column = i - 2
+    #             for i in range(1,ws_mes.max_column+1):
+    #                 if ws_mes.cell(8, i).value == "Status":
+    #                     self.status_column = i - 2
 
-                row = ws_todos.max_row
-                dv_categorias = DataValidation(type="list", formula1="=Categorias!A$1:A$"+str(len(self.lista_categorias_default)), allow_blank=True)
-                ws_todos.add_data_validation(dv_categorias)
-                for concepto in los_conceptos:
-                    row += 1
-                    clave = concepto['clave_concepto']
-                    ws_todos.cell(row, 1, concepto['mes'])
-                    ws_todos.cell(row, 2, clave)
-                    ws_todos.cell(row, 3, self.getDescription(clave))
-                    ws_todos.cell(row, 4, concepto['UUID'])
-                    ws_todos.cell(row, 5, concepto['cantidad'])
-                    ws_todos.cell(row, 6, concepto['descripcion'])
-                    ws_todos.cell(row, 7, concepto['importeConcepto'])
-                    ws_todos.cell(row, 8, concepto['descuento'])
-                    ws_todos.cell(row, 9, concepto['importeConcepto'] - concepto['descuento'])
-                    ws_todos.cell(row, 10, concepto['impuestos'])
-                    ws_todos.cell(row, 11, (concepto['importeConcepto'] - concepto['descuento']) + concepto['impuestos'])
-                    dv_categorias.add(ws_todos.cell(row, 12))
-                    ws_todos.cell(row, 12, concepto['tipo'])
-                    ws_todos.cell(row, 13, "=VLOOKUP(D"+str(row)+","+concepto['mes']+"!C:Q,"+str(self.status_column)+",FALSE)")
-                workbook.save(self.annual_xlsx_path)
+    #             row = ws_todos.max_row
+    #             dv_categorias = DataValidation(type="list", formula1="=Categorias!A$1:A$"+str(len(self.lista_categorias_default)), allow_blank=True)
+    #             ws_todos.add_data_validation(dv_categorias)
+    #             for concepto in los_conceptos:
+    #                 row += 1
+    #                 clave = concepto['clave_concepto']
+    #                 ws_todos.cell(row, 1, concepto['mes'])
+    #                 ws_todos.cell(row, 2, clave)
+    #                 ws_todos.cell(row, 3, self.getDescription(clave))
+    #                 ws_todos.cell(row, 4, concepto['UUID'])
+    #                 ws_todos.cell(row, 5, concepto['cantidad'])
+    #                 ws_todos.cell(row, 6, concepto['descripcion'])
+    #                 ws_todos.cell(row, 7, concepto['importeConcepto'])
+    #                 ws_todos.cell(row, 8, concepto['descuento'])
+    #                 ws_todos.cell(row, 9, concepto['importeConcepto'] - concepto['descuento'])
+    #                 ws_todos.cell(row, 10, concepto['impuestos'])
+    #                 ws_todos.cell(row, 11, (concepto['importeConcepto'] - concepto['descuento']) + concepto['impuestos'])
+    #                 dv_categorias.add(ws_todos.cell(row, 12))
+    #                 ws_todos.cell(row, 12, concepto['tipo'])
+    #                 ws_todos.cell(row, 13, "=VLOOKUP(D"+str(row)+","+concepto['mes']+"!C:Q,"+str(self.status_column)+",FALSE)")
+    #             workbook.save(self.annual_xlsx_path)
 
         
 
@@ -825,6 +982,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         if name == "Ingresos":
             print("aquí haría algo")
             self.mes = ""
+        elif name == "Conceptos":
+            print("aquí haría algo")
         else:
             self.mes = name
             cliente = os.path.split(self.cliente_path)[1]
@@ -983,23 +1142,22 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             print ("el sistema no tiene una aplicacion por default para abrir exceles")
             QMessageBox.information(self, "Information", "El sistema no tiene una aplicación por default para abrir exceles" )
     def edita_categorias(self):
-        self.cats_dialog = categorias_widget()
-        self.cats_dialog.remove_button.clicked.connect(self.quitaCategoria)
-        self.cats_dialog.add_button.clicked.connect(self.agregaCategoria)
-        self.cats_dialog.edit_button.clicked.connect(self.editaCategoria)
         folder_cliente = os.path.split(os.path.split(self.paths[0])[0])[0]
         self.json_path = join(folder_cliente, "categorias_dicc_huiini.json")
-        if os.path.exists(self.json_path):
-            with open(self.json_path, "r", encoding="utf-8") as jsonfile:
-                self.dicc_de_categorias = json.load(jsonfile)
-        else:
-            self.dicc_de_categorias = {}
+        
+
+        self.cats_dialog = categorias_widget(parent = self, path_categorias = self.json_path)
+
+        # self.cats_dialog.remove_button.clicked.connect(self.quitaCategoria)
+        # self.cats_dialog.add_button.clicked.connect(self.agregaCategoria)
+        # self.cats_dialog.edit_button.clicked.connect(self.editaCategoria)
+        
 
 
         # lista_de_tuplas.extend(lista_categorias_default)
         #self.lista_ordenada = sorted(lista_de_tuplas, key=lambda tup: tup[1])
 
-        self.enlista_categorias()
+#        self.enlista_categorias()
         self.cats_dialog.exec()
 
     def as_text(self,value):
@@ -1905,7 +2063,56 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         deleteAction.triggered.connect(lambda: self.quitaRenglon(self.tables[self.mes].verticalHeader().logicalIndexAt(pos)))
         menu.addAction(deleteAction)
 
+        add2CatAction = QAction('&Agregar a categoría', self)
+        add2CatAction.triggered.connect(lambda: self.agrega_a_categoria(self.tables["Conceptos"].verticalHeader().logicalIndexAt(pos)))
+        menu.addAction(add2CatAction)
+
         menu.exec_(QtGui.QCursor.pos())
+
+    def agrega_a_categoria(self,row):
+        print("si señor")
+        esta_clave_concepto = self.tables["Conceptos"].item(row,1).text()
+        print("si señor", row, esta_clave_concepto)
+        las_primas = []
+        text1 = esta_clave_concepto + " - " + self.concepto[esta_clave_concepto]
+        las_primas.append(text1)
+        mas_general = esta_clave_concepto[:-2] + '00'
+        if mas_general != esta_clave_concepto:
+            text2 = esta_clave_concepto[:-2] + " - " + self.concepto[mas_general]
+            las_primas.append(text2)
+
+        super_general = esta_clave_concepto[:-4] + '0000'
+        if super_general != esta_clave_concepto:
+            try:
+                text3 = esta_clave_concepto[:-4] + " - " + self.concepto[super_general]
+                las_primas.append(text3)
+            except:
+                print("no hay mas general")
+
+
+        selected_clave, ok = QInputDialog.getItem(self, "Claves", "seleciona clave", las_primas)
+        if ok:
+            print("input is ", selected_clave)
+
+        
+        selected_cat, ok2 = QInputDialog.getItem(self, "Categoria", "seleciona categoría", self.lista_categorias_default)
+        if ok2:
+            print("input is ", selected_cat)
+            kk = selected_clave.split(" - ")
+            clave = kk[0]
+            descripcion = kk[1]
+            cats = {}
+            with open(join(self.cliente_path, "categorias_dicc_huiini.json"), "r") as jsonfile:
+                cats = json.load(jsonfile)
+
+            
+            cats[selected_cat].append(clave)
+            #copied_cats[selected_cat].update(clave = descripcion) 
+            with open(join(self.cliente_path, "categorias_dicc_huiini.json"), "w", encoding="utf-8") as jsonfile:
+                    json.dump(cats, jsonfile, indent=4, sort_keys=True)
+        
+        self.cargaCategorias()
+
 
     def quitaRenglon(self,row):
         elNombre = self.tables[self.mes].item(row,2).text()
@@ -2158,6 +2365,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         for categoria, claves in self.dicc_de_categorias.items():
             if not categoria in self.lista_categorias_default:
                 self.lista_categorias_default.append(categoria)
+                #por acá sería para aumentar claves en las categorias default desde el gui
+
 
     def setup_log(self):
         try:
@@ -2196,7 +2405,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.setup_log()
         same_year = True
         no_son_meses = False
-
+        self.listaDeUUIDsEgresos = []
         huiini_home_folder = os.path.split(os.path.split(self.year_folder)[0])[0]
         print(huiini_home_folder)
         with open(os.path.join(appDataDirectory,"huiini_home_folder_path.txt"), "w") as f:
@@ -2321,7 +2530,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         self.close_log()
 
-        import pandas as pd
+        
         
         df = pd.read_excel(open(self.annual_xlsx_path, 'rb'), sheet_name='Conceptos', skiprows=7)  
         
@@ -2332,8 +2541,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         self._dynamic_ax = self.dynamic_canvas.figure.subplots()
         
-        
-        #self.dynamic_canvas.tight_layout()
         y_pos = np.arange(len(tipos))
 
         self._dynamic_ax.barh(y_pos, sumas, align='center')
@@ -2341,9 +2548,49 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self._dynamic_ax.invert_yaxis()  # labels read top-to-bottom
         self._dynamic_ax.set_xlabel('acumulado')
         self._dynamic_ax.set_title('Categorias')
+        self.dynamic_canvas.draw()
+
+         
+        estos_conceptos_df = df.loc[df['UUID'].isin(self.listaDeUUIDsEgresos)]
 
 
+        #print(estos_conceptos_df)
+        lc = estos_conceptos_df.columns.tolist()
+        r_max = len(estos_conceptos_df)
+        c_max = len(lc)
+        self.tables["Conceptos"] = QTableWidget(r_max,c_max)
+        self.tabWidget.addTab(self.tables["Conceptos"], "Conceptos")
+        self.tables["Conceptos"].setColumnCount(c_max-1)
 
+        self.tables["Conceptos"].verticalHeader().setFixedWidth(35)
+        header = self.tables["Conceptos"].verticalHeader()
+        header.setContextMenuPolicy(Qt.CustomContextMenu)
+        header.customContextMenuRequested.connect(self.handleHeaderMenu)
+
+        
+
+        self.ponEncabezado(lc,"Conceptos")
+
+        # self.tables[self.mes].cellDoubleClicked.connect(self.meDoblePicaronXML)
+        # self.tables[self.mes].horizontalHeader().sectionClicked.connect(self.reordena)
+        ren = -1
+        colorGris = QBrush(QColor(207, 207, 207, 100))
+        for _, i in estos_conceptos_df.iterrows():
+            ren += 1
+            col = -1
+            tipo = i["tipo"]
+            for c in lc:
+                col += 1
+                valor = i[c]
+                self.tables["Conceptos"].setItem(ren,col,self.esteItem(str(valor),str(valor)))
+                if tipo == "Otros" and self.tables["Conceptos"].item(ren, col):
+                    self.tables["Conceptos"].item(ren, col).setBackground(colorGris)
+        # for r in range(9, r_max):
+        #     for c in range(1, c_max):
+        #         #print(str(r),str(c))
+        #         valor = ws.cell(r,c).value
+        #         self.tables["Conceptos"].setItem(r-9,c-1,self.esteItem(str(valor),str(valor)))
+    
 
     def agregaTab(self, tabName):
 
@@ -2902,7 +3149,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         if not mensajeAlerta == "":
             self.warning(self, "Information", mensajeAlerta)
 
-        
+        self.listaDeUUIDsEgresos.extend(self.listaDeUUIDs)
 
 
         #self.folder.setText("Carpeta Procesada: " + u'\n' + self.esteFolder)
