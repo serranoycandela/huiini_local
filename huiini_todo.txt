@@ -352,13 +352,20 @@ ejemplo en la p1 es por default en C:/Users/fidel/Onedrive/documentos mejor apre
 - al escoger meses si no hay archivo de claves ayudar a crear(encriptado?)
 
 
-- bug
-	cuando seleccionas carpetas y luego vuelves a seleccionar las mismas se rompe
+- bugs
+	cuando seleccionas carpetas y luego vuelves a seleccionar las mismas se rompe -  Fixed
+	no puede hacer solo un mes
 
 - en el widget de categorias hay que hacer un mejor chekeo para prender el botón de guardar
-	- ninguna categoria sin claves
 	- ninguna clave no valida
 	
+- que se puedan editar las categorias default??
+
+	
+mcfly debia 15000
+menos 750
+mwnos 1200
+
 
 
 
@@ -368,7 +375,7 @@ ejemplo en la p1 es por default en C:/Users/fidel/Onedrive/documentos mejor apre
 
 
 
- debo mil 
+
 
 
 

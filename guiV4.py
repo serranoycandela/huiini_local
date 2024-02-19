@@ -18,7 +18,7 @@ class Ui_MainWindow(object):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
         MainWindow.setEnabled(True)
-        MainWindow.resize(1299, 588)
+        MainWindow.resize(1410, 588)
         self.actionEscoger_cliente = QAction(MainWindow)
         self.actionEscoger_cliente.setObjectName(u"actionEscoger_cliente")
         self.action_editar_Categor_as = QAction(MainWindow)
@@ -44,6 +44,8 @@ class Ui_MainWindow(object):
         self.actionClaves = QAction(MainWindow)
         self.actionClaves.setObjectName(u"actionClaves")
         self.actionClaves.setEnabled(False)
+        self.actionEditar_categor_as_default = QAction(MainWindow)
+        self.actionEditar_categor_as_default.setObjectName(u"actionEditar_categor_as_default")
         self.centralWidget = QWidget(MainWindow)
         self.centralWidget.setObjectName(u"centralWidget")
         self.horizontalLayout_3 = QHBoxLayout(self.centralWidget)
@@ -134,7 +136,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralWidget)
         self.menuBar = QMenuBar(MainWindow)
         self.menuBar.setObjectName(u"menuBar")
-        self.menuBar.setGeometry(QRect(0, 0, 1299, 21))
+        self.menuBar.setGeometry(QRect(0, 0, 1410, 21))
         self.menuCliente = QMenu(self.menuBar)
         self.menuCliente.setObjectName(u"menuCliente")
         self.menuImprimir = QMenu(self.menuBar)
@@ -177,6 +179,7 @@ class Ui_MainWindow(object):
         self.menuImprimir.addSeparator()
         self.menuImprimir.addAction(self.actionSelccionar_Impresora)
         self.menuConfiguraci_n.addAction(self.actionActualizar_cat_logos_CFDI)
+        self.menuConfiguraci_n.addAction(self.actionEditar_categor_as_default)
 
         self.retranslateUi(MainWindow)
 
@@ -187,7 +190,7 @@ class Ui_MainWindow(object):
     # setupUi
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Huiini 2.0.2", None))
+        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Huiini 2.0.3", None))
         self.actionEscoger_cliente.setText(QCoreApplication.translate("MainWindow", u"Escoger cliente", None))
         self.action_editar_Categor_as.setText(QCoreApplication.translate("MainWindow", u"Editar Categor\u00edas", None))
         self.actionActualizar_Exceles.setText(QCoreApplication.translate("MainWindow", u"Actualizar Exceles", None))
@@ -198,6 +201,7 @@ class Ui_MainWindow(object):
         self.actionGenerar_Carpetas_Aspel_Coi.setText(QCoreApplication.translate("MainWindow", u"Generar Carpetas Aspel-Coi", None))
         self.actionActualizar_cat_logos_CFDI.setText(QCoreApplication.translate("MainWindow", u"Actualizar cat\u00e1logos CFDI", None))
         self.actionClaves.setText(QCoreApplication.translate("MainWindow", u"Claves", None))
+        self.actionEditar_categor_as_default.setText(QCoreApplication.translate("MainWindow", u"Editar categor\u00edas default", None))
         self.labelLogo_sicad.setText("")
         self.header_cliente.setText("")
         self.labelLogo.setText("")

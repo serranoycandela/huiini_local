@@ -3,8 +3,8 @@ from PySide2.QtCore import *
 from PySide2.QtCore import Qt, QDir
 from PySide2.QtGui import *
 from PySide2 import QtGui, QtCore, QtWidgets
-from PySide2.QtWidgets import QTreeWidgetItem, QTreeWidget, QTableView, QTableWidget, QLineEdit, QTableWidgetItem, QFileDialog, QProgressDialog, QMessageBox, QListView, QAbstractItemView, QTreeView, QDialog, QVBoxLayout, QDialogButtonBox, QFileSystemModel, QInputDialog
-from PySide2.QtWidgets import QPushButton, QListWidget, QListWidgetItem, QComboBox, QMenu, QAction
+from PySide2.QtWidgets import QGridLayout, QTreeWidgetItem, QTreeWidget, QTableView, QTableWidget, QLineEdit, QTableWidgetItem, QFileDialog, QProgressDialog, QMessageBox, QListView, QAbstractItemView, QTreeView, QDialog, QVBoxLayout, QDialogButtonBox, QFileSystemModel, QInputDialog
+from PySide2.QtWidgets import QPushButton, QListWidget, QListWidgetItem, QComboBox, QMenu, QAction, QCheckBox
 import sys
 import guiV4
 import cryptoDialog
@@ -54,10 +54,11 @@ from matplotlib.backends.backend_qtagg import FigureCanvas
 from matplotlib.figure import Figure
 
 import numpy as np
+import string
 
-from PyQtJsonModel import QJsonModel
+import glob
 
-# Fixing random state for reproducibility
+# # Fixing random state for reproducibility
 np.random.seed(19680801)
 
 
@@ -142,14 +143,20 @@ class PandasModel(QAbstractTableModel):
         return None
     
 
-
-
-
 class categorias_widget(QDialog):
-    def __init__(self, parent=None, path_categorias=None):
+    def __init__(self, parent=None, path_categorias=None, default_cats=None):
         super(categorias_widget, self).__init__(parent)
         import ctypes
         self.parent = parent
+        self.vengo_de_quitar = False
+        self.path_categorias = path_categorias
+        if os.path.exists(path_categorias):
+            with open(path_categorias, "r", encoding="utf-8") as jsonfile:
+                self.dicc_de_categorias = json.load(jsonfile)
+        else:
+            self.dicc_de_categorias = {}
+
+        self.default_cats = default_cats
         user32 = ctypes.windll.user32
         user32.SetProcessDPIAware()
         screensize = user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)
@@ -157,6 +164,9 @@ class categorias_widget(QDialog):
         h = min(round(screensize[1]*0.8),850)
         self.setMinimumSize(520, h)
         layout = QVBoxLayout()
+        self.add_default_button = QPushButton("Agrega Categorías Default")
+        if not default_cats:
+            layout.addWidget(self.add_default_button)
         self.add_button = QPushButton("Nueva Categoría")
         layout.addWidget(self.add_button)
         self.edit_button = QPushButton("Nueva Clave")
@@ -180,17 +190,20 @@ class categorias_widget(QDialog):
         self.setLayout(layout)
 
         items = []
-        for categoria, lista in parent.dicc_de_categorias.items():
+        for categoria, lista in self.dicc_de_categorias.items():
             item = QTreeWidgetItem([categoria])
             item.setFlags(item.flags()|QtCore.Qt.ItemIsEditable)
             
             for clave in lista:
-                clave = clave.ljust(8, '0') 
+                clave_completa = clave.ljust(8, '0') 
                 try:
-                    desc = parent.concepto[clave]
+                    desc = parent.concepto[clave_completa]
                 except:
-                    desc = ""
+                    desc = "Clave no válida"
+                    item.setForeground(0,QtGui.QBrush(QtGui.QColor("red")))
                 child = QTreeWidgetItem([clave, desc])
+                if "Clave no v" in desc:
+                    child.setForeground(0,QtGui.QBrush(QtGui.QColor("red")))
                 child.setFlags(child.flags()|QtCore.Qt.ItemIsEditable)
                 item.addChild(child)
             items.append(item)
@@ -199,31 +212,100 @@ class categorias_widget(QDialog):
 
         self.tree.insertTopLevelItems(0, items)
 
+        self.cats_object = self.as_dict()
+
+        self.cancel_button.clicked.connect(self.cierra)
         self.save_button.clicked.connect(self.guarda_cats)
         self.add_button.clicked.connect(self.add_cat)
         self.edit_button.clicked.connect(self.add_clave)
         self.remove_button.clicked.connect(self.remove_item)
-        
-        # model = QJsonModel(json_data=path_categorias)
-        
-
-        # self.view.setModel(model)
-        
-        #for column in range(model.columnCount()):
-        #    self.view.resizeColumnToContents(column)
-
+        self.add_default_button.clicked.connect(self.add_default_cats)
         
         self.tree.model().dataChanged.connect(self.valida_edicion)
         self.tree.selectionModel().selectionChanged.connect(self.branch_selected)
+
+    def add_default_cats(self):
+        print("las agregaria")
+        self.dicc_de_categorias
+        if os.path.exists(self.parent.default_cats_path):
+            with open(self.parent.default_cats_path, "r", encoding="utf-8") as jsonfile:
+                categorias_default = json.load(jsonfile)
+        else:
+            categorias_default = {}
+        
+        categorias_agregadas = 0
+        claves_agregadas_a_cats_existentes = 0
+        for categoria, lista in categorias_default.items():
+            if categoria in self.cats_object:
+                for clave in lista:
+                    if not clave in self.cats_object[categoria]:
+                        self.cats_object[categoria].append(clave)
+                        claves_agregadas_a_cats_existentes += 1
+            else:
+                self.cats_object[categoria] = lista
+                categorias_agregadas += 1
+        if claves_agregadas_a_cats_existentes > 0 or categorias_agregadas > 0:
+            self.tree.clear()
+
+            items = []
+            for categoria, lista in self.cats_object.items():
+
+                    item = QTreeWidgetItem([categoria])
+                    item.setFlags(item.flags()|QtCore.Qt.ItemIsEditable)
+                    
+                    for clave in lista:
+                        clave_completa = clave.ljust(8, '0') 
+                        try:
+                            desc = self.parent.concepto[clave_completa]
+                        except:
+                            desc = "Clave no válida"
+                            item.setForeground(0,QtGui.QBrush(QtGui.QColor("red")))
+                        child = QTreeWidgetItem([clave, desc])
+                        child.setFlags(child.flags()|QtCore.Qt.ItemIsEditable)
+                        item.addChild(child)
+                    items.append(item)
+
+
+
+            self.tree.insertTopLevelItems(0, items)
+
+            self.cats_object = self.as_dict()
+            if self.cats_ok():
+                self.save_button.setEnabled(True)
+            
+
+            print("claves agregadas a categorias existentes:", claves_agregadas_a_cats_existentes)
+            print("categorias agregadas:", categorias_agregadas)
+
+    def cierra(self):
+        self.close()
 
     def remove_item(self):
         if self.selected_index.parent().row() == -1:
             self.tree.takeTopLevelItem(self.selected_cat)
         else:
             self.tree.topLevelItem(self.selected_index.parent().row()).takeChild(self.selected_index.row())
+            
+            pasa = True
+            try:
+                for i in range(0,self.tree.topLevelItem(self.selected_index.parent().row()).childCount()):
+                    if "Clave no v" in self.tree.topLevelItem(self.selected_index.parent().row()).child(i).text(1):
+                        pasa = False
+            except:
+                print("no tiene hijos")
+            
+            if pasa:
+                print("pasó")
+                self.tree.topLevelItem(self.selected_index.parent().row()).setForeground(0,QtGui.QBrush(QtGui.QColor("black")))
+            else:
+                print("no pasó")
+                self.tree.topLevelItem(self.selected_index.parent().row()).setForeground(0,QtGui.QBrush(QtGui.QColor("red")))
+        self.vengo_de_quitar = True
         self.tree.clearSelection()
         self.remove_button.setEnabled(False)
-        self.save_button.setEnabled(True)
+        self.cats_object = self.as_dict()
+        if self.cats_ok():
+            self.save_button.setEnabled(True)
 
     def add_clave(self):
         print("agregando clave")
@@ -248,57 +330,121 @@ class categorias_widget(QDialog):
         topLevel.setSelected(True)
         self.save_button.setEnabled(False)
 
-    def guarda_cats(self):
-        print("guarda_cats")
+    def as_dict(self):
         cats_object = {}
         for j in range(self.tree.topLevelItemCount()):
             cat = self.tree.topLevelItem(j)
-            print(cat.text(0))
+            #print(cat.text(0))
             cats_object[cat.text(0)] = []
             for i in range(cat.childCount()):
-                print(cat.child(i).text(0))
+                #print(cat.child(i).text(0))
                 cats_object[cat.text(0)].append(cat.child(i).text(0))
+        return cats_object
 
-        print(cats_object)
-        with open(self.parent.json_path, "w", encoding="utf-8") as jsonfile:
+    def guarda_cats(self):
+        print("guarda_cats")
+        cats_object = self.as_dict()
+
+        #print(cats_object)
+        with open(self.path_categorias, "w", encoding="utf-8") as jsonfile:
                 json.dump(cats_object, jsonfile, indent=4, sort_keys=True)
-            
-        self.parent.cargaCategorias()
 
+        
+        if self.default_cats:
+            QMessageBox.information(self, "Información", "Actualización de categorías default exitosa:\n Se recomienda cargar categorias default en todos los clientes")
+        else:
+            QMessageBox.information(self, "Información", "Actualización de categorías exitosa:\n Se recomienda procesar todo el año para este cliente")
+            self.parent.cargaCategorias()
+
+        self.close()
+
+    def cats_ok(self):
+        pasa = True
+        for j in range(self.tree.topLevelItemCount()):
+            cat = self.tree.topLevelItem(j)
+            desc = cat.text(1)
+            if "Categoría repetida" in desc:
+                pasa = False
+            for i in range(cat.childCount()):
+                desc = cat.child(i).text(1)
+                if "Clave no válida" in desc:
+                    pasa = False
+        if not pasa:
+            print("Hay claves o categorías no válidas")
+        return pasa
+                
 
     def valida_edicion(self, topLeft, bottomRight, role):
-        self.save_button.setEnabled(True)
-        print("topLeft:", topLeft.row(), topLeft.column())
-        print("bottomRight:", bottomRight.row(), bottomRight.column())
-        print("parent:", topLeft.parent().row(), topLeft.parent().column())
-        #print("bottomRight:", bottomRight.parent.row(), bottomRight.parent.column())
+        print(role)
+        if not role[0] == 9:
+            print("validando")
+            # print("topLeft:", topLeft.row(), topLeft.column())
+            # print("bottomRight:", bottomRight.row(), bottomRight.column())
+            # print("parent:", topLeft.parent().row(), topLeft.parent().column())
+            #print("bottomRight:", bottomRight.parent.row(), bottomRight.parent.column())
+            if topLeft.parent().row() > -1:
+                #aqui es cuando se modifico una clave dentro de una categoria
+                #check si la clave ya esta en uso
 
-        if topLeft.parent().row() > -1:
-            el_parent = self.tree.topLevelItem(topLeft.parent().row())
-            el_item = el_parent.child(topLeft.row())
-            clave = el_item.text(0).ljust(8, '0')
-            
-            try:
-                desc = self.parent.concepto[clave]
-                self.save_button.setEnabled(True)
-            except:
-                desc = "Clave no válida"
-                self.save_button.setEnabled(False)
-            el_item.setText(1,desc)
-        else:
-            self.tree.topLevelItem(topLeft.row()).setText(1, "")
-            self.save_button.setEnabled(True)
-            
+                self.el_parent = self.tree.topLevelItem(topLeft.parent().row())
+                el_item = self.el_parent.child(topLeft.row())
+                clave = el_item.text(0)
+
+                cat_culpable = ""
+                for cat, claves in self.cats_object.items():
+                    if clave in claves:
+                        cat_culpable = cat
+                if cat_culpable != "" and self.el_parent.text(0) != cat_culpable:
+                    desc = "Clave no válida, parte de la categoría " + cat_culpable
+                    self.save_button.setEnabled(False)
+                    el_item.setForeground(0,QtGui.QBrush(QtGui.QColor("red")))
+                    self.el_parent.setForeground(0,QtGui.QBrush(QtGui.QColor("red")))
+                else:
+                    clave_completa = clave.ljust(8, '0')
+                    
+                    try:
+                        desc = self.parent.concepto[clave_completa]
+                        self.cats_object = self.as_dict()
+                        if self.cats_ok():
+                            self.save_button.setEnabled(True)
+                        el_item.setForeground(0,QtGui.QBrush(QtGui.QColor("black")))
+                        try:
+                            pasa = True
+                            for i in range(0,self.el_parent.childCount()):
+                                if "Clave no v" in self.el_parent.child(i).text(1):
+                                    pasa = False
+                            print("pasa:", pasa)
+                            if pasa:
+                                self.el_parent.setForeground(0,QtGui.QBrush(QtGui.QColor("black")))
+                            else:
+                                self.el_parent.setForeground(0,QtGui.QBrush(QtGui.QColor("red")))
+                        except:
+                            print("no tiene hijos")
+                        
+                    except:
+                        desc = "Clave no válida"
+                        self.save_button.setEnabled(False)
+                        el_item.setForeground(0,QtGui.QBrush(QtGui.QColor("red")))
+                        self.el_parent.setForeground(0,QtGui.QBrush(QtGui.QColor("red")))
+                el_item.setText(1,desc)
+            else:
+                #aqui es cuando se modifico el nombre de una categoria pero también entra cuando quitas una clave
+                # check if this name is not used already?
+                if not self.vengo_de_quitar:
+                    el_item = self.tree.topLevelItem(topLeft.row())
+                    la_cat = el_item.text(0)
+                    if la_cat in self.cats_object:
+                        el_item.setText(1,"Categoría repetida")
+                        el_item.setForeground(0,QtGui.QBrush(QtGui.QColor("red")))
+                    else:
+                        self.tree.topLevelItem(topLeft.row()).setText(1, "")
+                        el_item.setForeground(0,QtGui.QBrush(QtGui.QColor("black")))
+                        self.cats_object = self.as_dict()
+                        if self.cats_ok():
+                            self.save_button.setEnabled(True)
+                   
+        self.vengo_de_quitar = False    
         
-
-        
-
-    # def selectionChanged(self, selected, deselected):
-    #     print('selected: {}'.format(','.join(str(i.row()) for i in selected.indexes())))
-    #     # Displaying Row index 
-    #     print('full selection: {}'.format(','.join(str(i.row()) for i in self.selectionModel.selectedIndexes())))
-    #     # Displaying data
-    #     print('full selection text: {}'.format(','.join(str(i.data()) for i in self.selectionModel.selectedIndexes())))
 
     def branch_selected(self, selected, deselected):
         if len(selected.indexes()) > 0:
@@ -438,7 +584,11 @@ class CryptoDialog(QtWidgets.QDialog, cryptoDialog.Ui_Dialog):
         self.f = Fernet(parent.key)
         with open(join(parent.cliente_path,"Doc_Fiscal","claves"), 'rb') as fp:
             encrypted = fp.read()
-            decrypted = self.f.decrypt(encrypted).decode()
+            try:
+                decrypted = self.f.decrypt(encrypted).decode()
+            except:
+                decrypted = self.f.decrypt(encrypted).decode('Latin-1')
+
             self.textEdit.setPlainText(decrypted) 
            
 
@@ -468,6 +618,30 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         logoSicadPix = QtGui.QPixmap(join(scriptDirectory,"logo_s.png"))
         self.labelLogo_sicad.setPixmap(logoSicadPix)
+        ####################################################################
+        #
+        #                           get default_cats.json path
+        #
+        ####################################################################
+        los_drives = self.get_drives()
+        el_drive = ""
+        for este_drive in los_drives:
+            nombre = win32api.GetVolumeInformation(este_drive+":\\")[0]
+            if nombre == "Google Drive":
+                el_drive = este_drive
+
+        
+        el_guess = join(el_drive+":/","Shared drives","SISTEMAS","Programacion","huiini_default_cats","default_cats.json")
+        if not os.path.exists(el_guess):
+            print("lo buscaria con glob")
+            fil = glob.glob(el_drive+':/**/default_cats.json',recursive = True)
+            for f in fil:
+                print("lo encontré",f)
+                self.default_cats_path = f
+        else:
+            print("fue guess",el_guess)
+            self.default_cats_path = el_guess
+
 
         
         with open(join(appDataDirectory,"conceptos.json"), "r") as jsonfile:
@@ -530,6 +704,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.actionEscoger_cliente.triggered.connect(self.escoger_cliente)
         self.dynamic_canvas = FigureCanvas(Figure(figsize=(10, 40), tight_layout=True))
         self.dockWidget.setWidget(self.dynamic_canvas)
+        self._dynamic_ax = self.dynamic_canvas.figure.subplots()
 
         self.carpetaChooser.clicked.connect(self.cualCarpeta)
         self.action_editar_Categor_as.triggered.connect(self.edita_categorias)
@@ -537,6 +712,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.actionClaves.triggered.connect(self.open_crypto)
         self.actionImprimir.triggered.connect(self.imprime)
         self.excel_anual_button.clicked.connect(self.abre_excel_anual)
+        self.actionEditar_categor_as_default.triggered.connect(self.edita_categorias_default)
         #self.descarga_bt.clicked.connect(self.descarga_mesta)
 
         self.actionSelccionar_Impresora.triggered.connect(self.cambiaImpresora)
@@ -563,6 +739,19 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self.tabWidget.currentChanged.connect(self.tabChanged)
         self.tabWidget.hide()
         self.numeroDeFacturasValidas = {}
+
+    
+
+    def get_drives(self):
+        import ctypes
+        drives = []
+        bitmask = ctypes.windll.kernel32.GetLogicalDrives()
+        for letter in string.ascii_uppercase:
+            if bitmask & 1:
+                drives.append(letter)
+            bitmask >>= 1
+
+        return drives
 
     def open_crypto(self):
         widget = CryptoDialog(self)
@@ -718,12 +907,12 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         file_dialog.exec()
 
     def despliega_cliente(self):
-        f = Fernet(self.key)
+        self.f = Fernet(self.key)
         if os.path.exists(join(self.cliente_path,"Doc_Fiscal","claves.txt")):
             #si existe el claves.txt (no encriptado) leerlo, crear el archivo encriptado y borrar el original
             with open(join(self.cliente_path,"Doc_Fiscal","claves.txt"), "rb") as fp:
                 original = fp.read()
-                encrypted = f.encrypt(original)
+                encrypted = self.f.encrypt(original)
                 with open(join(self.cliente_path,"Doc_Fiscal","claves"), 'wb') as encrypted_file:
                     encrypted_file.write(encrypted)
 
@@ -737,13 +926,16 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                 with open(join(self.cliente_path,"Doc_Fiscal","claves"), 'wb') as encrypted_file:
                     info = "Nombre: "+nombre+"\n"+"RFC: "+rfc+"\n"
                     message = info.encode()
-                    encrypted = f.encrypt(message)
+                    encrypted = self.f.encrypt(message)
                     encrypted_file.write(encrypted)
         
         #leer el encryptado, desencriptarlo y sacar nombre y rfc        
         with open(join(self.cliente_path,"Doc_Fiscal","claves"), 'rb') as fp:
             encrypted = fp.read()
-            decrypted = f.decrypt(encrypted).decode()
+            try:
+                decrypted = self.f.decrypt(encrypted).decode()
+            except:
+                decrypted = self.f.decrypt(encrypted).decode('Latin-1')
             lines = decrypted.split("\n")
             self.nombre = ""
             self.rfc = ""
@@ -754,6 +946,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                     self.rfc = line.split("RFC: ")[1]       
         
         self.header_cliente.setText("Nombre: "+self.nombre+"\nRFC: "+self.rfc)
+
+        
        
     def procesa_cliente(self,paths):
         print("si lo haría")
@@ -1048,91 +1242,6 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             print("reodenaria con tipo")
             self.facturas[self.mes] = sorted(self.facturas[self.mes], key=lambda facturas: facturas.conceptos[0]['tipo'])
 
-    def quitaCategoria(self):
-        reply = QMessageBox.question(self, 'Message',"Estás seguro?", QMessageBox.Yes |
-        QMessageBox.No, QMessageBox.No)
-
-        if reply == QMessageBox.Yes:
-            curr_indexes = self.cats_dialog.myListWidget.selectedIndexes()
-            if len(curr_indexes)>1:
-                print("no")
-            else:
-                #confirmacion para maricas
-                categoria = self.cats_dialog.myListWidget.currentItem().text().split(" (")[0]
-                self.dicc_de_categorias.pop(categoria)
-                with open(self.json_path, "w", encoding="utf-8") as jsonfile:
-                    json.dump(self.dicc_de_categorias, jsonfile, indent=4, sort_keys=True)
-
-                self.cats_dialog.myListWidget.takeItem(curr_indexes[0].row())
-
-    def editaCategoria(self):
-        curr_indexes = self.cats_dialog.myListWidget.selectedIndexes()
-        if len(curr_indexes)>1:
-            print("no")
-        else:
-            categoria = self.cats_dialog.myListWidget.currentItem().text().split(" (")[0]
-            lista_de_empiezos = ", ".join(self.dicc_de_categorias[categoria])
-
-
-            nombre, ok1 = QInputDialog().getText(self.cats_dialog, "Nombre de la Categoría",
-                                        "Nombre de la categoría:", QLineEdit.Normal,categoria)
-            claves_ps, ok2 = QInputDialog().getText(self.cats_dialog, "Lista de claves de producto o servicio",
-                                         "clave_ps:", QLineEdit.Normal,
-                                         lista_de_empiezos)
-
-            if ok1 and ok2:
-                if nombre != categoria:
-                    self.dicc_de_categorias.pop(categoria)
-                if nombre in self.dicc_de_categorias:
-                    #lista_previa = self.dicc_de_categorias[nombre].copy()
-
-                    #lista_previa.extend(claves_ps.strip().split(","))#el espacio no se ocupa
-                    self.dicc_de_categorias[nombre] = claves_ps.replace(" ","").split(",")
-                #self.lista_ordenada = sorted(self.lista_ordenada, key=lambda tup: tup[1])
-                with open(self.json_path, "w", encoding="utf-8") as jsonfile:
-                    json.dump(self.dicc_de_categorias, jsonfile, indent=4, sort_keys=True)
-                self.cats_dialog.myListWidget.clear()
-                self.enlista_categorias()
-
-    def agregaCategoria(self):
-        nombre, ok1 = QInputDialog().getText(self.cats_dialog, "Nombre de la Categoría",
-                                     "Nombre de la categoría:", QLineEdit.Normal,"")
-        claves_ps, ok2 = QInputDialog().getText(self.cats_dialog, "Lista de claves de producto o servicio",
-                                     "clave_ps:", QLineEdit.Normal,
-                                     "")
-        claves_ps.strip()
-
-        if ok1 and ok2:
-            for clave in claves_ps.split(", "):
-                pasa = True
-                for categoria, lista in self.dicc_de_categorias.items():
-                    for clave1 in lista:
-                        if clave1.startswith(clave) or clave.startswith(clave1):
-                            pasa = False
-                            QMessageBox.information(self, "Advertencia", "El inicio de clave " + clave + " ya está considerado en la categoría " + categoria)
-                if pasa:
-                    if clave == "" or nombre == "":
-                        print("no mames")
-                    else:
-                        self.dicc_de_categorias[nombre] = claves_ps.split(", ")
-
-            #self.lista_ordenada = sorted(self.lista_ordenada, key=lambda tup: tup[1])
-            with open(self.json_path, "w", encoding="utf-8") as jsonfile:
-                json.dump(self.dicc_de_categorias, jsonfile, indent=4, sort_keys=True)
-            self.cats_dialog.myListWidget.clear()
-            self.enlista_categorias()
-
-    def enlista_categorias(self):
-        for key, value in self.dicc_de_categorias.items():
-            if len(value) > 3:
-                texto_claves = " ("+value[0]+", "+value[1]+", "+value[2]+"...)"
-            else:
-                texto_claves = " (" + ", ".join(value) + ")"
-            i = QListWidgetItem(key+texto_claves)
-            i.setToolTip("\n".join(value))
-            # if "Default" in tupla[0]:
-            #     i.setBackground(QtGui.QColor("#ababab"))
-            self.cats_dialog.myListWidget.addItem(i)
 
     def abre_excel_anual(self):
         try:
@@ -1141,23 +1250,15 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         except:
             print ("el sistema no tiene una aplicacion por default para abrir exceles")
             QMessageBox.information(self, "Information", "El sistema no tiene una aplicación por default para abrir exceles" )
+
+
+    def edita_categorias_default(self):
+        self.cats_dialog = categorias_widget(parent = self, path_categorias = self.default_cats_path, default_cats = True)
+        self.cats_dialog.exec()     
+
+    
     def edita_categorias(self):
-        folder_cliente = os.path.split(os.path.split(self.paths[0])[0])[0]
-        self.json_path = join(folder_cliente, "categorias_dicc_huiini.json")
-        
-
-        self.cats_dialog = categorias_widget(parent = self, path_categorias = self.json_path)
-
-        # self.cats_dialog.remove_button.clicked.connect(self.quitaCategoria)
-        # self.cats_dialog.add_button.clicked.connect(self.agregaCategoria)
-        # self.cats_dialog.edit_button.clicked.connect(self.editaCategoria)
-        
-
-
-        # lista_de_tuplas.extend(lista_categorias_default)
-        #self.lista_ordenada = sorted(lista_de_tuplas, key=lambda tup: tup[1])
-
-#        self.enlista_categorias()
+        self.cats_dialog = categorias_widget(parent = self, path_categorias = self.json_path, default_cats = False)
         self.cats_dialog.exec()
 
     def as_text(self,value):
@@ -1457,28 +1558,34 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
     def hazWsRegimenes(self):
         workbook = load_workbook(self.annual_xlsx_path)
-        if not "Regimenes" in workbook.sheetnames:
-            ws_regimenes = workbook.create_sheet("Regimenes")
-        else:
-            ws_regimenes = workbook["Regimenes"]
+        try:
+            ws_ingresos = workbook["Ingresos"]
+            if not "Regimenes" in workbook.sheetnames:
+                ws_regimenes = workbook.create_sheet("Regimenes")
+            else:
+                ws_regimenes = workbook["Regimenes"]
 
-        self.agregaMembrete(ws_regimenes, 7)
-        ws_regimenes.column_dimensions['A'].width = 14
-        ws_regimenes.column_dimensions['B'].width = 10
-        ws_ingresos = workbook["Ingresos"]
-        regimenes = []
-        for row_index in range(9,ws_ingresos.max_row):
-            row = [cell.value for cell in ws_ingresos[row_index]]
-            regimen = row[17]
-            if regimen not in regimenes and regimen != None:
-                regimenes.append(regimen)
-        print(regimenes)
-        renglon_inicial = 9
-        for regimen in regimenes:
-            self.cuadroRegimen(ws_regimenes, renglon_inicial, 1, regimen)
-            renglon_inicial+=17
+            self.agregaMembrete(ws_regimenes, 7)
+            ws_regimenes.column_dimensions['A'].width = 14
+            ws_regimenes.column_dimensions['B'].width = 10
+            
+        
+            regimenes = []
+            for row_index in range(9,ws_ingresos.max_row):
+                row = [cell.value for cell in ws_ingresos[row_index]]
+                regimen = row[17]
+                if regimen not in regimenes and regimen != None:
+                    regimenes.append(regimen)
+            print(regimenes)
+            renglon_inicial = 9
+            for regimen in regimenes:
+                self.cuadroRegimen(ws_regimenes, renglon_inicial, 1, regimen)
+                renglon_inicial+=17
 
-        workbook.save(self.annual_xlsx_path)
+            workbook.save(self.annual_xlsx_path)
+            workbook.close()
+        except:
+            print("no tiene ingresos")
 
 
     def hazTabDeIngresos(self,paths):## hazWSIngresos?
@@ -1660,6 +1767,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             self.style_ws_ingresos(ws_ingresos,17,row+1)
 
             workbook.save(self.annual_xlsx_path)
+            workbook.close()
 
     def getDescription(self, clave):
         desc = ""
@@ -1688,13 +1796,14 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             workbook.remove(sheet1)
 
         workbook.save(self.annual_xlsx_path)
+        workbook.close()
 
 
         ws_cats = workbook.create_sheet("IVA_mensual")
         ws_egresos_mensual = workbook.create_sheet("Egresos_mensual")
         ws_lista_cats = workbook.create_sheet("Categorias")
         r = 0
-        for cat in self.lista_categorias_default:
+        for cat in self.lista_categorias:
             r += 1
             ws_lista_cats.cell(r, 1, cat)
 
@@ -1754,7 +1863,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         #         for concepto in self.conceptos[mes]:
 
         #dv_categorias = DataValidation(type="list", formula1='"{}"'.format(self.texto_para_validacion), allow_blank=True)
-        dv_categorias = DataValidation(type="list", formula1="=Categorias!A$1:A$"+str(len(self.lista_categorias_default)), allow_blank=True)
+        dv_categorias = DataValidation(type="list", formula1="=Categorias!A$1:A$"+str(len(self.lista_categorias)), allow_blank=True)
         c = ws_mes['A9']
         ws_todos.freeze_panes = c
         ws_todos.add_data_validation(dv_categorias)
@@ -1789,6 +1898,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
 
         workbook.save(self.annual_xlsx_path)
+        workbook.close()
 
     def agregaMembrete(self, ws, columna):
         for column in range(1,28):
@@ -1968,6 +2078,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                     cell.font = Font(bold=True)
             
             workbook.save(self.annual_xlsx_path)
+            workbook.close()
 
     def hazResumenDiot(self,currentDir):
         workbook = load_workbook(os.path.join(appDataDirectory,"template_diot.xlsx"))
@@ -2048,6 +2159,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         ws_factura.cell(row, 9,     "=SUM(I2:I"+str(row-1)+")")
 
         workbook.save(xlsx_path)
+        workbook.close()
 
 
     def hazListadeUuids(self):
@@ -2095,24 +2207,34 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             print("input is ", selected_clave)
 
         
-        selected_cat, ok2 = QInputDialog.getItem(self, "Categoria", "seleciona categoría", self.lista_categorias_default)
+        selected_cat, ok2 = QInputDialog.getItem(self, "Categoria", "seleciona categoría", self.lista_categorias)
         if ok2:
             print("input is ", selected_cat)
             kk = selected_clave.split(" - ")
             clave = kk[0]
             descripcion = kk[1]
             cats = {}
+
             with open(join(self.cliente_path, "categorias_dicc_huiini.json"), "r") as jsonfile:
                 cats = json.load(jsonfile)
 
-            
-            cats[selected_cat].append(clave)
-            #copied_cats[selected_cat].update(clave = descripcion) 
-            with open(join(self.cliente_path, "categorias_dicc_huiini.json"), "w", encoding="utf-8") as jsonfile:
-                    json.dump(cats, jsonfile, indent=4, sort_keys=True)
+            cat_culpable = ""
+            for cat, claves in cats.items():
+                if clave in claves:
+                    cat_culpable = cat
+
+            if cat_culpable != "":
+                QMessageBox.information(self, "Information", "La clave "+clave+" ya es parte de "+cat_culpable )
+            else:
+                cats[selected_cat].append(clave)
+                #copied_cats[selected_cat].update(clave = descripcion) 
+                with open(join(self.cliente_path, "categorias_dicc_huiini.json"), "w", encoding="utf-8") as jsonfile:
+                        json.dump(cats, jsonfile, indent=4, sort_keys=True)
+                QMessageBox.information(self, "Información", "Actualización de categorías exitosa:\n Se recomienda procesar todo el año para este cliente")
+
         
         self.cargaCategorias()
-
+        
 
     def quitaRenglon(self,row):
         elNombre = self.tables[self.mes].item(row,2).text()
@@ -2355,17 +2477,30 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         if os.path.exists(self.json_path):
             with open(self.json_path, "r", encoding="utf-8") as jsonfile:
                 self.dicc_de_categorias = json.load(jsonfile)
+                self.lista_categorias = list(self.dicc_de_categorias.keys())
         else:
-            self.dicc_de_categorias = {}
+            options = ["Crear el archivo de categorías con las categorias default", "Crear el archivo de categorías vacío"]
+            selected_action, ok = QInputDialog.getItem(self, "Este cliente no tiene archivo de categorías", "seleciona acción", options)
+            if ok:
+                if selected_action == options[0]:
+                    with open(self.default_cats_path, "r", encoding="utf-8") as j:
+                        las_default = json.load(j)
+                    with open(self.json_path, "w", encoding="utf-8") as jsonfile:
+                        json.dump(las_default, jsonfile, indent=4, sort_keys=True)
+                    
+                if selected_action == options[1]:
+                    c = {}
+                    with open(self.json_path, "w", encoding="utf-8") as jsonfile:
+                        json.dump(c, jsonfile, indent=4, sort_keys=True)
+                
+                with open(self.json_path, "r", encoding="utf-8") as jsonfile:
+                    self.dicc_de_categorias = json.load(jsonfile)
+                self.lista_categorias = list(self.dicc_de_categorias.keys())
 
-        self.lista_categorias_default = []
 
-        with open(join(scriptDirectory,"categorias_default.json"), "r", encoding="utf-8") as jf:
-            self.lista_categorias_default = json.load(jf)
-        for categoria, claves in self.dicc_de_categorias.items():
-            if not categoria in self.lista_categorias_default:
-                self.lista_categorias_default.append(categoria)
-                #por acá sería para aumentar claves en las categorias default desde el gui
+        
+        
+
 
 
     def setup_log(self):
@@ -2530,17 +2665,22 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
 
         self.close_log()
 
+        with open(self.annual_xlsx_path, "rb") as f:
+            df = pd.read_excel(f, sheet_name='Conceptos', skiprows=7)
         
-        
-        df = pd.read_excel(open(self.annual_xlsx_path, 'rb'), sheet_name='Conceptos', skiprows=7)  
+        #df = pd.read_excel(open(self.annual_xlsx_path, 'rb'), sheet_name='Conceptos', skiprows=7)  
         
         portipo = df.groupby('tipo', group_keys=True)[['total']].sum()
 
         tipos = list(portipo.index)
         sumas = portipo['total'].tolist()
-
-        self._dynamic_ax = self.dynamic_canvas.figure.subplots()
         
+        #################################### Plot #########################################
+        self.dynamic_canvas = FigureCanvas(Figure(figsize=(10, 40), tight_layout=True))
+        self.dockWidget.setWidget(self.dynamic_canvas)
+        self._dynamic_ax = self.dynamic_canvas.figure.subplots()
+        #self._dynamic_ax.clear()
+       
         y_pos = np.arange(len(tipos))
 
         self._dynamic_ax.barh(y_pos, sumas, align='center')
@@ -2549,7 +2689,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         self._dynamic_ax.set_xlabel('acumulado')
         self._dynamic_ax.set_title('Categorias')
         self.dynamic_canvas.draw()
-
+        #####################################################################################################
          
         estos_conceptos_df = df.loc[df['UUID'].isin(self.listaDeUUIDsEgresos)]
 
@@ -2666,6 +2806,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         if hay_categorias_custom:
             for concepto in self.conceptos:
                 clave = concepto["clave_concepto"]
+                concepto["tipo"] = "Otros"
                 for categoria, claves in self.dicc_de_categorias.items():
                     for clave1 in claves:
                         if clave.startswith(clave1):
@@ -2926,6 +3067,8 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                     if os.path.exists(pdf_path):
                         self.tables[self.mes].setCellWidget(contador,0, ImgWidgetPalomita(self))
 
+        workbook.close()
+
     def procesaEgresos(self, path):
         #self.folder.setText("Procesando: " + u'\n' + path)
         #self.folder.show()
@@ -2972,6 +3115,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
             try:
                 print(xml_path)
                 laFactura = Factura(xml_path)
+                print(laFactura.UUID)
                 if laFactura.sello == "SinSello":
                     print("Omitiendo xml sin sello "+laFactura.xml_path)
                 else:
@@ -2984,6 +3128,7 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
                             #if laFactura.tipoDeComprobante != "N":
                             self.listaDeUUIDs.append(laFactura.UUID)
                             contador += 1
+                            print("appendeando: ", contador)
                             self.listaDeFacturas.append(laFactura)
             except:
                 self.warning(self, "Information", "El xml " + xml_path + " no está bien formado")
