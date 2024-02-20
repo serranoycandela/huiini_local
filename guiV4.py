@@ -190,7 +190,7 @@ class Ui_MainWindow(object):
     # setupUi
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Huiini 2.0.3", None))
+        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Huiini 2.0.4", None))
         self.actionEscoger_cliente.setText(QCoreApplication.translate("MainWindow", u"Escoger cliente", None))
         self.action_editar_Categor_as.setText(QCoreApplication.translate("MainWindow", u"Editar Categor\u00edas", None))
         self.actionActualizar_Exceles.setText(QCoreApplication.translate("MainWindow", u"Actualizar Exceles", None))

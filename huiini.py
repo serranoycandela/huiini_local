@@ -623,26 +623,57 @@ class Ui_MainWindow(QtWidgets.QMainWindow, guiV4.Ui_MainWindow):
         #                           get default_cats.json path
         #
         ####################################################################
-        los_drives = self.get_drives()
-        el_drive = ""
-        for este_drive in los_drives:
-            nombre = win32api.GetVolumeInformation(este_drive+":\\")[0]
-            if nombre == "Google Drive":
-                el_drive = este_drive
-
         
-        el_guess = join(el_drive+":/","Shared drives","SISTEMAS","Programacion","huiini_default_cats","default_cats.json")
-        if not os.path.exists(el_guess):
-            print("lo buscaria con glob")
-            fil = glob.glob(el_drive+':/**/default_cats.json',recursive = True)
-            for f in fil:
-                print("lo encontré",f)
-                self.default_cats_path = f
-        else:
-            print("fue guess",el_guess)
-            self.default_cats_path = el_guess
+        try:
+            with open(os.path.join(appDataDirectory,"default_cats_path.txt")) as f:
+                self.default_cats_path = f.readline()
+                if os.path.exists(self.default_cats_path):
+                    print("Ya sabía",self.default_cats_path)
+                    self.tiene_default_cats = True
+            
+        except:
+            try:
+                los_drives = self.get_drives()
+                el_drive = ""
+                for este_drive in los_drives:
+                    nombre = win32api.GetVolumeInformation(este_drive+":\\")[0]
+                    if nombre == "Google Drive":
+                        el_drive = este_drive
 
+                
+                el_guess = join(el_drive+":/","Shared drives","SISTEMAS","Programacion","huiini_default_cats","default_cats.json")
+                el_guess2 = join(el_drive+":/","Unidades compartidas","SISTEMAS","Programacion","huiini_default_cats","default_cats.json")
+                if os.path.exists(el_guess):
+                    print("fue guess",el_guess)
+                    self.default_cats_path = el_guess
+                    self.tiene_default_cats = True
+                elif os.path.exists(el_guess2):
+                    print("fue guess",el_guess2)
+                    self.default_cats_path = el_guess2
+                    self.tiene_default_cats = True
+                print(self.tiene_default_cats)
+                if self.tiene_default_cats:
+                    with open(os.path.join(appDataDirectory,"default_cats_path.txt"), "w") as f:
+                        f.write(self.default_cats_path.replace("\\","\\\\"))
+            except:
+                reply = QMessageBox.question(self, 'No encuentro las categorías por default',"¿está Google Drive instalado?\n contesta que si para buscar la ruta del archivo default_cats.json manualmete\n o no para cancelar", QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+                
+                if reply == QMessageBox.Yes:
+                    path_to_file, _ = QFileDialog.getOpenFileName(self, "ruta de default_cats.json", "~")
+                    if "default_cats.json" in path_to_file.lower():
+                        self.default_cats_path = path_to_file
+                        self.tiene_default_cats = True
+                        with open(os.path.join(appDataDirectory,"default_cats_path.txt"), "w") as f:
+                            f.write(path_to_file.replace("\\","\\\\"))
+                    else:
+                        QMessageBox.information(self, "Advertencia", "ruta incorrecta, el uso de categorías por default quedará desactivado")
+                        self.tiene_default_cats = False
+                if reply == QMessageBox.No:
+                    QMessageBox.information(self, "Advertencia", "el uso de categorías por default quedará desactivado")
+                    self.tiene_default_cats = False
 
+        if self.tiene_default_cats == False:
+            self.actionEditar_categor_as_default.setEnabled(False)
         
         with open(join(appDataDirectory,"conceptos.json"), "r") as jsonfile:
             self.concepto = json.load(jsonfile)
