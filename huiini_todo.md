@@ -16,4 +16,4 @@
 
     - un manejador de agentes
 
-- ayudar a que rabit pueda leer del drive y escribir resultados en el drive
+- ayudar a que rabit pueda leer del drive y escribir resultados en el drive (hecho)
